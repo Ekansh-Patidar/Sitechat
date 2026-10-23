@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sitechat KT 9: Interviews</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,650&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  /* Layout: a reading column with a phase map on top; coloured callouts by role
+     (analogy, in this project, interview, try it); code blocks scroll inside themselves. */
+  :root {
+    --bg: #f5f6f4;
+    --paper: #ffffff;
+    --ink: #1b2725;
+    --muted: #5a6663;
+    --line: #dde3e0;
+    --accent: #1f6f5c;
+    --accent-soft: #e5f1ec;
+    --analogy: #7a4f9a;
+    --analogy-soft: #f2ecf7;
+    --interview: #a5630d;
+    --interview-soft: #fbf1e0;
+    --code-bg: #f0f3f1;
+    --display: "Literata", Georgia, "Times New Roman", serif;
+    --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121918; --paper: #1a2322; --ink: #e5ebe9; --muted: #9db0aa; --line: #2b3735;
+      --accent: #63c2a6; --accent-soft: #1d3530; --analogy: #c7a3e6; --analogy-soft: #2a2235;
+      --interview: #e3a64b; --interview-soft: #2e2416; --code-bg: #0f1514;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #121918; --paper: #1a2322; --ink: #e5ebe9; --muted: #9db0aa; --line: #2b3735;
+    --accent: #63c2a6; --accent-soft: #1d3530; --analogy: #c7a3e6; --analogy-soft: #2a2235;
+    --interview: #e3a64b; --interview-soft: #2e2416; --code-bg: #0f1514;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 17px/1.65 var(--body);
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 32px 80px;
+  }
+  main { max-width: 48rem; margin: 0 auto; display: grid; gap: 44px; }
+  header { display: grid; gap: 12px; }
+  .eyebrow { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  h1 { font: 650 clamp(30px, 5.5vw, 42px)/1.12 var(--display); margin: 0; text-wrap: balance; }
+  h2 { font: 650 clamp(23px, 3.6vw, 28px)/1.25 var(--display); margin: 0; text-wrap: balance; }
+  h3 { font: 700 18px/1.35 var(--body); margin: 8px 0 0; }
+  p, ul, ol { margin: 0; }
+  ul, ol { padding-left: 1.3em; display: grid; gap: 6px; }
+  li::marker { color: var(--accent); }
+  section { display: grid; gap: 16px; min-width: 0; }
+  .lede { color: var(--muted); font-size: 18px; }
+  a { color: var(--accent); }
+  code { font: 0.88em var(--mono); background: var(--code-bg); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+  pre {
+    margin: 0; background: var(--code-bg); border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 16px; overflow-x: auto; font: 14px/1.55 var(--mono);
+  }
+  pre code { background: none; padding: 0; font-size: inherit; overflow-wrap: normal; }
+  .file { font: 600 13px var(--mono); color: var(--muted); margin-bottom: -10px; }
+  .phases { display: flex; flex-wrap: wrap; gap: 6px; }
+  .phases span {
+    font-size: 13px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line);
+    color: var(--muted); background: var(--paper);
+  }
+  .phases span.now { background: var(--accent); color: var(--paper); border-color: var(--accent); font-weight: 600; }
+  .box { border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; border: 1px solid var(--line); background: var(--paper); }
+  .box .tag { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .analogy { background: var(--analogy-soft); border-color: transparent; }
+  .analogy .tag { color: var(--analogy); }
+  .project { background: var(--accent-soft); border-color: transparent; }
+  .project .tag { color: var(--accent); }
+  .interview { background: var(--interview-soft); border-color: transparent; }
+  .interview .tag { color: var(--interview); }
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
+  table { border-collapse: collapse; width: 100%; font-size: 15.5px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-weight: 700; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+  tr:last-child td { border-bottom: none; }
+  td:first-child { white-space: nowrap; }
+  .steps { list-style: none; padding: 0; counter-reset: s; display: grid; gap: 10px; }
+  .steps > li { counter-increment: s; display: grid; grid-template-columns: 2rem 1fr; gap: 10px; min-width: 0; }
+  .steps > li::before {
+    content: counter(s); width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+    font: 700 13px/1 var(--body); color: var(--accent); border: 1.5px solid var(--accent);
+  }
+  .steps > li > div { display: grid; gap: 6px; min-width: 0; }
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .flow .node { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: 15px; }
+  .flow .arrow { color: var(--accent); font-weight: 700; }
+  details { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+  details summary { cursor: pointer; font-weight: 600; }
+  details[open] summary { margin-bottom: 8px; }
+  details p { color: var(--ink); }
+  dl.gloss { display: grid; gap: 10px; margin: 0; }
+  dl.gloss div { display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr; gap: 12px; }
+  dl.gloss dt { font-weight: 700; }
+  dl.gloss dd { margin: 0; }
+  @media (max-width: 560px) { dl.gloss div { grid-template-columns: 1fr; gap: 2px; } td:first-child { white-space: normal; } }
+  .toc { columns: 2 16rem; column-gap: 28px; }
+  .toc li { break-inside: avoid; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 0; }
+  summary:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .machines { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 10px; }
+  .machine { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 6px; align-content: start; }
+  .machine b { font-family: var(--display); font-size: 17px; }
+  .machine.us { border-color: var(--accent); }
+  .lbl { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+
+  :root { --challenge: #a8322f; --challenge-soft: #fbecea; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --challenge: #f2958f; --challenge-soft: #3a2220; } }
+  :root[data-theme="dark"] { --challenge: #f2958f; --challenge-soft: #3a2220; }
+  .challenge { background: var(--challenge-soft); border-color: transparent; }
+  .challenge .tag { color: var(--challenge); }
+  .phases a { font-size: 13px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line);
+    color: var(--muted); background: var(--paper); text-decoration: none; }
+  .phases a:hover { border-color: var(--accent); color: var(--accent); }
+  .phases a.now { background: var(--accent); color: var(--paper); border-color: var(--accent); font-weight: 600; }
+  figure { margin: 0; display: grid; gap: 8px; justify-items: start; }
+  figure img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+  figcaption { font-size: 14px; color: var(--muted); }
+  .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 12px; }
+  .kv { display: grid; grid-template-columns: minmax(7rem, 11rem) 1fr; gap: 6px 14px; }
+  @media (max-width: 560px) { .kv { grid-template-columns: 1fr; gap: 2px; } }
+</style>
+
+</head>
+<body>
+<main>
+<header>
+  <div class="eyebrow">Sitechat knowledge transfer · Phase 9 of 10</div>
+  <h1>Interview prep: telling the Sitechat story so it builds confidence</h1>
+  <p class="lede">Everything in Phases 0 to 8 turns into answers here: a 30-second and a 2-minute pitch, a walkthrough you can draw, resume lines with numbers you can defend, a bank of likely questions with model answers, challenge stories in a structured form, how to handle "did you build this with AI?", and a practice plan. Every number on this page comes from the repo, its commit history or a measurement recorded in the earlier phases.</p>
+  <div class="phases" aria-label="All phases">
+    <a href="https://claude.ai/artifact/QuxrXdoFv7vr5KKvNSML78">0 First principles</a><a href="https://claude.ai/artifact/MDdgNKEGibTrFVYqtGjGhs">1 How the web works</a><a href="https://claude.ai/artifact/VVYejQXYpWzuimyovij4CY">2 What Sitechat is</a><a href="https://claude.ai/artifact/RHDbDbJ6r8RmXdRsvAUK9S">3 AI fundamentals</a><a href="https://claude.ai/artifact/F1oZk1cyDLGAPio8khD7cY">4a API layer</a><a href="https://claude.ai/artifact/QKLydSMm3tKdXapho5kS1V">4b The agent</a><a href="https://claude.ai/artifact/2TNXtynh229R59PV9MwHc1">4c Retrieval</a><a href="https://claude.ai/artifact/Np1qbTsXtXtDL6UmGaMvFv">4d Leads</a><a href="https://claude.ai/artifact/S2dSYJnVDTPbqeAWJP6qd1">4e Data stores</a><a href="https://claude.ai/artifact/4hwNREB8CxkHtRrwgwRraL">4f Scripts and evals</a><a href="https://claude.ai/artifact/AHXQrMEzxpZ6x4ihiiiCm1">5 The chat widget</a><a href="https://claude.ai/artifact/BknbsJYd7gFx9geyWbBqKF">6 Cloud and data</a><a href="https://claude.ai/artifact/KdgDyd9VuQVfjJu3dvHPv2">7 Quality and safety</a><a href="https://claude.ai/artifact/QDifNPBS4Lu8CLhvZTJ5C4">8 Rebuild it yourself</a><a class="now" href="https://claude.ai/artifact/99LTVwqoTPzBmFmHCZcsCS">9 Interview prep</a><a href="https://claude.ai/artifact/NKGY4fDQXK9Cp41B55wiTs">10 Set it up</a>
+  </div>
+</header>
+
+<section>
+  <h2>How to read this phase</h2>
+  <p>Don't memorise the model answers word for word; interviewers can tell, and follow-up questions break a script. Learn the <b>shape</b> of each answer (the decision, the reason, the evidence, the trade-off) and the numbers. Each answer links to the phase that explains it, so when one feels shaky, reread that section.</p>
+  <h3>In this phase</h3>
+  <ol class="toc">
+    <li>The rules for talking about this project</li>
+    <li>The 30-second pitch</li>
+    <li>The 2-minute walkthrough, with a drawing</li>
+    <li>Resume lines</li>
+    <li>Numbers to know cold</li>
+    <li>Question bank: RAG and retrieval</li>
+    <li>Question bank: evaluation</li>
+    <li>Question bank: agents, tools and prompts</li>
+    <li>Question bank: safety and privacy</li>
+    <li>Question bank: backend and Python</li>
+    <li>Question bank: cloud, reliability and cost</li>
+    <li>Question bank: testing and engineering practice</li>
+    <li>System design follow-ups</li>
+    <li>Challenge stories (STAR)</li>
+    <li>"Did you build this with AI?"</li>
+    <li>Honest limitations, said well</li>
+    <li>Questions to ask them</li>
+    <li>A practice plan</li>
+  </ol>
+</section>
+
+<section>
+  <h2>1. The rules for talking about this project</h2>
+  <ul>
+    <li><b>Only claim what you can explain two levels down.</b> If you say "weighted reciprocal rank fusion", expect "how is it computed, and why weighted?". If you can't answer yet, leave it out until you can.</li>
+    <li><b>Never invent usage.</b> No customer and no real visitors yet. "Deployed on Google Cloud Run and working, with one configured tenant" is true. "Serving thousands of users" would collapse at the first follow-up.</li>
+    <li><b>Lead with decisions and evidence</b>, not features. "I measured hybrid search and turned it off" beats "I built hybrid search".</li>
+    <li><b>Say the trade-off before they ask.</b> "Rate-limit counters are per instance, so the worst case is ten times the limit; I'd move to Redis once instances are regularly above one." It shows judgement.</li>
+    <li><b>Use "I" for what you decided and understand</b>, and be ready to say how the work was done (section 15).</li>
+  </ul>
+</section>
+
+<section>
+  <h2>2. The 30-second pitch</h2>
+  <div class="box interview"><div class="tag">Say it</div><p>"Sitechat is a multi-tenant AI chat assistant that a business adds to its website with one script tag. It answers visitors from the business's own documents using retrieval-augmented generation, keeps exact prices and dates in a separate facts sheet the business edits in Google Sheets, and hands interested visitors to the team by email with every question they asked. It's a Python and FastAPI backend on Google Cloud Run, with Pinecone for vector search and OpenAI for the model, and I built an evaluation harness that changed several design decisions: for example, hybrid search made retrieval worse on our data, so it's off."</p></div>
+</section>
+
+<section>
+  <h2>3. The 2-minute walkthrough, with a drawing</h2>
+  <p>Practise drawing this on paper while you talk. Five boxes, left to right:</p>
+<pre><code>[ widget.js ]  →  [ FastAPI on Cloud Run ]  →  [ orchestrator ]  →  [ OpenAI ]
+  shadow DOM        site key + Origin check      facts + RAG + tools
+  localStorage      rate limits                        ↓         ↓
+                    503 on model failure         [ Pinecone ]  [ Firestore ]
+                                                 namespace/     conversations,
+                    background: store turn,      tenant         leads, facts
+                    email team (Resend)
+                    every 5 min: Cloud Scheduler → digest + facts sync</code></pre>
+  <div class="box interview"><div class="tag">Say it</div><p>"A school pastes a script tag. The widget runs in a shadow root so the site's CSS can't break it, and it never inserts server text as HTML. It sends the message with a public site key to FastAPI on Cloud Run. A dependency maps the key to a tenant and checks the browser's Origin against that tenant's allowed domains; rate limits apply per visitor and per tenant.</p><p>The orchestrator is the one place that defines a reply. It first strips email and phone numbers into a separate lead record, so personal data never reaches the model. It works out which course the visitor means by matching names, reads the conversation and retrieves the top five chunks from the tenant's Pinecone namespace in parallel, then builds the prompt: rules, the full facts sheet, the extracts labelled with their heading paths, and recent history. The model can call a contact_team tool, which only records the request.</p><p>The response goes back immediately. In a background task we store the turn, record every visitor question deterministically, summarise long histories, and email the team if a request is waiting. A scheduler job every five minutes emails visitors who left contact details and went quiet, and refreshes facts from Google Sheets.</p><p>Quality is measured: 82 labelled questions for retrieval, an LLM judge for answers, and 29 attack prompts for safety, plus 492 offline tests gating every deploy."</p></div>
+</section>
+
+<section>
+  <h2>4. Resume lines</h2>
+  <p>Corrected and tightened from the earlier draft in our conversation: the reranker <i>was</i> measured as harmful (MRR 0.96 → 0.90 on 10 Oct); only the latest run's rerank rows are invalid, because the reranker likely had no key then. Both versions below use only numbers you can defend.</p>
+  <h3>Full version</h3>
+  <div class="box"><p><b>Sitechat: multi-tenant AI chat assistant for business websites</b> · Python, FastAPI, OpenAI, Pinecone, Firestore, Google Cloud Run<br><i>Personal project · deployed on GCP</i></p>
+  <ul>
+    <li>Built a RAG chatbot backend in Python/FastAPI that answers website visitors from each business's own documents (Pinecone vector search, heading-aware chunking) and a facts sheet synced from Google Sheets, served to any site through one embeddable JavaScript widget.</li>
+    <li>Built an evaluation harness (82 labelled questions; recall, precision, MRR; LLM-as-judge faithfulness; 29-prompt attack suite) and used it to drive design: measured that BM25 hybrid search and Cohere reranking both <b>lowered</b> MRR on our corpus (0.96 → 0.70–0.90), so shipped vector-only behind config flags; tuned a programme-focus boost from MRR 0.82 to 0.87.</li>
+    <li>Implemented an LLM tool-calling agent (OpenAI function calling, bounded loop, shared 40 s deadline) where tools only record intent; the server records every visitor question deterministically and emails the business a labelled summary, after models proved unreliable at noticing unanswered questions.</li>
+    <li>Enforced tenant isolation structurally (Pinecone namespace per tenant, compound Firestore keys) and bounded abuse and cost with per-visitor and per-tenant rate limits, a daily token budget per tenant, reply caps and a daily email cap.</li>
+    <li>Hardened against prompt injection (instruction-hierarchy rules, invisible-Unicode stripping, screening of ingested content; attack pass rate 24/29 → 29/29) and kept personal data out of the model, logs and error reports, with 365-day TTL retention.</li>
+    <li>492 offline pytest tests (in-memory stores via dependency injection, mocked model; 39 Playwright browser tests) gating a Cloud Build deploy; CI with ruff, mypy, bandit, gitleaks, hadolint, pip-audit and an 80% coverage floor (85.7% today).</li>
+  </ul></div>
+  <h3>Three-line version</h3>
+  <div class="box"><ul>
+    <li>Built a multi-tenant RAG chat assistant (Python, FastAPI, OpenAI, Pinecone, Firestore, Cloud Run) with an embeddable widget and email lead hand-off.</li>
+    <li>Built retrieval and answer evaluations (82 labelled questions, LLM judge, 29 attacks); measured that hybrid search and reranking hurt MRR on our data and shipped vector-only.</li>
+    <li>492 offline tests gating deploys; prompt-injection defences (29/29 attacks held), per-tenant token budgets, structural tenant isolation.</li>
+  </ul></div>
+  <p><b>Skills line:</b> Python, FastAPI, Pydantic, RAG, embeddings, vector databases (Pinecone), LLM tool calling, LLM evaluation, prompt-injection defence, OpenAI API, Google Cloud (Cloud Run, Firestore, Cloud Build, Secret Manager, Cloud Scheduler, IAM), Docker, pytest, Playwright, CI/CD.</p>
+</section>
+
+<section>
+  <h2>5. Numbers to know cold</h2>
+  <div class="tablewrap"><table>
+    <tr><th>Number</th><th>What</th><th>Phase</th></tr>
+    <tr><td>0.96 vs 0.70 / 0.76 / 0.90</td><td>MRR vector-only vs hybrid equal / hybrid 0.3 / rerank, 28 chunks (10 Oct)</td><td>3, 4c</td></tr>
+    <tr><td>0.86, 0.99</td><td>Production MRR and recall, 82 questions, 95 chunks (18 Oct)</td><td>4f</td></tr>
+    <tr><td>0.46 → 0.90</td><td>General-question MRR after restructuring content into a school-general document</td><td>4c</td></tr>
+    <tr><td>0.08</td><td>Focus boost; tried 0 / 0.05 / 0.08 / 0.12 / 0.2 → MRR 0.82 / 0.85 / 0.87 / 0.86 / 0.85</td><td>4c</td></tr>
+    <tr><td>24 → 29 of 29</td><td>Attacks held before / after hardening</td><td>4f, 7</td></tr>
+    <tr><td>79 of 82</td><td>Answers judged correct (18 Oct)</td><td>4f</td></tr>
+    <tr><td>492, 39, 85.66%</td><td>Tests, of which browser tests, coverage</td><td>7</td></tr>
+    <tr><td>~11 s → 3–6 s</td><td>Reply time after moving writes to background, parallel read and retrieval, triage</td><td>3</td></tr>
+    <tr><td>43 s → none</td><td>Cold start, then no idle cold starts once the 5-minute digest ran</td><td>6</td></tr>
+    <tr><td>15 s, 1 retry, 40 s, 60 s</td><td>Per-attempt timeout, retries, reply deadline, Cloud Run limit</td><td>4b</td></tr>
+    <tr><td>3,000,000 tokens ≈ US$0.50</td><td>Daily budget per tenant; a reply uses 4,000–6,000 tokens</td><td>4b</td></tr>
+    <tr><td>5/min, 60/hour, 20/min</td><td>Per-visitor chats, per-tenant chats, refusals per visitor</td><td>4a</td></tr>
+    <tr><td>50/day</td><td>Lead emails per tenant (Resend free plan: 100/day)</td><td>4d</td></tr>
+    <tr><td>1,536; 5; 12/16</td><td>Embedding size; top-k; history window / summarise trigger</td><td>3</td></tr>
+    <tr><td>3 of 10</td><td>Questions a real 16-turn chat lost when a model decided what counted</td><td>4b</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2>6. Question bank: RAG and retrieval</h2>
+  <details><summary>Walk me through your RAG pipeline.</summary><p>Ingest: Markdown documents are split along headings, each chunk keeps its heading path, the path is prepended before embedding with text-embedding-3-small, and vectors plus text go to Pinecone in a per-tenant namespace. Query: skip retrieval for conversational messages; embed the question; search top 5 in the tenant's namespace, blending in the focused programme's sections with a small score boost; add them to the prompt labelled with full heading paths; the model answers from rules, facts and extracts. (<a href="https://claude.ai/artifact/RHDbDbJ6r8RmXdRsvAUK9S">3 §9</a>, <a href="https://claude.ai/artifact/2TNXtynh229R59PV9MwHc1">4c</a>)</p></details>
+  <details><summary>Why chunk by headings rather than fixed size?</summary><p>Fixed sizes cut sections mid-thought, so a question retrieves a fragment missing the useful part. Headings are the author's own topic boundaries. Long sections are still split at paragraph breaks, and each piece keeps the heading path so it's understandable alone.</p></details>
+  <details><summary>Did you use hybrid search? Why or why not?</summary><p>I built BM25 plus weighted RRF and Cohere reranking, then measured on labelled questions. On our small corpus, both hurt: MRR 0.96 vector-only against 0.70 for equal-weight hybrid and 0.90 with the reranker. BM25 ranks near-randomly when nearly every chunk shares vocabulary with the query, and the reranker matched surface terms ("advanced") and lost intent. They're behind config flags, off by default, with a note to re-measure at a few hundred chunks.</p></details>
+  <details><summary>What's Reciprocal Rank Fusion?</summary><p>Merging ranked lists by position instead of score: each result earns weight ÷ (60 + rank) per list, summed. It avoids comparing incompatible scores (cosine is 0–1, BM25 unbounded). Weighting let the weaker retriever break ties without overriding the stronger one.</p></details>
+  <details><summary>How do you stop the model mixing up similar documents, like two courses' fees?</summary><p>Three things: chunks reach the model labelled with their full heading path ("7-Day Retreat &gt; Fees"); a prompt rule to use an extract only for the programme it names; and conversation focus, matched from programme names, that retrieves the focused programme's sections with a small boost. The judge in the answer evaluation specifically checks for claims taken from one programme and stated about another.</p></details>
+  <details><summary>Why are prices not in the documents?</summary><p>Exact, changeable values must come from one place the business controls (a Google Sheet), and retrieval by meaning can't reliably tell one course's fee section from another's. Facts are small, so they're sent in full every time. The trigger was the school's website listing dates going backwards in time.</p></details>
+  <details><summary>How do you handle follow-ups like "how much is it?"</summary><p>Focus tracking: the programme named earlier is stored on the conversation and carried over unless the message names another or compares. It's name-matching against a per-tenant catalogue, no model call; short names like "7 day" only count inside the same family.</p></details>
+  <details><summary>What happens if Pinecone is down?</summary><p>Retrieval failures are caught and logged (Sentry reports them), and the reply is built from facts and history, where the rules make the bot say what it doesn't know. Before that fix, an outage turned every message into a 500.</p></details>
+</section>
+
+<section>
+  <h2>7. Question bank: evaluation</h2>
+  <details><summary>How do you know retrieval is good?</summary><p>82 hand-written questions across ten kinds (semantic, keyword, programme, comparison, follow-up, general, trap, list, language, unanswerable), each labelled with the sections that answer it. We compute recall@k, precision@k, MRR and noise through the production retrieval function, and compare only runs with the same question-set fingerprint. Latest: recall 0.99, MRR 0.86.</p></details>
+  <details><summary>Why label by section rather than chunk id?</summary><p>Chunk ids change whenever a document is re-split; headings rarely do. Chunk-id labels broke every re-chunk. A label check before each run refuses to proceed if a label matches nothing.</p></details>
+  <details><summary>How do you evaluate answers, not just retrieval?</summary><p>LLM-as-judge: a second call sees the facts, extracts, earlier messages and the answer, and lists unsupported claims; unanswerable questions get a separate judge that checks whether the answer claimed anything about the visitor's case. Every flag is printed for a human, because judges make mistakes.</p></details>
+  <details><summary>What went wrong with your judges?</summary><p>One described a correct refusal and marked it failed; fixed by making it reason first and answer one narrow question. Another penalised correct prices because it hadn't seen the facts sheet; now it sees the bot's exact context. About three false flags per run remain, so an optional stronger judge model exists for high-stakes runs at about fifteen times the cost.</p></details>
+  <details><summary>Did the eval ever measure the wrong thing?</summary><p>Yes: the eval had its own copy of the retrieval code that always ran fusion and used a stale candidate count. I made production's retrieve accept a config and had the eval call it, so it measures what ships, plus a "production" row built from settings. Also, the latest run's rerank rows equal vector-only exactly, which I read as the reranker not running (no key) rather than being neutral.</p></details>
+  <details><summary>How do you evaluate safety?</summary><p>29 attacks in 7 categories (off-topic, extraction, jailbreak, false facts, data, output, consumption). Each must pass deterministic checks, including no forbidden text in tool-call arguments, which reach the team's email, plus a judge. Baseline 24/29, 29/29 after hardening.</p></details>
+</section>
+
+<section>
+  <h2>8. Question bank: agents, tools and prompts</h2>
+  <details><summary>How does tool calling work in your system?</summary><p>Two tools as JSON schemas. The model returns a tool call; we append it, run the handler, append a tool message with the matching id, and call again. At most three rounds, sharing one 40-second deadline. contact_team only records a request; record_visitor_details only reports what the model noticed, filtered and capped at 200 characters. Nothing the model calls can send, delete or browse.</p></details>
+  <details><summary>Tell me about a time a model didn't do what you expected.</summary><p>A record_unanswered tool was never called across four unanswerable questions, because the prompt didn't mention it. With a stronger prompt, the model wrote "I will record this question" in replies while still not calling it. Extracting at email time still missed 3 of 10 questions in a 16-turn chat. The fix was to stop depending on the model: the server records every visitor question as each turn is stored, and one model call only labels them by id, with the server keeping any it drops.</p></details>
+  <details><summary>How do you handle conversation memory?</summary><p>The last 12 messages verbatim; beyond 16, older ones are folded into a running summary by a background call. Anything that must not be lost is stored separately: every question, and contact details on the lead. When the lead has an email, a system note says so every turn, because the model lost sight of it after summarising.</p></details>
+  <details><summary>How did you write the system prompt?</summary><p>Rule by rule from observed failures, each measured: scope and instruction hierarchy for injection; "don't know" in its own voice, without saying what's usual or likely; a near-miss rule; no padding lists or inventing counts; use an extract only for its programme; chat-style short paragraphs; reply in the visitor's language. One rule about where to put offers made gpt-4o-mini add offers to complete answers (19 to 25 instead of 7), so it was removed. No prompt change without before-and-after numbers.</p></details>
+  <details><summary>Why one agent rather than multiple agents?</summary><p>The job is one conversation with two small tools. If a specialist is needed, it becomes a tool the main agent calls. Multi-agent coordination is a different problem the product doesn't have.</p></details>
+  <details><summary>How do you get structured output reliably?</summary><p>JSON mode for the lead-email call, and validation: the server starts from its own list of questions, accepts model entries only by valid id and known status, and keeps everything else as "unchecked". JSON mode guarantees syntax, not content.</p></details>
+</section>
+
+<section>
+  <h2>9. Question bank: safety and privacy</h2>
+  <details><summary>How do you defend against prompt injection?</summary><p>Layers, measured: the system prompt states it's the only source of instructions and everything else is information; facts and extracts are labelled reference material; invisible Unicode is stripped; ingested content and facts rows are screened for text addressed to a model; tools have minimal power; and a 29-attack suite runs after every prompt or tool change.</p></details>
+  <details><summary>Your site key is public. Isn't that insecure?</summary><p>It only names the tenant. In browsers, the Origin check against the tenant's allowed domains stops other sites embedding it; browsers guarantee Origin. Scripts can forge Origin, so the real bound on abuse is rate limits per visitor and tenant, a refusal limit, and the daily token budget. Bot protection is the next layer once there's a domain.</p></details>
+  <details><summary>What personal data do you handle and how?</summary><p>Visitors' messages, emails, phone numbers and details. Contact details are extracted before the model sees the message and stored separately on a lead; Sentry gets no locals or request bodies (verified with the real SDK); conversations, leads and feedback expire 365 days after last activity via Firestore TTL; one visitor's data can be deleted on request.</p></details>
+  <details><summary>Describe a security issue you found in your own system.</summary><p>Lead emails copied the visitor, so anyone could type a victim's address and make us email them text the attacker wrote: a spam and phishing relay that would get our sender blocked for every customer. Fixed by emailing only the team with Reply-To set to the visitor, defanging links, and a daily cap. Also: the service ran as a project Editor account; now it runs as a dedicated account with only Firestore and its five secrets.</p></details>
+  <details><summary>How do you stop model output becoming a vulnerability?</summary><p>The widget never uses innerHTML: model text goes in with textContent, and bold is built from DOM calls. The HTML email escapes every value and only accepts a hex accent colour. A test sends an onerror payload through the real widget and checks it never runs.</p></details>
+</section>
+
+<section>
+  <h2>10. Question bank: backend and Python</h2>
+  <details><summary>How do your tests avoid calling OpenAI and Firestore?</summary><p>Dependency injection: create_app accepts store instances and lifespan only builds Firestore clients for stores not supplied. Each store is an abstract base class with in-memory and Firestore implementations. The model and embedding calls go through single functions that tests patch where they're looked up.</p></details>
+  <details><summary>Why sync route functions, and what does that cost?</summary><p>FastAPI runs them in a thread pool, which is simple and works with blocking SDKs. Cost: around 40 threads against Cloud Run's 80 concurrent requests per instance, so under load requests would queue in-process; that's the trigger for a load test and possibly an async rewrite. It also means context variables set in a dependency vanish, which bit us in logging.</p></details>
+  <details><summary>What's a race condition you fixed?</summary><p>Summarising read the history, waited seconds for the model, then overwrote messages with the slice it read, losing any turn stored meanwhile. Now apply_summary runs in a transaction that removes exactly the summarised messages from the front if they're still there, and does nothing otherwise. Similarly, overlapping digest sweeps could double-send, fixed with a transactional claim with a lease.</p></details>
+  <details><summary>How do you get request ids into every log line?</summary><p>contextvars: an ASGI middleware sets a request id per request, which threads and background tasks inherit as a copy; tenant and conversation are set where the work runs, and the parallel retrieval pool submits with copy_context().run. The JSON formatter adds them to each line, so Cloud Logging can filter by conversation.</p></details>
+  <details><summary>Explain your caching.</summary><p>Module-level dictionaries with monotonic timestamps: tenant by site key (including not-found, to stop made-up keys costing reads), facts, programme catalogue, token usage, 60 seconds each. Per instance, bounded staleness, no invalidation. The site-key cache is cleared at 10,000 entries so a flood can't grow memory.</p></details>
+</section>
+
+<section>
+  <h2>11. Question bank: cloud, reliability and cost</h2>
+  <details><summary>How is it deployed?</summary><p>A push to main triggers Cloud Build: run pytest in a clean Python 3.12 container (failure stops everything), build the image tagged with the commit SHA, push to Artifact Registry, deploy to Cloud Run with a dedicated service account, secrets from Secret Manager, min 0, max 10 instances, 60-second timeout.</p></details>
+  <details><summary>How do you keep responses inside Cloud Run's 60 seconds?</summary><p>15-second timeout per attempt, one retry, a 40-second deadline shared by all tool rounds where each call gets an equal share of what's left, no call started with under 3 seconds left, a 600-token reply cap, and a 5-second embedding timeout. A timeout becomes a 503 with a readable message instead of a bare 504.</p></details>
+  <details><summary>What about cold starts?</summary><p>Measured 43 seconds after scale-to-zero. Instead of paying for a minimum instance, the 5-minute scheduler job we needed for lead digests keeps an instance warm; logs showed no idle cold starts over 16 hours. Startup CPU boost is on and the Pinecone index handle is lazy.</p></details>
+  <details><summary>How do you control cost?</summary><p>A per-tenant daily token budget checked before any model call (fails open), a reply token cap, triage skipping retrieval for small talk, caches to stay inside Firestore's free tier, negative caching for bad keys, a daily email cap, and scale-to-zero.</p></details>
+  <details><summary>How do scheduled jobs authenticate?</summary><p>Cloud Scheduler attaches a Google-signed OIDC token for a dedicated service account; the endpoint verifies signature, expiry and audience, then requires that exact account. No shared secret. Until configured it returns 404.</p></details>
+</section>
+
+<section>
+  <h2>12. Question bank: testing and engineering practice</h2>
+  <details><summary>Tell me about a bad test you found.</summary><p>A test patched the module where a function was defined, but the orchestrator had imported it by name, so the mock was never used and the assertion always passed. I proved it by removing the guard it protected; the test stayed green. Patched the lookup site, and now I make new tests fail once on purpose.</p></details>
+  <details><summary>What's failure injection and what did it find?</summary><p>Breaking each dependency deliberately (model errors, bad tool calls, store outages, a failed summary) and asserting the outcome. It found that retrieval outages caused 500s, that a failed summary skipped the lead email, and that a lead store outage failed the reply. Known gaps were strict xfails until fixed.</p></details>
+  <details><summary>What does your CI check?</summary><p>Tests with an 80% coverage floor, ruff, mypy, bandit, gitleaks over full history, hadolint and pip-audit, plus Dependabot. Adding them found 30 type errors, missing exception chaining, a URL-scheme issue and a root container.</p></details>
+  <details><summary>What isn't tested well?</summary><p>The Firestore implementations: coverage is 55% for the conversation store because tests use in-memory stores. Firestore-only bugs (like a full set wiping fields) live there. Emulator tests are the next step. Also no load or concurrency tests yet.</p></details>
+</section>
+
+<section>
+  <h2>13. System design follow-ups</h2>
+  <details><summary>How would you scale this to 1,000 tenants?</summary><p>Shared rate-limit counters in Redis instead of per-instance; Pinecone namespaces scale, but watch per-index limits; composite index or ordering for the digest query; async routes or more instances for concurrency; a tenant dashboard instead of scripts for onboarding; per-tenant evaluation runs; staging and production projects; alerting on error rate and latency; and re-measure hybrid search per tenant as corpora grow.</p></details>
+  <details><summary>How would you add streaming responses?</summary><p>It was built (server-sent events) and reverted for product reasons: word-by-word felt robotic. If wanted, stream one bubble at a time. Technically: the tool loop must finish before streaming the final answer, citation-marker stripping must work on a stream, and Cloud Run's request timeout still bounds it.</p></details>
+  <details><summary>How would you support a non-yoga business?</summary><p>Already partly done: ten wording phrases per tenant slot into the prompt, tool descriptions and email, with yoga defaults. Next: per-tenant lead fields, and per-tenant programme catalogues already generalise to any offering.</p></details>
+  <details><summary>What would you change if starting again?</summary><p>Firestore emulator tests from day one; async routes; a staging environment early; and the evaluation set before the retrieval features, not after.</p></details>
+</section>
+
+<section>
+  <h2>14. Challenge stories (STAR)</h2>
+  <p><b>STAR</b> = Situation, Task, Action, Result. Have these six ready; each takes about 90 seconds.</p>
+  <div class="box challenge"><div class="tag">1. Measuring before trusting best practice</div><p><b>S:</b> Standard advice says hybrid search and reranking improve RAG. <b>T:</b> Decide whether to ship them. <b>A:</b> Built a labelled evaluation and compared five configurations through the same code path. <b>R:</b> Both hurt (MRR 0.96 vs 0.70–0.90); shipped vector-only behind flags with the numbers recorded; the harness also exposed a BM25 IDF-zero bug that was silently dropping correct matches.</p></div>
+  <div class="box challenge"><div class="tag">2. When the model can't be trusted to remember</div><p><b>S:</b> The business needs every visitor question. <b>T:</b> Capture unanswered questions reliably. <b>A:</b> Tried a tool (never called), a stronger prompt (narrated, not called), extraction at email time (lost 3 of 10 in a long chat). <b>R:</b> Moved recording to the server, deterministic per turn; the model only labels by id and can't drop anything.</p></div>
+  <div class="box challenge"><div class="tag">3. A feature that was an abuse channel</div><p><b>S:</b> Lead emails copied the visitor. <b>T:</b> A review asked what an attacker could do with it. <b>A:</b> Traced it: any typed address would receive attacker-written text from our sender. <b>R:</b> Team-only emails with Reply-To, defanged links, a daily cap; the visitor gets an in-chat confirmation card instead.</p></div>
+  <div class="box challenge"><div class="tag">4. Every visitor was one visitor</div><p><b>S:</b> Per-visitor rate limits on Cloud Run. <b>T:</b> Make them actually per visitor. <b>A:</b> Logged the real headers in production first, found every request came from Google's front end, chose the X-Forwarded-For entry one hop from the end, grouped IPv6 by /64. <b>R:</b> Correct limits, plus the per-tenant limit that had been defined but never applied.</p></div>
+  <div class="box challenge"><div class="tag">5. Getting programme focus right</div><p><b>S:</b> 12 similar programmes; follow-ups and school-wide questions. <b>T:</b> Retrieve the right sections. <b>A:</b> Fixed slots failed ("is there laundry?" got only course sections); then ranking with a boost, tuned on the eval (0.08 gave the best MRR, 0.87), plus an overview section for broad groups, added after results because putting it first dropped semantic MRR from 0.86 to 0.69. <b>R:</b> Follow-ups at 1.00 MRR, general questions at 0.96.</p></div>
+  <div class="box challenge"><div class="tag">6. Fitting inside 60 seconds</div><p><b>S:</b> Slow OpenAI responses produced bare 504s. <b>T:</b> Always return a readable error in time. <b>A:</b> Calculated the worst case (30 s × 3 attempts × 3 calls), set 15 s and one retry, and a 40 s deadline shared across tool rounds with equal shares per attempt. <b>R:</b> Failures become 503s with messages the widget shows, and the cap trims runaway replies to a whole sentence.</p></div>
+</section>
+
+<section>
+  <h2>15. "Did you build this with AI?"</h2>
+  <p>Assume the question comes. The honest framing is strong, not weak:</p>
+  <div class="box interview"><div class="tag">Say it</div><p>"Yes, I used an AI coding assistant heavily, the way most teams now do. What I own is the decisions and the understanding: what to measure, which results to act on, what the trade-offs were, and why each piece is shaped the way it is. The history shows that: measurements in commit messages, features reverted after measuring, a code review that found real issues I then fixed. Happy to go as deep as you like on any part, or to write a piece of it from scratch."</p></div>
+  <p>The last sentence only works if it's true, which is what Phase 8 is for. Being able to type minichat from memory turns this from a risk into proof.</p>
+</section>
+
+<section>
+  <h2>16. Honest limitations, said well</h2>
+  <div class="tablewrap"><table>
+    <tr><th>Limitation</th><th>Say it like this</th></tr>
+    <tr><td>No customers</td><td>"It's deployed and working with one configured tenant; the next step was a pilot with a school."</td></tr>
+    <tr><td>Per-instance rate limits</td><td>"Exact at one instance, up to 10× under scale-out; Redis when instances are regularly above one."</td></tr>
+    <tr><td>Firestore code untested against a real database</td><td>"Logic is covered with in-memory stores; emulator tests are next, because that's where Firestore-only bugs live."</td></tr>
+    <tr><td>No alerting, no staging</td><td>"Deliberately deferred while there's no customer; both are on the list before one."</td></tr>
+    <tr><td>Test email sender</td><td>"Needs a verified domain; the code is ready."</td></tr>
+    <tr><td>Date read as a phone number</td><td>"A known false positive in the phone pattern; I'd add a date-shape exclusion and a test."</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2>17. Questions to ask them</h2>
+  <ul>
+    <li>"How do you evaluate your LLM features before and after a change?"</li>
+    <li>"Where do your AI features fail most often: retrieval, generation, or the integration around them?"</li>
+    <li>"How do you handle prompt injection and data privacy with customer data?"</li>
+    <li>"What does a new engineer own in their first three months?"</li>
+  </ul>
+  <p>Each shows you think about the same problems Sitechat solved, and invites a conversation where you can mention it.</p>
+</section>
+
+<section>
+  <h2>18. A practice plan</h2>
+  <ol class="steps">
+    <li><div><b>Days 1–2.</b> Reread Phases 2 and 3. Say the 30-second pitch out loud ten times; record yourself once.</div></li>
+    <li><div><b>Days 3–4.</b> Draw the walkthrough diagram from memory and talk over it for 2 minutes. Reread 4a and 4b where you hesitate.</div></li>
+    <li><div><b>Days 5–7.</b> Build minichat (Phase 8), typing every line.</div></li>
+    <li><div><b>Days 8–9.</b> Answer every question in sections 6 to 13 aloud without opening the answer; then open it and compare.</div></li>
+    <li><div><b>Day 10.</b> Tell the six STAR stories, 90 seconds each, timed.</div></li>
+    <li><div><b>Day 11.</b> Mock interview: have someone (or an AI assistant) pick random questions and ask "why?" twice after each answer.</div></li>
+    <li><div><b>Then</b> pick two Phase 8 exercises (say, the evaluation set and the attack set) and add them to minichat, so your own code demonstrates the strongest stories.</div></li>
+  </ol>
+</section>
+
+<section>
+  <h2>Next: Phase 10, setting it up</h2>
+  <p>A complete guide for someone you share the project folder with (without your <code>.env</code>): what to send and what never to send, running the tests offline, running the chat locally with only an OpenAI key, and setting up their own cloud services from scratch. <a href="https://claude.ai/artifact/NKGY4fDQXK9Cp41B55wiTs">Read Phase 10</a>.</p>
+</section>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sitechat KT 10: Setup</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,650&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  /* Layout: a reading column with a phase map on top; coloured callouts by role
+     (analogy, in this project, interview, try it); code blocks scroll inside themselves. */
+  :root {
+    --bg: #f5f6f4;
+    --paper: #ffffff;
+    --ink: #1b2725;
+    --muted: #5a6663;
+    --line: #dde3e0;
+    --accent: #1f6f5c;
+    --accent-soft: #e5f1ec;
+    --analogy: #7a4f9a;
+    --analogy-soft: #f2ecf7;
+    --interview: #a5630d;
+    --interview-soft: #fbf1e0;
+    --code-bg: #f0f3f1;
+    --display: "Literata", Georgia, "Times New Roman", serif;
+    --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121918; --paper: #1a2322; --ink: #e5ebe9; --muted: #9db0aa; --line: #2b3735;
+      --accent: #63c2a6; --accent-soft: #1d3530; --analogy: #c7a3e6; --analogy-soft: #2a2235;
+      --interview: #e3a64b; --interview-soft: #2e2416; --code-bg: #0f1514;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #121918; --paper: #1a2322; --ink: #e5ebe9; --muted: #9db0aa; --line: #2b3735;
+    --accent: #63c2a6; --accent-soft: #1d3530; --analogy: #c7a3e6; --analogy-soft: #2a2235;
+    --interview: #e3a64b; --interview-soft: #2e2416; --code-bg: #0f1514;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 17px/1.65 var(--body);
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 32px 80px;
+  }
+  main { max-width: 48rem; margin: 0 auto; display: grid; gap: 44px; }
+  header { display: grid; gap: 12px; }
+  .eyebrow { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  h1 { font: 650 clamp(30px, 5.5vw, 42px)/1.12 var(--display); margin: 0; text-wrap: balance; }
+  h2 { font: 650 clamp(23px, 3.6vw, 28px)/1.25 var(--display); margin: 0; text-wrap: balance; }
+  h3 { font: 700 18px/1.35 var(--body); margin: 8px 0 0; }
+  p, ul, ol { margin: 0; }
+  ul, ol { padding-left: 1.3em; display: grid; gap: 6px; }
+  li::marker { color: var(--accent); }
+  section { display: grid; gap: 16px; min-width: 0; }
+  .lede { color: var(--muted); font-size: 18px; }
+  a { color: var(--accent); }
+  code { font: 0.88em var(--mono); background: var(--code-bg); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+  pre {
+    margin: 0; background: var(--code-bg); border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 16px; overflow-x: auto; font: 14px/1.55 var(--mono);
+  }
+  pre code { background: none; padding: 0; font-size: inherit; overflow-wrap: normal; }
+  .file { font: 600 13px var(--mono); color: var(--muted); margin-bottom: -10px; }
+  .phases { display: flex; flex-wrap: wrap; gap: 6px; }
+  .phases span {
+    font-size: 13px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line);
+    color: var(--muted); background: var(--paper);
+  }
+  .phases span.now { background: var(--accent); color: var(--paper); border-color: var(--accent); font-weight: 600; }
+  .box { border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; border: 1px solid var(--line); background: var(--paper); }
+  .box .tag { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .analogy { background: var(--analogy-soft); border-color: transparent; }
+  .analogy .tag { color: var(--analogy); }
+  .project { background: var(--accent-soft); border-color: transparent; }
+  .project .tag { color: var(--accent); }
+  .interview { background: var(--interview-soft); border-color: transparent; }
+  .interview .tag { color: var(--interview); }
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
+  table { border-collapse: collapse; width: 100%; font-size: 15.5px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-weight: 700; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+  tr:last-child td { border-bottom: none; }
+  td:first-child { white-space: nowrap; }
+  .steps { list-style: none; padding: 0; counter-reset: s; display: grid; gap: 10px; }
+  .steps > li { counter-increment: s; display: grid; grid-template-columns: 2rem 1fr; gap: 10px; min-width: 0; }
+  .steps > li::before {
+    content: counter(s); width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+    font: 700 13px/1 var(--body); color: var(--accent); border: 1.5px solid var(--accent);
+  }
+  .steps > li > div { display: grid; gap: 6px; min-width: 0; }
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .flow .node { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: 15px; }
+  .flow .arrow { color: var(--accent); font-weight: 700; }
+  details { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+  details summary { cursor: pointer; font-weight: 600; }
+  details[open] summary { margin-bottom: 8px; }
+  details p { color: var(--ink); }
+  dl.gloss { display: grid; gap: 10px; margin: 0; }
+  dl.gloss div { display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr; gap: 12px; }
+  dl.gloss dt { font-weight: 700; }
+  dl.gloss dd { margin: 0; }
+  @media (max-width: 560px) { dl.gloss div { grid-template-columns: 1fr; gap: 2px; } td:first-child { white-space: normal; } }
+  .toc { columns: 2 16rem; column-gap: 28px; }
+  .toc li { break-inside: avoid; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 0; }
+  summary:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .machines { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 10px; }
+  .machine { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 6px; align-content: start; }
+  .machine b { font-family: var(--display); font-size: 17px; }
+  .machine.us { border-color: var(--accent); }
+  .lbl { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+
+  :root { --challenge: #a8322f; --challenge-soft: #fbecea; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --challenge: #f2958f; --challenge-soft: #3a2220; } }
+  :root[data-theme="dark"] { --challenge: #f2958f; --challenge-soft: #3a2220; }
+  .challenge { background: var(--challenge-soft); border-color: transparent; }
+  .challenge .tag { color: var(--challenge); }
+  .phases a { font-size: 13px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line);
+    color: var(--muted); background: var(--paper); text-decoration: none; }
+  .phases a:hover { border-color: var(--accent); color: var(--accent); }
+  .phases a.now { background: var(--accent); color: var(--paper); border-color: var(--accent); font-weight: 600; }
+  figure { margin: 0; display: grid; gap: 8px; justify-items: start; }
+  figure img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+  figcaption { font-size: 14px; color: var(--muted); }
+  .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 12px; }
+  .kv { display: grid; grid-template-columns: minmax(7rem, 11rem) 1fr; gap: 6px 14px; }
+  @media (max-width: 560px) { .kv { grid-template-columns: 1fr; gap: 2px; } }
+</style>
+
+</head>
+<body>
+<main>
+<header>
+  <div class="eyebrow">Sitechat knowledge transfer · Phase 10 of 10</div>
+  <h1>Setting it up: a guide for someone you share the project with</h1>
+  <p class="lede">You're sharing the Sitechat folder with someone, without your <code>.env</code> file. This phase is written for them, and for you before you send it. It covers what to send and what never to send, then four levels, each building on the last: run the tests (no accounts needed), run the chat on their own computer with only an OpenAI key, set up their own cloud services for the full system, and deploy it. Every command was checked: a clean copy of the repo with no <code>.env</code> passes the test suite, and the local demo script below starts and answers.</p>
+  <div class="phases" aria-label="All phases">
+    <a href="https://claude.ai/artifact/QuxrXdoFv7vr5KKvNSML78">0 First principles</a><a href="https://claude.ai/artifact/MDdgNKEGibTrFVYqtGjGhs">1 How the web works</a><a href="https://claude.ai/artifact/VVYejQXYpWzuimyovij4CY">2 What Sitechat is</a><a href="https://claude.ai/artifact/RHDbDbJ6r8RmXdRsvAUK9S">3 AI fundamentals</a><a href="https://claude.ai/artifact/F1oZk1cyDLGAPio8khD7cY">4a API layer</a><a href="https://claude.ai/artifact/QKLydSMm3tKdXapho5kS1V">4b The agent</a><a href="https://claude.ai/artifact/2TNXtynh229R59PV9MwHc1">4c Retrieval</a><a href="https://claude.ai/artifact/Np1qbTsXtXtDL6UmGaMvFv">4d Leads</a><a href="https://claude.ai/artifact/S2dSYJnVDTPbqeAWJP6qd1">4e Data stores</a><a href="https://claude.ai/artifact/4hwNREB8CxkHtRrwgwRraL">4f Scripts and evals</a><a href="https://claude.ai/artifact/AHXQrMEzxpZ6x4ihiiiCm1">5 The chat widget</a><a href="https://claude.ai/artifact/BknbsJYd7gFx9geyWbBqKF">6 Cloud and data</a><a href="https://claude.ai/artifact/KdgDyd9VuQVfjJu3dvHPv2">7 Quality and safety</a><a href="https://claude.ai/artifact/QDifNPBS4Lu8CLhvZTJ5C4">8 Rebuild it yourself</a><a href="https://claude.ai/artifact/99LTVwqoTPzBmFmHCZcsCS">9 Interview prep</a><a class="now" href="https://claude.ai/artifact/NKGY4fDQXK9Cp41B55wiTs">10 Set it up</a>
+  </div>
+</header>
+
+<section>
+  <h2>How to read this phase</h2>
+  <p>Part A is for <b>you</b>, the sender. Parts B to F are for the <b>recipient</b>. Each level says what it needs, how long it takes, and how to check it worked. Most people only need Levels 1 and 2 to understand and demo the project; Levels 3 and 4 create their own accounts and resources.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Level</th><th>What you get</th><th>Needs</th><th>Costs</th></tr>
+    <tr><td>1. Tests</td><td>All tests passing on their machine</td><td>Python 3.12</td><td>Nothing</td></tr>
+    <tr><td>2. Local demo</td><td>The real widget and bot running on their computer, answering from the school's documents</td><td>+ an OpenAI API key</td><td>A fraction of a cent per message</td></tr>
+    <tr><td>3. Full local system</td><td>Everything real: Firestore, Pinecone, facts from a Google Sheet, lead emails</td><td>+ Google Cloud, Pinecone, optionally Resend</td><td>Free tiers (Google Cloud needs a billing account)</td></tr>
+    <tr><td>4. Deployed</td><td>Their own copy on Cloud Run, with deploys on every push and the 5-minute job</td><td>+ a GitHub repo and Cloud Build</td><td>Free tiers</td></tr>
+  </table></div>
+  <h3>In this phase</h3>
+  <ol class="toc">
+    <li>Part A (sender): what to share and what never to share</li>
+    <li>Part B: what's in the folder</li>
+    <li>Part C, Level 1: run the tests</li>
+    <li>Part D, Level 2: run the chat locally with only an OpenAI key</li>
+    <li>Part E, Level 3: your own cloud services</li>
+    <li>Part F, Level 4: deploy to Cloud Run</li>
+    <li>Every setting, in one table</li>
+    <li>Troubleshooting</li>
+    <li>Challenges we faced while setting it up</li>
+    <li>Check yourself</li>
+  </ol>
+</section>
+
+<section>
+  <h2>1. Part A (sender): what to share and what never to share</h2>
+  <p>The project folder on your computer contains more than the code. Some of it is secret, some is visitors' personal data, some is just bulky. Here is every top-level item:</p>
+  <div class="tablewrap"><table>
+    <tr><th>Item</th><th>Share?</th><th>Why</th></tr>
+    <tr><td><code>.env</code></td><td><b>Never</b></td><td>Your API keys. Anyone with them can spend on your OpenAI account and read or change your databases.</td></tr>
+    <tr><td><code>service-account.json</code></td><td><b>Never</b></td><td>A private key for a Google service account that can read your schools' Google Sheets. If it's ever sent by mistake, delete that key in Google Cloud (IAM → Service accounts → Keys) at once.</td></tr>
+    <tr><td><code>chat.txt</code></td><td><b>No</b></td><td>A dump of real conversations (visitor data). Gitignored for that reason.</td></tr>
+    <tr><td><code>leads-*.csv</code></td><td><b>No</b></td><td>Visitors' names, emails and phone numbers, if you've exported any.</td></tr>
+    <tr><td><code>.venv/</code></td><td>No</td><td>Your Python environment: large, specific to your machine (and on Python 3.14). They create their own.</td></tr>
+    <tr><td><code>__pycache__/</code>, <code>.pytest_cache/</code>, <code>.mypy_cache/</code>, <code>.ruff_cache/</code></td><td>No</td><td>Generated caches.</td></tr>
+    <tr><td><code>docs/</code></td><td>Your choice</td><td>The school's documents and <code>programmes.yaml</code>. Not secret (they're from the school's public website) but the school's content; needed for the Level 2 demo to answer about real courses. Gitignored, so it isn't in git.</td></tr>
+    <tr><td><code>evaluation/history/</code></td><td>Optional</td><td>Saved evaluation runs; not needed to run anything.</td></tr>
+    <tr><td><code>.claude/</code></td><td>Optional</td><td>Your Claude Code settings for this project.</td></tr>
+    <tr><td><code>.git/</code></td><td>Yes</td><td>The full history (useful to read the commit messages). gitleaks has scanned it: no secrets were ever committed.</td></tr>
+    <tr><td>Everything else</td><td>Yes</td><td>The code, tests, notes and configuration.</td></tr>
+  </table></div>
+  <h3>The safe way to package it</h3>
+  <p><code>git archive</code> includes only files tracked by git, so every ignored file (<code>.env</code>, <code>service-account.json</code>, <code>chat.txt</code>, <code>.venv</code>, <code>docs/</code>...) is left out automatically. From the project folder, in PowerShell or Git Bash:</p>
+<pre><code>git archive --format=zip -o sitechat.zip HEAD</code></pre>
+  <p>If you also want to send the documents for the Level 2 demo, zip <code>docs\pyramid-yogshala</code> separately. Or push the repo to GitHub and give them access, which also gives them the history.</p>
+  <h3>Two things inside the code that are yours</h3>
+  <ul>
+    <li><code>scripts/create_tenant.py</code> contains your email as the tenant's <code>team_email</code>, and your Google Sheet's id. Harmless to share (they can't access your sheet without being shared on it), but they should replace both with their own before running it.</li>
+    <li>Several notes and docstrings name your Google Cloud project (<code>sitechat-511008</code>) and your service URL. They're documentation; the recipient substitutes their own. Nothing in the running code depends on them except the defaults listed in section 7.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>2. Part B: what's in the folder</h2>
+<pre><code>sitechat/
+├── app/                 the service (FastAPI): api/, agent/, retrieval/, documents/, leads/,
+│                        conversations/, tenants/, facts/, programmes/, usage/, feedback/,
+│                        main.py, config.py ...
+├── static/              widget.js (the chat widget) and test-page.html
+├── scripts/             operator tools, run as python -m scripts.&lt;name&gt;
+├── evaluation/          the evaluation set, metrics, judges and attacks
+├── tests/               the test suite (tests/browser/ needs Playwright)
+├── notes/               project notes, setup guides, this course (notes/kt/)
+├── Dockerfile, cloudbuild.yaml, .github/   packaging, deploy, CI
+├── requirements.txt, requirements-dev.txt  dependencies (service / + tests and tools)
+├── ruff.toml, mypy.ini  lint and type-check settings
+└── CLAUDE.md            a concise technical overview; read it first</code></pre>
+  <p>Recommended reading order for a newcomer: <code>CLAUDE.md</code>, then <code>notes/CODEMAP.md</code>, then this course from <a href="https://claude.ai/artifact/VVYejQXYpWzuimyovij4CY">Phase 2</a>.</p>
+</section>
+
+<section>
+  <h2>3. Part C, Level 1: run the tests</h2>
+  <p><b>Needs:</b> Python 3.12 and Git (optional). <b>Time:</b> 10 minutes. <b>Accounts:</b> none.</p>
+  <ol class="steps">
+    <li><div><b>Install Python 3.12</b> from python.org (Windows: tick "Add python.exe to PATH"). The project, its CI and its container all use 3.12. Newer versions mostly work (the sender's machine runs 3.14), but 3.12 avoids surprises.</div></li>
+    <li><div><b>Unzip the folder</b> and open a terminal in it (the folder containing <code>CLAUDE.md</code>).</div></li>
+    <li><div><b>Create and activate a virtual environment</b>:
+<pre><code># Windows (PowerShell)
+py -3.12 -m venv .venv
+.venv\Scripts\Activate.ps1
+# If PowerShell refuses to run the activation script, run once:
+#   Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+
+# macOS / Linux
+python3.12 -m venv .venv
+source .venv/bin/activate</code></pre>
+    Your prompt now starts with <code>(.venv)</code>.</div></li>
+    <li><div><b>Install the dependencies</b>:
+<pre><code>pip install -r requirements-dev.txt</code></pre>
+    This installs the service's packages plus pytest, ruff, mypy, bandit and coverage, at the exact versions the project uses.</div></li>
+    <li><div><b>Run the tests</b>:
+<pre><code># Windows (PowerShell)
+$env:ENVIRONMENT = "development"; $env:GCP_PROJECT_ID = "test-project"
+pytest
+
+# macOS / Linux
+ENVIRONMENT=development GCP_PROJECT_ID=test-project pytest</code></pre>
+    The two variables match what CI sets. (Checked: the suite also passes with neither set and no <code>.env</code>, since both have safe defaults, but setting them keeps you identical to CI.)</div></li>
+  </ol>
+  <p><b>What success looks like</b> (real output from a clean copy with no <code>.env</code>, browser tests excluded):</p>
+<pre><code>451 passed, 5 warnings in 17.67s</code></pre>
+  <p>With Playwright installed, the browser tests run too and the total is 492. To include them:</p>
+<pre><code>pip install playwright
+python -m playwright install chromium webkit
+pytest tests/browser</code></pre>
+  <p>The other CI checks, if you want to run them all:</p>
+<pre><code>ruff check .
+mypy
+bandit -q -r app scripts --skip B101
+pytest --cov=app --cov-fail-under=80</code></pre>
+  <div class="box project"><div class="tag">Why this works with no keys</div><p>Every test uses in-memory stores and a scripted stand-in for the AI (<a href="https://claude.ai/artifact/KdgDyd9VuQVfjJu3dvHPv2">Phase 7, §3</a>). Nothing in the suite touches the internet.</p></div>
+</section>
+
+<section>
+  <h2>4. Part D, Level 2: run the chat locally with only an OpenAI key</h2>
+  <p><b>Needs:</b> Level 1, plus an OpenAI API key with billing set up (platform.openai.com → API keys). <b>Time:</b> 10 minutes.</p>
+  <p>The normal way to start the server, <code>uvicorn app.main:app</code>, connects to Google Firestore at start-up. Without Google credentials it stops with this (real error from a clean copy):</p>
+<pre><code>google.auth.exceptions.DefaultCredentialsError: Your default credentials were not found.
+To set up Application Default Credentials, see https://cloud.google.com/docs/authentication/external/set-up-adc for more information.</code></pre>
+  <p>So for a local demo, use a small script that builds the app with in-memory stores instead, exactly the way the tests do (<code>create_app(...)</code> with every store supplied, so <code>lifespan</code> creates nothing in the cloud). Only OpenAI is real. Save this as <code>local_demo.py</code> in the project folder (next to <code>CLAUDE.md</code>):</p>
+<pre><code>"""Run Sitechat on this computer with no Google Cloud and no Pinecone.
+
+    python local_demo.py
+
+Everything is kept in memory (lost when you stop it). Only OpenAI is real,
+so OPENAI_API_KEY must be set in .env or the environment. Documents in
+docs/&lt;tenant&gt;/ are embedded at start-up (a fraction of a cent). No email is
+sent: without a Resend key, a request for the team makes the bot give the
+contact details instead.
+
+Then open http://localhost:8080/widget/test-page.html
+"""
+
+import os
+from pathlib import Path
+
+os.environ.setdefault("ENVIRONMENT", "development")
+os.environ.setdefault("GCP_PROJECT_ID", "local")
+
+import uvicorn  # noqa: E402
+
+from app.config import get_settings  # noqa: E402
+from app.conversations.store import InMemoryConversationStore  # noqa: E402
+from app.documents.ingest import ingest_file  # noqa: E402
+from app.documents.store import InMemoryChunkStore  # noqa: E402
+from app.facts.models import Fact, FactSheet  # noqa: E402
+from app.facts.store import InMemoryFactStore  # noqa: E402
+from app.feedback.store import InMemoryFeedbackStore  # noqa: E402
+from app.leads.store import InMemoryLeadStore  # noqa: E402
+from app.main import create_app  # noqa: E402
+from app.programmes.models import load_catalogue  # noqa: E402
+from app.programmes.store import InMemoryProgrammeStore  # noqa: E402
+from app.retrieval.vector_store import InMemoryVectorStore  # noqa: E402
+from app.tenants.models import Tenant  # noqa: E402
+from app.tenants.store import InMemoryTenantStore  # noqa: E402
+from app.usage.store import InMemoryUsageStore  # noqa: E402
+
+TENANT_ID = "pyramid-yogshala"
+DOCS = Path("docs") / TENANT_ID
+
+if not get_settings().openai_api_key.get_secret_value():
+    raise SystemExit("Set OPENAI_API_KEY in .env first (see Phase 10, step 2).")
+
+tenants = InMemoryTenantStore()
+tenants.save(Tenant(
+    tenant_id=TENANT_ID,
+    site_key="pk_pyramid_yogshala_001",          # the key static/test-page.html uses
+    display_name="Pyramid Yogshala",
+    allowed_domains=["localhost", "127.0.0.1"],
+    greeting="Namaste! Ask me anything about our courses.",
+    suggested_questions=["What food is provided?", "Who are the teachers?"],
+))
+
+facts = InMemoryFactStore()
+facts.save(FactSheet(tenant_id=TENANT_ID, facts=[
+    Fact(category="Courses and fees", label="200-hour Teacher Training fee",
+         value="USD 1,450, including shared accommodation and all meals"),
+]))
+
+chunks, vectors, programmes = InMemoryChunkStore(), InMemoryVectorStore(), InMemoryProgrammeStore()
+if DOCS.is_dir():
+    catalogue = None
+    if (DOCS / "programmes.yaml").is_file():
+        catalogue = load_catalogue(DOCS / "programmes.yaml", TENANT_ID)
+        programmes.save(catalogue)
+    for path in sorted(DOCS.glob("*.md")):
+        result = ingest_file(path, TENANT_ID, chunks, vectors, catalogue)
+        print(f"  {result.title}: {result.chunk_count} chunks")
+else:
+    print(f"No {DOCS} folder: the bot will answer from the facts only.")
+
+app = create_app(
+    tenant_store=tenants,
+    conversation_store=InMemoryConversationStore(),
+    fact_store=facts,
+    vector_store=vectors,
+    chunk_store=chunks,
+    lead_store=InMemoryLeadStore(),
+    programme_store=programmes,
+    usage_store=InMemoryUsageStore(),
+    feedback_store=InMemoryFeedbackStore(),
+)
+
+if __name__ == "__main__":
+    print("Open http://localhost:8080/widget/test-page.html")
+    uvicorn.run(app, host="127.0.0.1", port=8080)</code></pre>
+  <ol class="steps">
+    <li><div><b>Create <code>.env</code></b> in the project folder with one line (no quotes):
+<pre><code>OPENAI_API_KEY=sk-your-key-here</code></pre>
+    <code>.env</code> is gitignored, so it can't be committed by accident.</div></li>
+    <li><div><b>Put the documents in place</b> (if the sender included them): <code>docs\pyramid-yogshala\</code> with the three <code>.md</code> files and <code>programmes.yaml</code>. Without them the bot still runs, answering from the one fact in the script.</div></li>
+    <li><div><b>Start it</b>: <code>python local_demo.py</code>. It prints each document as it's embedded:
+<pre><code>  200-Hour Hatha, Ashtanga, Naturopathy and Ayurveda Yoga Teacher Training: 18 chunks
+  Pyramid Yogshala: Courses, Retreats and School Information: 58 chunks
+  Pyramid Yogshala: The School and the Rishikesh Campus: 19 chunks
+Open http://localhost:8080/widget/test-page.html</code></pre></div></li>
+    <li><div><b>Open</b> <code>http://localhost:8080/widget/test-page.html</code>. That page is deliberately styled to be hostile to the widget (dashed red buttons, yellow textareas); the widget should look normal anyway. Click the chat button and ask "What food is provided?".</div></li>
+  </ol>
+  <p><b>Checked</b> with a scripted model and stand-in embeddings: the page loads (200), <code>/config</code> returns the tenant's settings, and <code>/chat</code> returns a reply with a conversation id. With a real key, answers come from the school's documents.</p>
+  <p>What's different from production: nothing is saved (stop the script and the conversations are gone); no lead email (without a Resend key, asking for the team makes the bot give the business's contact details instead); no daily facts sync or digest. Everything else (retrieval, programme focus, the prompt, the tools, the widget) is the real code.</p>
+</section>
+
+<section>
+  <h2>5. Part E, Level 3: your own cloud services</h2>
+  <p><b>Needs:</b> Level 2, plus a Google account with a billing account (Google requires one even within free tiers), a Pinecone account (free), and optionally Resend (free) and Sentry (free). <b>Time:</b> 1 to 2 hours the first time.</p>
+  <h3>E1. Accounts and keys</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Service</th><th>Get</th><th>Goes into <code>.env</code> as</th></tr>
+    <tr><td>OpenAI</td><td>API key</td><td><code>OPENAI_API_KEY</code></td></tr>
+    <tr><td>Pinecone</td><td>API key (app.pinecone.io)</td><td><code>PINECONE_API_KEY</code></td></tr>
+    <tr><td>Google Cloud</td><td>A project id (console.cloud.google.com → new project)</td><td><code>GCP_PROJECT_ID</code></td></tr>
+    <tr><td>Resend (optional)</td><td>API key (resend.com). Without a verified domain, it only delivers to your own Resend account's address.</td><td><code>RESEND_API_KEY</code>, optionally <code>NOTIFICATION_FROM_EMAIL</code></td></tr>
+    <tr><td>Sentry (optional)</td><td>A project DSN</td><td><code>SENTRY_DSN</code></td></tr>
+    <tr><td>Cohere (optional, unused)</td><td>Only if you turn reranking on</td><td><code>COHERE_API_KEY</code></td></tr>
+  </table></div>
+  <h3>E2. The <code>.env</code> file</h3>
+  <p>A template with every variable the code reads from the environment that you're likely to set (all others have defaults; see section 7). Lines starting with <code>#</code> are comments.</p>
+<pre><code>ENVIRONMENT=development
+LOG_LEVEL=INFO
+GCP_PROJECT_ID=your-project-id
+
+OPENAI_API_KEY=sk-...
+PINECONE_API_KEY=...
+PINECONE_INDEX_NAME=sitechat
+
+# Optional
+RESEND_API_KEY=
+NOTIFICATION_FROM_EMAIL=onboarding@resend.dev
+SENTRY_DSN=
+COHERE_API_KEY=
+
+# Only for reading Google Sheets from your computer (step E7)
+GOOGLE_SERVICE_ACCOUNT_FILE=service-account.json</code></pre>
+  <h3>E3. Google Cloud from the command line</h3>
+  <p>Install the Google Cloud CLI (cloud.google.com/sdk), then:</p>
+<pre><code>gcloud auth login
+gcloud config set project your-project-id
+gcloud auth application-default login       # lets code on your computer use Firestore as you
+
+gcloud services enable firestore.googleapis.com sheets.googleapis.com
+gcloud firestore databases create --location=us-central1</code></pre>
+  <p><code>application-default login</code> creates the "Application Default Credentials" whose absence caused the error in Level 2. After it, <code>uvicorn app.main:app</code> can start. us-central1 matches where the project's server runs; keep the database and server in the same region.</p>
+  <h3>E4. The Pinecone index (once)</h3>
+<pre><code>python -m scripts.create_index</code></pre>
+  <p>Creates the index named by <code>PINECONE_INDEX_NAME</code> (1,536 dimensions, cosine, AWS us-east-1), or does nothing if it exists.</p>
+  <h3>E5. Create your tenant</h3>
+  <p>Edit the values in <code>scripts/create_tenant.py</code> first:</p>
+  <ul>
+    <li><code>team_email</code>: your own address (it's the sender's today).</li>
+    <li><code>allowed_domains</code>: keep <code>localhost</code> and <code>127.0.0.1</code>; replace the Cloud Run host with yours after Level 4.</li>
+    <li><code>facts_sheet_id</code>: your sheet's id (step E7) or <code>""</code> for none.</li>
+    <li>Keep <code>site_key="pk_pyramid_yogshala_001"</code> if you want <code>static/test-page.html</code> to work unchanged; if you change it, change the key in the test page too.</li>
+  </ul>
+<pre><code>python -m scripts.create_tenant</code></pre>
+  <h3>E6. Load the documents</h3>
+<pre><code>python -m scripts.ingest pyramid-yogshala docs/pyramid-yogshala
+python -m scripts.inspect_chunks pyramid-yogshala            # see what was stored</code></pre>
+  <p>Ingest embeds every chunk (paid, cents) and stores text in Firestore and vectors in Pinecone. Expect 95 chunks for the school's three documents. Any line printed as "CHECK, reads like an instruction to the bot" deserves a look.</p>
+  <h3>E7. Load the facts</h3>
+  <p>Two options:</p>
+  <ul>
+    <li><b>Quick:</b> edit the list in <code>scripts/set_facts.py</code> and run <code>python -m scripts.set_facts</code>.</li>
+    <li><b>As the real product does</b>, from a Google Sheet:
+      <ol>
+        <li>Create a sheet with headers <code>Category</code>, <code>Label</code>, <code>Value</code> in row 1, one fact per row.</li>
+        <li>Create a service account for reading it: <code>gcloud iam service-accounts create sheets-reader</code>, then in the console create a JSON key for it and save it as <code>service-account.json</code> in the project folder (gitignored; never share it).</li>
+        <li>Share the sheet with that account's email address as <b>Viewer</b>.</li>
+        <li>Put the sheet's id (the long part of its URL between <code>/d/</code> and <code>/edit</code>) in <code>facts_sheet_id</code> in <code>create_tenant.py</code>, re-run it, then: <code>python -m scripts.sync_facts pyramid-yogshala</code>. It prints what was added and any rows it skipped, with reasons.</li>
+      </ol>
+    </li>
+  </ul>
+  <h3>E8. Run the full system locally</h3>
+<pre><code>uvicorn app.main:app --reload --port 8080</code></pre>
+  <p>Open <code>http://localhost:8080/widget/test-page.html</code>. Now conversations are saved in your Firestore, retrieval uses your Pinecone index, and with a Resend key a contact request sends a lead email to <code>team_email</code>. Check your data with <code>python -m scripts.dump_conversation pyramid-yogshala</code>.</p>
+  <h3>E9. Measure it (optional, paid)</h3>
+<pre><code>python -m scripts.evaluate pyramid-yogshala            # retrieval; embeddings only
+python -m scripts.evaluate_answers pyramid-yogshala    # answers + judge; a few cents
+python -m scripts.evaluate_attacks pyramid-yogshala    # 29 attacks; a few cents</code></pre>
+</section>
+
+<section>
+  <h2>6. Part F, Level 4: deploy to Cloud Run</h2>
+  <p><b>Needs:</b> Level 3, the code in a GitHub repository you control. <b>Time:</b> about an hour. Each step below has a full guide in <code>notes/</code>; replace <code>sitechat-511008</code> in them with your project id.</p>
+  <ol class="steps">
+    <li><div><b>Enable the services</b>:
+<pre><code>gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com secretmanager.googleapis.com cloudscheduler.googleapis.com</code></pre></div></li>
+    <li><div><b>Create the image repository</b>:
+<pre><code>gcloud artifacts repositories create sitechat --repository-format=docker --location=us-central1</code></pre></div></li>
+    <li><div><b>Create the secrets</b>, one per key, from a file or standard input (PowerShell example for one; repeat for each you use):
+<pre><code>"sk-your-key" | Out-File -NoNewline -Encoding ascii key.txt
+gcloud secrets create OPENAI_API_KEY --data-file=key.txt
+Remove-Item key.txt</code></pre>
+    <code>cloudbuild.yaml</code>'s <code>--set-secrets</code> line lists five secrets: <code>OPENAI_API_KEY</code>, <code>PINECONE_API_KEY</code>, <code>COHERE_API_KEY</code>, <code>RESEND_API_KEY</code>, <code>SENTRY_DSN</code>. <b>Every secret named there must exist</b> or the deploy fails. If you don't use Cohere, Resend or Sentry, delete those entries from that line rather than creating placeholder secrets (a placeholder Sentry DSN would be an invalid DSN at start-up). <code>tests/test_cloudbuild.py</code> checks that each listed secret is granted in the setup notes, so keep the two in step.</div></li>
+    <li><div><b>Create the runtime service account and its permissions</b>: follow <code>notes/runtime-sa-setup.md</code> steps 1 to 4 (create <code>sitechat-runtime</code>; grant <code>roles/datastore.user</code>; grant <code>roles/secretmanager.secretAccessor</code> on each secret you created; let your build account act as it). Do this <b>before</b> the first deploy, or the deploy step fails (safely: nothing changes).</div></li>
+    <li><div><b>Create the Cloud Build trigger</b>: in the console, Cloud Build → Triggers → Connect repository (GitHub) → Create trigger on pushes to <code>main</code>, using the <code>cloudbuild.yaml</code> in the repo. A trigger is needed rather than a manual <code>gcloud builds submit</code>, because built-in values like <code>$SHORT_SHA</code> (used to tag the image) are filled in only for builds started from a connected repository.</div></li>
+    <li><div><b>Push to <code>main</code></b>. The build runs the tests (about 45 s), builds and pushes the image, and deploys. The deploy output prints the service URL (<code>https://sitechat-api-...run.app</code>).</div></li>
+    <li><div><b>Allow the new host</b>: add the service's host name to <code>allowed_domains</code> in <code>create_tenant.py</code>, re-run it, then check the deployment:
+<pre><code>python -m scripts.smoke_test https://your-service-url pk_pyramid_yogshala_001</code></pre>
+    Expected: <code>ok /health</code> and <code>ok /config (Pyramid Yogshala)</code>. Then open <code>https://your-service-url/widget/test-page.html</code>.</div></li>
+    <li><div><b>The 5-minute job</b> (lead digest and daily facts sync): follow <code>notes/lead-digest-setup.md</code> with your service URL. It creates the <code>lead-digest</code> service account and the Cloud Scheduler job. <code>cloudbuild.yaml</code> already sets <code>LEAD_DIGEST_INVOKER</code> to <code>lead-digest@$PROJECT_ID...</code>, so it works for your project. For the daily facts sync in production, share each facts sheet with <code>sitechat-runtime@your-project-id.iam.gserviceaccount.com</code> as Viewer.</div></li>
+    <li><div><b>Automatic deletion of old data</b>: the three commands in <code>notes/retention-setup.md</code> (TTL on <code>expire_at</code> for conversations, leads and feedback).</div></li>
+    <li><div><b>Installing on a real site</b>: <code>notes/install-guide.md</code>, with your service URL in the snippet and the site's domain added to <code>allowed_domains</code>.</div></li>
+  </ol>
+</section>
+
+<section>
+  <h2>7. Every setting, in one table</h2>
+  <p>All come from <code>app/config.py</code>; each can be set as an environment variable of the same name in capitals (or in <code>.env</code>). The defaults are what the project runs with.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Variable</th><th>Default</th><th>Needed at level</th></tr>
+    <tr><td><code>ENVIRONMENT</code></td><td>development</td><td>4 sets production (cloudbuild does)</td></tr>
+    <tr><td><code>LOG_LEVEL</code></td><td>INFO</td><td>—</td></tr>
+    <tr><td><code>GCP_PROJECT_ID</code></td><td>""</td><td>3, 4</td></tr>
+    <tr><td><code>OPENAI_API_KEY</code></td><td>""</td><td>2, 3, 4</td></tr>
+    <tr><td><code>OPENAI_MODEL</code>, <code>EVAL_JUDGE_MODEL</code></td><td>gpt-4o-mini, ""</td><td>—</td></tr>
+    <tr><td><code>PINECONE_API_KEY</code>, <code>PINECONE_INDEX_NAME</code></td><td>"", sitechat</td><td>3, 4</td></tr>
+    <tr><td><code>EMBEDDING_MODEL</code>, <code>EMBEDDING_DIMENSION</code></td><td>text-embedding-3-small, 1536</td><td>— (change both together, then re-ingest)</td></tr>
+    <tr><td><code>GOOGLE_SERVICE_ACCOUNT_FILE</code></td><td>service-account.json</td><td>3 (sheets from your computer)</td></tr>
+    <tr><td><code>RESEND_API_KEY</code>, <code>NOTIFICATION_FROM_EMAIL</code></td><td>"", onboarding@resend.dev</td><td>optional</td></tr>
+    <tr><td><code>SENTRY_DSN</code></td><td>""</td><td>optional</td></tr>
+    <tr><td><code>COHERE_API_KEY</code>, <code>USE_RERANK</code>, <code>THROTTLE_RERANK</code></td><td>"", false, true</td><td>optional (throttle must be false in production; cloudbuild sets it)</td></tr>
+    <tr><td><code>USE_KEYWORD_SEARCH</code>, <code>KEYWORD_WEIGHT</code>, <code>VECTOR_WEIGHT</code></td><td>false, 0.3, 1.0</td><td>—</td></tr>
+    <tr><td><code>RETRIEVAL_TOP_K</code>, <code>RETRIEVAL_CANDIDATES</code>, <code>FOCUS_BOOST</code></td><td>5, 5, 0.08</td><td>—</td></tr>
+    <tr><td><code>RATE_LIMIT_PER_VISITOR</code>, <code>RATE_LIMIT_PER_TENANT</code></td><td>5/minute, 60/hour</td><td>—</td></tr>
+    <tr><td><code>RATE_LIMIT_CONFIG_PER_VISITOR</code>, <code>RATE_LIMIT_FEEDBACK_PER_VISITOR</code>, <code>RATE_LIMIT_REJECTED_PER_VISITOR</code></td><td>30/minute, 30/minute, 20/minute</td><td>—</td></tr>
+    <tr><td><code>TRUSTED_PROXY_HOPS</code></td><td>1</td><td>— (2 behind an external load balancer)</td></tr>
+    <tr><td><code>TENANT_CACHE_SECONDS</code></td><td>60</td><td>—</td></tr>
+    <tr><td><code>OPENAI_TIMEOUT_SECONDS</code>, <code>OPENAI_MAX_RETRIES</code>, <code>EMBEDDING_TIMEOUT_SECONDS</code>, <code>REPLY_DEADLINE_SECONDS</code>, <code>REPLY_MAX_TOKENS</code></td><td>15, 1, 5, 40, 600</td><td>—</td></tr>
+    <tr><td><code>DAILY_TOKEN_BUDGET</code></td><td>3000000</td><td>—</td></tr>
+    <tr><td><code>HISTORY_WINDOW</code>, <code>SUMMARIZE_TRIGGER</code></td><td>12, 16</td><td>—</td></tr>
+    <tr><td><code>RETRY_FAILED_LEAD_EMAILS</code>, <code>LEAD_EMAIL_COOLDOWN_MINUTES</code>, <code>LEAD_EMAILS_PER_DAY</code></td><td>false, 10, 50</td><td>—</td></tr>
+    <tr><td><code>LEAD_DIGEST_IDLE_MINUTES</code>, <code>LEAD_DIGEST_BATCH</code>, <code>LEAD_DIGEST_CLAIM_MINUTES</code></td><td>15, 10, 10</td><td>—</td></tr>
+    <tr><td><code>LEAD_DIGEST_INVOKER</code>, <code>LEAD_DIGEST_AUDIENCE</code></td><td>"", sitechat-lead-digest</td><td>4 (cloudbuild sets the invoker)</td></tr>
+    <tr><td><code>FACTS_SYNC_HOURS</code>, <code>FACTS_SYNC_BATCH</code>, <code>FACTS_SYNC_RETRY_MINUTES</code></td><td>24, 2, 60</td><td>—</td></tr>
+    <tr><td><code>RETENTION_DAYS</code></td><td>365</td><td>—</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2>8. Troubleshooting</h2>
+  <div class="tablewrap"><table>
+    <tr><th>Symptom</th><th>Cause and fix</th></tr>
+    <tr><td><code>ModuleNotFoundError: No module named 'app'</code></td><td>Run commands from the project folder (the one with <code>CLAUDE.md</code>), and run scripts as <code>python -m scripts.name</code>, not <code>python scripts/name.py</code>.</td></tr>
+    <tr><td><code>DefaultCredentialsError: Your default credentials were not found</code> when starting uvicorn</td><td>No Google credentials. For a demo, use <code>local_demo.py</code> (Level 2); for the full system, <code>gcloud auth application-default login</code> (E3).</td></tr>
+    <tr><td>PowerShell: "running scripts is disabled on this system" when activating</td><td><code>Set-ExecutionPolicy -Scope CurrentUser RemoteSigned</code>, once.</td></tr>
+    <tr><td>Chat says "This chat is not available right now"</td><td>Open the browser console (F12 → Console) and read the <code>[sitechat]</code> line: unknown site key (tenant not created, or the test page's key differs) or domain not allowed (add it to <code>allowed_domains</code>; changes take up to a minute because of the tenant cache).</td></tr>
+    <tr><td>Replies say "I couldn't reach the service" or "Something went wrong"</td><td>OpenAI rejected the call: wrong key, no billing, or no network. The terminal log shows "Could not reach OpenAI" or "OpenAI API error".</td></tr>
+    <tr><td>"That is a lot of questions at once"</td><td>The per-visitor limit (5 a minute). Wait a minute, or raise <code>RATE_LIMIT_PER_VISITOR</code> locally.</td></tr>
+    <tr><td><code>PERMISSION_DENIED</code> from Firestore on Cloud Run</td><td>The runtime account lacks <code>roles/datastore.user</code> (runtime-sa-setup step 2).</td></tr>
+    <tr><td>Deploy fails mentioning <code>iam.serviceaccounts.actAs</code></td><td>The build account may not deploy as <code>sitechat-runtime</code> (step 4 of the same guide).</td></tr>
+    <tr><td>Deploy fails on a secret</td><td>A secret named in <code>--set-secrets</code> doesn't exist or isn't granted to the runtime account. Create and grant it, or remove it from the line.</td></tr>
+    <tr><td><code>/healthz</code> returns a Google 404</td><td>Use <code>/health</code>: Cloud Run reserves <code>/healthz</code>.</td></tr>
+    <tr><td>Facts sync: "Could not read sheet"</td><td>The sheet isn't shared with the reading account (your <code>service-account.json</code> locally, <code>sitechat-runtime</code> in production), or the id is wrong.</td></tr>
+    <tr><td><code>pip install -r requirements.txt</code> fails with odd characters after you regenerated it</td><td>PowerShell's <code>&gt;</code> wrote UTF-16. Use <code>pip freeze | Out-File -Encoding utf8 requirements.txt</code>.</td></tr>
+    <tr><td>Browser tests are skipped</td><td>Playwright isn't installed: <code>pip install playwright</code> and <code>python -m playwright install chromium webkit</code>.</td></tr>
+    <tr><td>A lead email never arrives with Resend's test sender</td><td>Without a verified domain, Resend delivers only to the address that owns the Resend account. Set <code>team_email</code> to that address.</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2>9. Challenges we faced while setting it up</h2>
+  <p>Real setup problems from the project's history, so the recipient recognises them:</p>
+  <div class="box challenge"><div class="tag">Tests that only passed on the developer's machine</div><p>Three times, tests passed locally because <code>.env</code> had keys, and failed on GitHub where it didn't. Now the suite needs no keys at all, which is why Level 1 works on a fresh machine. Checked for this guide by running it in a clean copy with no <code>.env</code>.</p></div>
+  <div class="box challenge"><div class="tag">A missing space in a <code>gcloud</code> command</div><p>A secret's access grant silently never happened because <code>SENTRY_DSN--member=...</code> was typed without a space, and the next deploy failed on permissions. Copy commands exactly, and read what a command reports.</p></div>
+  <div class="box challenge"><div class="tag">An account Google creates later</div><p>The default compute service account didn't exist yet; Google creates it the first time the Compute Engine API is enabled. If a setup step names an account that doesn't exist, check which API creates it.</p></div>
+  <div class="box challenge"><div class="tag">Requirements files in UTF-16</div><p>Regenerating <code>requirements.txt</code> with PowerShell's <code>&gt;</code> wrote UTF-16, which pip can't read. Both files are UTF-8; the comment at the top of <code>requirements.txt</code> warns about it.</p></div>
+  <div class="box challenge"><div class="tag">Different Python versions</div><p>The sender's machine runs 3.14 while everything else runs 3.12. Installing 3.12 for the recipient avoids "works on my machine" surprises; the Cloud Build test step guarantees 3.12 before any deploy.</p></div>
+  <div class="box challenge"><div class="tag">Order matters for the service account</div><p>Deploying with <code>--service-account=sitechat-runtime@...</code> before creating that account fails the deploy step. The setup notes say to run the account steps first; the failure is safe (the old revision keeps serving).</p></div>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <details><summary>Which two files must never be shared, and what should you do if one is?</summary><p><code>.env</code> (API keys) and <code>service-account.json</code> (a Google private key). Rotate the leaked keys: create new API keys and revoke the old ones; delete the service account key in IAM.</p></details>
+  <details><summary>Why does <code>git archive</code> make a safe package?</summary><p>It includes only files tracked by git; everything in <code>.gitignore</code> (secrets, visitor data, environments, docs) is left out.</p></details>
+  <details><summary>Why can the tests run with no accounts at all?</summary><p>They inject in-memory stores and a scripted model, so nothing reaches Firestore, Pinecone or OpenAI.</p></details>
+  <details><summary>Why does <code>uvicorn app.main:app</code> fail without Google credentials, and how does <code>local_demo.py</code> avoid it?</summary><p>The lifespan builds Firestore stores for any store not supplied, which needs credentials. <code>local_demo.py</code> supplies every store as an in-memory one, so the lifespan builds nothing.</p></details>
+  <details><summary>A deploy fails because <code>SENTRY_DSN</code> doesn't exist. What are your two options?</summary><p>Create the secret (with a real DSN) and grant it to the runtime account, or remove it from <code>--set-secrets</code> in <code>cloudbuild.yaml</code> if you don't use Sentry.</p></details>
+  <details><summary>The widget on your deployed test page says "not available". Where do you look first?</summary><p>The browser console's <code>[sitechat]</code> line. Most likely the Cloud Run host isn't in the tenant's <code>allowed_domains</code> yet.</p></details>
+</section>
+
+<section>
+  <h2>The end of the course</h2>
+  <p>That's every phase. To revisit any part, use the phase links at the top of each page. If a section is unclear, say which one and it will be expanded in place, with a dated note at the top of that phase saying what changed.</p>
+</section>
+
+</main>
+</body>
+</html>

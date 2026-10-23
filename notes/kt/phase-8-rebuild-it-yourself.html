@@ -1,0 +1,881 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sitechat KT 8: Rebuild</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,650&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  /* Layout: a reading column with a phase map on top; coloured callouts by role
+     (analogy, in this project, interview, try it); code blocks scroll inside themselves. */
+  :root {
+    --bg: #f5f6f4;
+    --paper: #ffffff;
+    --ink: #1b2725;
+    --muted: #5a6663;
+    --line: #dde3e0;
+    --accent: #1f6f5c;
+    --accent-soft: #e5f1ec;
+    --analogy: #7a4f9a;
+    --analogy-soft: #f2ecf7;
+    --interview: #a5630d;
+    --interview-soft: #fbf1e0;
+    --code-bg: #f0f3f1;
+    --display: "Literata", Georgia, "Times New Roman", serif;
+    --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121918; --paper: #1a2322; --ink: #e5ebe9; --muted: #9db0aa; --line: #2b3735;
+      --accent: #63c2a6; --accent-soft: #1d3530; --analogy: #c7a3e6; --analogy-soft: #2a2235;
+      --interview: #e3a64b; --interview-soft: #2e2416; --code-bg: #0f1514;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #121918; --paper: #1a2322; --ink: #e5ebe9; --muted: #9db0aa; --line: #2b3735;
+    --accent: #63c2a6; --accent-soft: #1d3530; --analogy: #c7a3e6; --analogy-soft: #2a2235;
+    --interview: #e3a64b; --interview-soft: #2e2416; --code-bg: #0f1514;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 17px/1.65 var(--body);
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 32px 80px;
+  }
+  main { max-width: 48rem; margin: 0 auto; display: grid; gap: 44px; }
+  header { display: grid; gap: 12px; }
+  .eyebrow { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  h1 { font: 650 clamp(30px, 5.5vw, 42px)/1.12 var(--display); margin: 0; text-wrap: balance; }
+  h2 { font: 650 clamp(23px, 3.6vw, 28px)/1.25 var(--display); margin: 0; text-wrap: balance; }
+  h3 { font: 700 18px/1.35 var(--body); margin: 8px 0 0; }
+  p, ul, ol { margin: 0; }
+  ul, ol { padding-left: 1.3em; display: grid; gap: 6px; }
+  li::marker { color: var(--accent); }
+  section { display: grid; gap: 16px; min-width: 0; }
+  .lede { color: var(--muted); font-size: 18px; }
+  a { color: var(--accent); }
+  code { font: 0.88em var(--mono); background: var(--code-bg); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+  pre {
+    margin: 0; background: var(--code-bg); border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 16px; overflow-x: auto; font: 14px/1.55 var(--mono);
+  }
+  pre code { background: none; padding: 0; font-size: inherit; overflow-wrap: normal; }
+  .file { font: 600 13px var(--mono); color: var(--muted); margin-bottom: -10px; }
+  .phases { display: flex; flex-wrap: wrap; gap: 6px; }
+  .phases span {
+    font-size: 13px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line);
+    color: var(--muted); background: var(--paper);
+  }
+  .phases span.now { background: var(--accent); color: var(--paper); border-color: var(--accent); font-weight: 600; }
+  .box { border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; border: 1px solid var(--line); background: var(--paper); }
+  .box .tag { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .analogy { background: var(--analogy-soft); border-color: transparent; }
+  .analogy .tag { color: var(--analogy); }
+  .project { background: var(--accent-soft); border-color: transparent; }
+  .project .tag { color: var(--accent); }
+  .interview { background: var(--interview-soft); border-color: transparent; }
+  .interview .tag { color: var(--interview); }
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
+  table { border-collapse: collapse; width: 100%; font-size: 15.5px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-weight: 700; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+  tr:last-child td { border-bottom: none; }
+  td:first-child { white-space: nowrap; }
+  .steps { list-style: none; padding: 0; counter-reset: s; display: grid; gap: 10px; }
+  .steps > li { counter-increment: s; display: grid; grid-template-columns: 2rem 1fr; gap: 10px; min-width: 0; }
+  .steps > li::before {
+    content: counter(s); width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+    font: 700 13px/1 var(--body); color: var(--accent); border: 1.5px solid var(--accent);
+  }
+  .steps > li > div { display: grid; gap: 6px; min-width: 0; }
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .flow .node { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: 15px; }
+  .flow .arrow { color: var(--accent); font-weight: 700; }
+  details { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+  details summary { cursor: pointer; font-weight: 600; }
+  details[open] summary { margin-bottom: 8px; }
+  details p { color: var(--ink); }
+  dl.gloss { display: grid; gap: 10px; margin: 0; }
+  dl.gloss div { display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr; gap: 12px; }
+  dl.gloss dt { font-weight: 700; }
+  dl.gloss dd { margin: 0; }
+  @media (max-width: 560px) { dl.gloss div { grid-template-columns: 1fr; gap: 2px; } td:first-child { white-space: normal; } }
+  .toc { columns: 2 16rem; column-gap: 28px; }
+  .toc li { break-inside: avoid; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 0; }
+  summary:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .machines { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 10px; }
+  .machine { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 6px; align-content: start; }
+  .machine b { font-family: var(--display); font-size: 17px; }
+  .machine.us { border-color: var(--accent); }
+  .lbl { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+
+  :root { --challenge: #a8322f; --challenge-soft: #fbecea; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --challenge: #f2958f; --challenge-soft: #3a2220; } }
+  :root[data-theme="dark"] { --challenge: #f2958f; --challenge-soft: #3a2220; }
+  .challenge { background: var(--challenge-soft); border-color: transparent; }
+  .challenge .tag { color: var(--challenge); }
+  .phases a { font-size: 13px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line);
+    color: var(--muted); background: var(--paper); text-decoration: none; }
+  .phases a:hover { border-color: var(--accent); color: var(--accent); }
+  .phases a.now { background: var(--accent); color: var(--paper); border-color: var(--accent); font-weight: 600; }
+  figure { margin: 0; display: grid; gap: 8px; justify-items: start; }
+  figure img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+  figcaption { font-size: 14px; color: var(--muted); }
+  .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 12px; }
+  .kv { display: grid; grid-template-columns: minmax(7rem, 11rem) 1fr; gap: 6px 14px; }
+  @media (max-width: 560px) { .kv { grid-template-columns: 1fr; gap: 2px; } }
+</style>
+
+</head>
+<body>
+<main>
+<header>
+  <div class="eyebrow">Sitechat knowledge transfer · Phase 8 of 10</div>
+  <h1>Rebuild it yourself: a smaller Sitechat, step by step</h1>
+  <p class="lede">Reading code teaches you to recognise it; writing it teaches you to explain it, which is what interviews test. This phase walks you through building <b>minichat</b>, a small working version of Sitechat (about 300 lines) in the same order the real project was built. Every file below was written and tested before being put on this page: its 7 tests pass, and its widget was checked in a real browser. After the mini version, a second part lists exercises that grow it towards the real thing, each pointing to the phase that explains it.</p>
+  <div class="phases" aria-label="All phases">
+    <a href="https://claude.ai/artifact/QuxrXdoFv7vr5KKvNSML78">0 First principles</a><a href="https://claude.ai/artifact/MDdgNKEGibTrFVYqtGjGhs">1 How the web works</a><a href="https://claude.ai/artifact/VVYejQXYpWzuimyovij4CY">2 What Sitechat is</a><a href="https://claude.ai/artifact/RHDbDbJ6r8RmXdRsvAUK9S">3 AI fundamentals</a><a href="https://claude.ai/artifact/F1oZk1cyDLGAPio8khD7cY">4a API layer</a><a href="https://claude.ai/artifact/QKLydSMm3tKdXapho5kS1V">4b The agent</a><a href="https://claude.ai/artifact/2TNXtynh229R59PV9MwHc1">4c Retrieval</a><a href="https://claude.ai/artifact/Np1qbTsXtXtDL6UmGaMvFv">4d Leads</a><a href="https://claude.ai/artifact/S2dSYJnVDTPbqeAWJP6qd1">4e Data stores</a><a href="https://claude.ai/artifact/4hwNREB8CxkHtRrwgwRraL">4f Scripts and evals</a><a href="https://claude.ai/artifact/AHXQrMEzxpZ6x4ihiiiCm1">5 The chat widget</a><a href="https://claude.ai/artifact/BknbsJYd7gFx9geyWbBqKF">6 Cloud and data</a><a href="https://claude.ai/artifact/KdgDyd9VuQVfjJu3dvHPv2">7 Quality and safety</a><a class="now" href="https://claude.ai/artifact/QDifNPBS4Lu8CLhvZTJ5C4">8 Rebuild it yourself</a><a href="https://claude.ai/artifact/99LTVwqoTPzBmFmHCZcsCS">9 Interview prep</a><a href="https://claude.ai/artifact/NKGY4fDQXK9Cp41B55wiTs">10 Set it up</a>
+  </div>
+</header>
+
+<section>
+  <h2>How to use this phase</h2>
+  <ul>
+    <li><b>Type the code, don't paste it.</b> Typing forces you to read every line; pasting lets your eyes slide past. When something breaks, that's the lesson.</li>
+    <li><b>After each step, run the tests</b> and answer the step's "explain it" question out loud, as if to an interviewer.</li>
+    <li><b>Work in a new folder</b>, not inside the Sitechat repo, so you can't break the real project.</li>
+    <li>The mini version needs Python 3.12 and, for the AI steps, an OpenAI key. The tests need no key: they fake the model, exactly like Sitechat's.</li>
+  </ul>
+  <h3>The steps</h3>
+  <ol class="toc">
+    <li>Set up the folder</li>
+    <li>A FastAPI app with <code>/health</code></li>
+    <li>Models: the shapes of the data</li>
+    <li>Stores behind interfaces</li>
+    <li>The model wrapper</li>
+    <li>Chunking and vector search</li>
+    <li>The agent: prompt, facts, extracts, tools</li>
+    <li>The API: site keys, domains, 503s, background work</li>
+    <li>Tests with a fake model</li>
+    <li>A widget in 60 lines</li>
+    <li>Run it for real</li>
+    <li>Part two: growing it into Sitechat</li>
+    <li>What you can now say in an interview</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Step 1. Set up the folder</h2>
+<pre><code>minichat/
+├── minichat/
+│   ├── __init__.py        (empty: makes the folder a package)
+│   ├── models.py
+│   ├── stores.py
+│   ├── llm.py
+│   ├── retrieval.py
+│   ├── agent.py
+│   └── main.py
+├── static/
+│   └── widget.js
+└── tests/
+    ├── __init__.py
+    └── test_minichat.py</code></pre>
+  <p>In a terminal (PowerShell on Windows):</p>
+<pre><code>mkdir minichat; cd minichat
+py -3.12 -m venv .venv                 # on macOS/Linux: python3.12 -m venv .venv
+.venv\Scripts\Activate.ps1             # on macOS/Linux: source .venv/bin/activate
+pip install fastapi uvicorn pydantic openai pytest httpx</code></pre>
+  <p>A <b>virtual environment</b> (<code>.venv</code>) is a private copy of Python for this project, so its packages don't mix with other projects'. <code>httpx</code> is needed by FastAPI's test client.</p>
+  <div class="box project"><div class="tag">In Sitechat</div><p>The real project pins exact versions in <code>requirements.txt</code> and keeps test tools in <code>requirements-dev.txt</code> (<a href="https://claude.ai/artifact/BknbsJYd7gFx9geyWbBqKF">Phase 6, §2</a>). Do the same once minichat works: <code>pip freeze</code> lists what's installed. (In PowerShell, use <code>pip freeze | Out-File -Encoding utf8 requirements.txt</code>; plain <code>&gt;</code> writes UTF-16.)</p></div>
+</section>
+
+<section>
+  <h2>Step 2. A FastAPI app with <code>/health</code></h2>
+  <p>Start with the smallest thing that runs. In <code>minichat/main.py</code>, temporarily:</p>
+<pre><code>from fastapi import FastAPI
+
+def create_app() -> FastAPI:
+    app = FastAPI(title="minichat")
+
+    @app.get("/health")
+    def health():
+        return {"status": "ok"}
+
+    return app
+
+app = create_app()</code></pre>
+  <p>Run <code>uvicorn minichat.main:app --reload --port 8080</code> and open <code>http://localhost:8080/health</code>. Then open <code>http://localhost:8080/docs</code>: FastAPI built a page to try your API.</p>
+  <p><b>Explain it:</b> why is the app built by a function (<code>create_app</code>) instead of at the top of the file? <i>(<a href="https://claude.ai/artifact/F1oZk1cyDLGAPio8khD7cY">Phase 4a, §1.1</a>: so tests can build fresh apps with their own stores.)</i></p>
+</section>
+
+<section>
+  <h2>Step 3. Models: the shapes of the data</h2>
+  <p><code>minichat/models.py</code>, the complete file:</p>
+<pre><code>from datetime import datetime, timezone
+
+from pydantic import BaseModel, Field
+
+
+def now() -&gt; datetime:
+    return datetime.now(timezone.utc)
+
+
+class Tenant(BaseModel):
+    tenant_id: str
+    site_key: str
+    display_name: str
+    allowed_domains: list[str] = Field(default_factory=list)
+    team_email: str = ""
+
+
+class Message(BaseModel):
+    role: str  # "user" or "assistant"
+    content: str
+
+
+class Conversation(BaseModel):
+    tenant_id: str
+    conversation_id: str
+    messages: list[Message] = Field(default_factory=list)
+    updated_at: datetime = Field(default_factory=now)
+
+
+class Fact(BaseModel):
+    category: str
+    label: str
+    value: str
+
+
+class Chunk(BaseModel):
+    chunk_id: str
+    tenant_id: str
+    heading_path: list[str]
+    text: str
+
+    def searchable(self) -&gt; str:
+        return " &gt; ".join(self.heading_path) + "\n\n" + self.text
+
+
+class Lead(BaseModel):
+    tenant_id: str
+    conversation_id: str
+    email: str = ""
+    wants_contact: bool = False
+    reason: str = ""
+    emailed: bool = False</code></pre>
+  <p>Each class is a Pydantic model: typed fields, validated on creation, convertible to and from JSON. <code>Field(default_factory=list)</code> gives each object its own list. <code>Chunk.searchable()</code> puts the heading path in front of the text, the same trick as the real <code>to_searchable_text</code>.</p>
+  <p><b>Explain it:</b> why is the lead a separate model from the conversation? <i>(<a href="https://claude.ai/artifact/Np1qbTsXtXtDL6UmGaMvFv">Phase 4d, §2</a>: personal data with its own retention and access.)</i></p>
+</section>
+
+<section>
+  <h2>Step 4. Stores behind interfaces</h2>
+  <p><code>minichat/stores.py</code>:</p>
+<pre><code>from abc import ABC, abstractmethod
+
+from minichat.models import Conversation, Fact, Lead, Message, Tenant, now
+
+
+class TenantStore(ABC):
+    @abstractmethod
+    def get_by_site_key(self, site_key: str) -&gt; Tenant | None: ...
+
+    @abstractmethod
+    def save(self, tenant: Tenant) -&gt; None: ...
+
+
+class InMemoryTenantStore(TenantStore):
+    def __init__(self) -&gt; None:
+        self._by_id: dict[str, Tenant] = {}
+
+    def get_by_site_key(self, site_key: str) -&gt; Tenant | None:
+        return next((t for t in self._by_id.values() if t.site_key == site_key), None)
+
+    def save(self, tenant: Tenant) -&gt; None:
+        self._by_id[tenant.tenant_id] = tenant
+
+
+class ConversationStore(ABC):
+    @abstractmethod
+    def get(self, tenant_id: str, conversation_id: str) -&gt; Conversation | None: ...
+
+    @abstractmethod
+    def append_turn(self, tenant_id: str, conversation_id: str, user: str, reply: str) -&gt; None: ...
+
+
+class InMemoryConversationStore(ConversationStore):
+    def __init__(self) -&gt; None:
+        self._data: dict[tuple[str, str], Conversation] = {}
+
+    def get(self, tenant_id, conversation_id):
+        return self._data.get((tenant_id, conversation_id))
+
+    def append_turn(self, tenant_id, conversation_id, user, reply):
+        key = (tenant_id, conversation_id)
+        convo = self._data.get(key) or Conversation(tenant_id=tenant_id, conversation_id=conversation_id)
+        convo.messages += [Message(role="user", content=user), Message(role="assistant", content=reply)]
+        convo.updated_at = now()
+        self._data[key] = convo
+
+
+class FactStore:
+    """Facts per tenant. In memory here; Firestore in the real project."""
+
+    def __init__(self) -&gt; None:
+        self._data: dict[str, list[Fact]] = {}
+
+    def get(self, tenant_id: str) -&gt; list[Fact]:
+        return self._data.get(tenant_id, [])
+
+    def save(self, tenant_id: str, facts: list[Fact]) -&gt; None:
+        self._data[tenant_id] = facts
+
+
+class LeadStore:
+    def __init__(self) -&gt; None:
+        self._data: dict[tuple[str, str], Lead] = {}
+
+    def get(self, tenant_id: str, conversation_id: str) -&gt; Lead:
+        key = (tenant_id, conversation_id)
+        return self._data.setdefault(key, Lead(tenant_id=tenant_id, conversation_id=conversation_id))</code></pre>
+  <p>Two stores have abstract interfaces (<code>TenantStore</code>, <code>ConversationStore</code>), so you can add a Firestore version later without touching the rest. To keep minichat short, facts and leads are simple classes; in Sitechat every store follows the full pattern. <code>next((... for ...), None)</code> returns the first match or <code>None</code>. <code>setdefault</code> returns the existing lead or stores and returns a new one.</p>
+  <p><b>Explain it:</b> what does <code>@abstractmethod</code> buy you? <i>(<a href="https://claude.ai/artifact/QuxrXdoFv7vr5KKvNSML78">Phase 0, §8.12</a>: a class that forgets a method can't even be created.)</i></p>
+</section>
+
+<section>
+  <h2>Step 5. The model wrapper</h2>
+  <p><code>minichat/llm.py</code>:</p>
+<pre><code>import os
+
+from openai import APIError, OpenAI
+
+MODEL = "gpt-4o-mini"
+_client: OpenAI | None = None
+
+
+class LLMError(Exception):
+    """The model could not be reached. Carries a message a visitor can read."""
+
+    def __init__(self, user_message: str) -&gt; None:
+        super().__init__(user_message)
+        self.user_message = user_message
+
+
+def _get_client() -&gt; OpenAI:
+    global _client
+    if _client is None:
+        _client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY", ""), timeout=15, max_retries=1)
+    return _client
+
+
+def complete_with_tools(messages: list[dict], tools: list[dict]):
+    """One model call. Returns the message object (text or tool calls)."""
+    try:
+        response = _get_client().chat.completions.create(
+            model=MODEL, messages=messages, tools=tools, max_tokens=600
+        )
+    except APIError as exc:
+        raise LLMError("Something went wrong. Please try again.") from exc
+    return response.choices[0].message
+
+
+def embed(texts: list[str]) -&gt; list[list[float]]:
+    response = _get_client().embeddings.create(model="text-embedding-3-small", input=texts)
+    return [item.embedding for item in response.data]</code></pre>
+  <p>The only file that talks to OpenAI. The client is built on first use, so importing the module needs no key (tests import it). API failures become <code>LLMError</code> with a message a visitor can read. Real Sitechat goes further: separate messages per error type, a deadline shared by all tool rounds, trimming a cut-off reply, and token counting for a daily budget (<a href="https://claude.ai/artifact/QKLydSMm3tKdXapho5kS1V">Phase 4b, §8</a>).</p>
+  <p><b>Explain it:</b> why return the whole message object instead of its text? <i>(Because the caller must tell a tool request from a reply.)</i></p>
+</section>
+
+<section>
+  <h2>Step 6. Chunking and vector search</h2>
+  <p><code>minichat/retrieval.py</code>:</p>
+<pre><code>import re
+
+from minichat import llm
+from minichat.models import Chunk
+
+HEADING = re.compile(r"^(#{1,6})\s+(.*)$")
+
+
+def chunk_markdown(text: str, tenant_id: str, doc_id: str) -&gt; list[Chunk]:
+    """One chunk per heading section, each carrying its heading path."""
+    stack: list[tuple[int, str]] = []
+    buffer: list[str] = []
+    chunks: list[Chunk] = []
+
+    def flush() -&gt; None:
+        body = "\n".join(buffer).strip()
+        if body:
+            chunks.append(Chunk(chunk_id=f"{doc_id}__{len(chunks)}", tenant_id=tenant_id,
+                                heading_path=[h for _, h in stack], text=body))
+        buffer.clear()
+
+    for line in text.split("\n"):
+        match = HEADING.match(line)
+        if match:
+            flush()
+            level = len(match.group(1))
+            while stack and stack[-1][0] &gt;= level:
+                stack.pop()
+            stack.append((level, match.group(2).strip()))
+        else:
+            buffer.append(line)
+    flush()
+    return chunks
+
+
+class InMemoryVectorStore:
+    """Vectors per tenant ("namespace"). Pinecone in the real project."""
+
+    def __init__(self) -&gt; None:
+        self._data: dict[str, list[tuple[Chunk, list[float]]]] = {}
+
+    def add(self, tenant_id: str, chunks: list[Chunk]) -&gt; None:
+        vectors = llm.embed([c.searchable() for c in chunks])
+        self._data.setdefault(tenant_id, []).extend(zip(chunks, vectors))
+
+    def search(self, tenant_id: str, query: str, top_k: int = 5) -&gt; list[Chunk]:
+        [q] = llm.embed([query])
+        scored = [(sum(a * b for a, b in zip(q, v)), c) for c, v in self._data.get(tenant_id, [])]
+        scored.sort(key=lambda pair: pair[0], reverse=True)
+        return [c for _, c in scored[:top_k]]</code></pre>
+  <p><code>chunk_markdown</code> is the heading-stack algorithm from <a href="https://claude.ai/artifact/2TNXtynh229R59PV9MwHc1">Phase 4c, §3</a>, shortened (no splitting of long sections). The vector store keeps a list of (chunk, vector) per tenant, the in-memory equivalent of a Pinecone namespace, and ranks by dot product, which equals cosine similarity for OpenAI's length-1 vectors. <code>[q] = llm.embed([query])</code> unpacks a one-item list into <code>q</code>.</p>
+  <p><b>Explain it:</b> why must documents and questions use the same embedding model? <i>(<a href="https://claude.ai/artifact/RHDbDbJ6r8RmXdRsvAUK9S">Phase 3, §6</a>.)</i></p>
+</section>
+
+<section>
+  <h2>Step 7. The agent: prompt, facts, extracts, tools</h2>
+  <p><code>minichat/agent.py</code>, the heart:</p>
+<pre><code>import json
+import re
+
+from minichat import llm
+from minichat.models import Tenant
+
+RULES = """You are the assistant on {name}'s website.
+- Help only with questions about {name}. Politely decline anything else.
+- Answer only from the information you are given. If it is not there,
+  say you don't know and offer to have the team get in touch.
+- When the visitor wants the team to follow up, call contact_team.
+- Never write out a visitor's email address."""
+
+CONTACT_TEAM = {
+    "type": "function",
+    "function": {
+        "name": "contact_team",
+        "description": "Pass the visitor's request to the team, who will follow up by email.",
+        "parameters": {
+            "type": "object",
+            "properties": {"reason": {"type": "string"}},
+            "required": ["reason"],
+        },
+    },
+}
+
+EMAIL = re.compile(r"\b[\w.+-]+@[\w-]+\.[\w.-]+\b")
+MAX_TOOL_ROUNDS = 3
+
+
+def generate_reply(tenant: Tenant, conversation_id: str, message: str, stores) -&gt; tuple[str, str]:
+    """Returns (reply, the message as stored, with any email removed)."""
+    lead = stores.leads.get(tenant.tenant_id, conversation_id)
+    found = EMAIL.search(message)
+    if found:
+        lead.email = found.group(0).lower()
+        message = message.replace(found.group(0), "[email provided]")
+
+    messages = [{"role": "system", "content": RULES.format(name=tenant.display_name)}]
+    facts = stores.facts.get(tenant.tenant_id)
+    if facts:
+        lines = "\n".join(f"- {f.category} / {f.label}: {f.value}" for f in facts)
+        messages.append({"role": "system", "content": "Verified facts. Use exactly as written:\n" + lines})
+    chunks = stores.vectors.search(tenant.tenant_id, message) if stores.vectors else []
+    if chunks:
+        extracts = "\n\n".join(f"{' &gt; '.join(c.heading_path)}\n{c.text}" for c in chunks)
+        messages.append({"role": "system", "content": "Relevant extracts:\n\n" + extracts})
+    if lead.email:
+        messages.append({"role": "system", "content": "The visitor already gave their email."})
+    convo = stores.conversations.get(tenant.tenant_id, conversation_id)
+    for m in convo.messages if convo else []:
+        messages.append({"role": m.role, "content": m.content})
+    messages.append({"role": "user", "content": message})
+
+    for _ in range(MAX_TOOL_ROUNDS):
+        reply = llm.complete_with_tools(messages, [CONTACT_TEAM])
+        if not reply.tool_calls:
+            return reply.content or "", message
+        messages.append({"role": "assistant", "content": reply.content,
+                         "tool_calls": [tc.model_dump() for tc in reply.tool_calls]})
+        for call in reply.tool_calls:
+            messages.append({"role": "tool", "tool_call_id": call.id,
+                             "content": run_tool(call.function.name, call.function.arguments, lead)})
+    return "Sorry, could you rephrase that?", message
+
+
+def run_tool(name: str, arguments: str, lead) -&gt; str:
+    try:
+        args = json.loads(arguments or "{}")
+    except json.JSONDecodeError:
+        args = {}
+    if name != "contact_team":
+        return f"Unknown tool {name}"
+    lead.wants_contact = True
+    lead.reason = args.get("reason", "")
+    if not lead.email:
+        return "Saved. Ask the visitor for their email address."
+    return "Passed to the team. Say someone will be in touch."
+
+
+def after_reply(tenant: Tenant, conversation_id: str, stored: str, reply: str, stores) -&gt; None:
+    """Runs after the response: store the turn, email the team if due."""
+    stores.conversations.append_turn(tenant.tenant_id, conversation_id, stored, reply)
+    lead = stores.leads.get(tenant.tenant_id, conversation_id)
+    if lead.email and lead.wants_contact and not lead.emailed:
+        print(f"EMAIL to {tenant.team_email}: reply-to {lead.email}")  # Resend in the real project
+        lead.emailed = True</code></pre>
+  <p>Walk through <code>generate_reply</code> and match each part to the real orchestrator:</p>
+  <ol class="steps">
+    <li><div><b>Email out first</b>: found, stored lowercase on the lead, replaced with <code>[email provided]</code> before anything else sees the message.</div></li>
+    <li><div><b>Messages in order</b>: rules → facts (all of them, verbatim) → retrieved extracts with heading paths → a note if the email is already known → history → the new message.</div></li>
+    <li><div><b>Tool loop</b>: at most 3 rounds; append the assistant's tool-call message as received, run each tool, append a <code>tool</code> message per call with its <code>tool_call_id</code>, call again.</div></li>
+    <li><div><b>The tool only records</b>; the email is decided in <code>after_reply</code>, which runs after the response.</div></li>
+  </ol>
+  <p><b>Explain it:</b> why doesn't <code>contact_team</code> send the email itself? <i>(<a href="https://claude.ai/artifact/QKLydSMm3tKdXapho5kS1V">Phase 4b, §7 and challenge 5</a>: the visitor shouldn't wait, and the summary should include the stored turn.)</i></p>
+</section>
+
+<section>
+  <h2>Step 8. The API: site keys, domains, 503s, background work</h2>
+  <p>Now replace <code>minichat/main.py</code> with the full version:</p>
+<pre><code>import uuid
+from types import SimpleNamespace
+
+from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
+
+from minichat.agent import after_reply, generate_reply
+from minichat.llm import LLMError
+from minichat.models import Tenant
+from minichat.stores import FactStore, InMemoryConversationStore, InMemoryTenantStore, LeadStore
+
+
+class ChatRequest(BaseModel):
+    message: str = Field(min_length=1, max_length=2000)
+    conversation_id: str | None = Field(default=None, pattern=r"^[A-Za-z0-9-]{1,64}$")
+
+
+class ChatResponse(BaseModel):
+    reply: str
+    conversation_id: str
+
+
+def get_tenant(request: Request, x_site_key: str = Header(...),
+               origin: str | None = Header(default=None)) -&gt; Tenant:
+    tenant = request.app.state.stores.tenants.get_by_site_key(x_site_key)
+    if tenant is None:
+        raise HTTPException(status_code=401, detail="Invalid site key")
+    if origin:
+        host = origin.split("://", 1)[-1].split("/", 1)[0].split(":", 1)[0].lower()
+        if not any(host == d or host.endswith("." + d) for d in tenant.allowed_domains):
+            raise HTTPException(status_code=403, detail="This domain is not allowed")
+    return tenant
+
+
+def create_app(stores=None) -&gt; FastAPI:
+    app = FastAPI(title="minichat")
+    app.state.stores = stores or SimpleNamespace(
+        tenants=InMemoryTenantStore(), conversations=InMemoryConversationStore(),
+        facts=FactStore(), leads=LeadStore(), vectors=None,
+    )
+    app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["GET", "POST", "OPTIONS"],
+                       allow_headers=["Content-Type", "X-Site-Key"])
+
+    @app.get("/health")
+    def health():
+        return {"status": "ok"}
+
+    @app.post("/chat", response_model=ChatResponse)
+    def chat(body: ChatRequest, request: Request, background: BackgroundTasks,
+             tenant: Tenant = Depends(get_tenant)) -&gt; ChatResponse:
+        stores = request.app.state.stores
+        conversation_id = body.conversation_id or str(uuid.uuid4())
+        try:
+            reply, stored = generate_reply(tenant, conversation_id, body.message, stores)
+        except LLMError as exc:
+            raise HTTPException(status_code=503, detail=exc.user_message) from exc
+        background.add_task(after_reply, tenant, conversation_id, stored, reply, stores)
+        return ChatResponse(reply=reply, conversation_id=conversation_id)
+
+    return app</code></pre>
+  <p>Every idea here is from Phases 1 and 4a, in miniature: Pydantic validation with a length limit and an id pattern; a <code>get_tenant</code> dependency that maps a public site key to a tenant and checks <code>Origin</code> against allowed domains with a dot boundary; CORS open at the middleware layer; <code>LLMError</code> → 503; storing and emailing as a background task. <code>SimpleNamespace</code> is a quick object with named attributes, standing in for the nine separate store parameters of the real <code>create_app</code>.</p>
+  <p>Notice the line <code>app = create_app()</code> is gone: the run script in step 11 builds the app with its stores and starts uvicorn itself (<code>uvicorn.run(create_app(stores), ...)</code>).</p>
+  <p><b>Explain it:</b> why is CORS <code>*</code> but the domain still checked? <i>(<a href="https://claude.ai/artifact/MDdgNKEGibTrFVYqtGjGhs">Phase 1, §9</a>: the preflight can't know the tenant; the dependency can.)</i></p>
+</section>
+
+<section>
+  <h2>Step 9. Tests with a fake model</h2>
+  <p><code>tests/test_minichat.py</code>:</p>
+<pre><code>from types import SimpleNamespace
+from unittest.mock import MagicMock, patch
+
+import pytest
+from fastapi.testclient import TestClient
+
+from minichat.main import create_app
+from minichat.models import Fact, Tenant
+from minichat.retrieval import InMemoryVectorStore, chunk_markdown
+from minichat.stores import FactStore, InMemoryConversationStore, InMemoryTenantStore, LeadStore
+
+
+def fake_embed(texts):
+    """Word-count vectors over a tiny vocabulary: enough to rank by overlap."""
+    vocab = ["food", "meals", "fees", "price", "anatomy", "body"]
+    return [[t.lower().count(w) for w in vocab] for t in texts]
+
+
+def text_reply(content):
+    m = MagicMock()
+    m.content, m.tool_calls = content, None
+    return m
+
+
+def tool_reply():
+    call = MagicMock()
+    call.id = "c1"
+    call.function.name = "contact_team"
+    call.function.arguments = '{"reason": "wants a call"}'
+    call.model_dump.return_value = {"id": "c1", "type": "function",
+                                    "function": {"name": "contact_team", "arguments": call.function.arguments}}
+    m = MagicMock()
+    m.content, m.tool_calls = None, [call]
+    return m
+
+
+@pytest.fixture
+def stores():
+    s = SimpleNamespace(tenants=InMemoryTenantStore(), conversations=InMemoryConversationStore(),
+                        facts=FactStore(), leads=LeadStore(), vectors=InMemoryVectorStore())
+    s.tenants.save(Tenant(tenant_id="t1", site_key="pk_1", display_name="Yoga School",
+                          allowed_domains=["school.com"], team_email="team@school.com"))
+    s.facts.save("t1", [Fact(category="Fees", label="200-hour", value="USD 1,450")])
+    with patch("minichat.llm.embed", fake_embed):
+        s.vectors.add("t1", chunk_markdown("# School\n## Food\nThree vegetarian meals.\n## Anatomy\nThe body.", "t1", "doc"))
+    return s
+
+
+@pytest.fixture
+def client(stores):
+    with patch("minichat.llm.embed", fake_embed):
+        yield TestClient(create_app(stores))
+
+
+def test_health(client):
+    assert client.get("/health").json() == {"status": "ok"}
+
+
+def test_unknown_key_is_401(client):
+    assert client.post("/chat", headers={"X-Site-Key": "nope"}, json={"message": "hi"}).status_code == 401
+
+
+def test_wrong_domain_is_403_and_subdomain_ok(client):
+    with patch("minichat.llm.complete_with_tools", return_value=text_reply("ok")):
+        bad = client.post("/chat", headers={"X-Site-Key": "pk_1", "Origin": "https://evil-school.com"}, json={"message": "hi"})
+        good = client.post("/chat", headers={"X-Site-Key": "pk_1", "Origin": "https://www.school.com"}, json={"message": "hi"})
+    assert bad.status_code == 403 and good.status_code == 200
+
+
+def test_prompt_has_facts_extracts_and_history(client, stores):
+    seen = []
+    def model(messages, tools):
+        seen.append(messages)
+        return text_reply("Three meals a day.")
+    with patch("minichat.llm.complete_with_tools", model):
+        first = client.post("/chat", headers={"X-Site-Key": "pk_1"}, json={"message": "what food?"}).json()
+        client.post("/chat", headers={"X-Site-Key": "pk_1"},
+                    json={"message": "and the fees?", "conversation_id": first["conversation_id"]})
+    system = " ".join(m["content"] for m in seen[0] if m["role"] == "system")
+    assert "USD 1,450" in system and "School &gt; Food" in system
+    assert [m["role"] for m in seen[1]][-3:] == ["user", "assistant", "user"]
+
+
+def test_email_is_removed_and_contact_request_emails_once(client, stores, capsys):
+    replies = iter([tool_reply(), text_reply("Someone will be in touch.")])
+    seen = []
+    def model(messages, tools):
+        seen.append(list(messages))
+        return next(replies)
+    with patch("minichat.llm.complete_with_tools", model):
+        r = client.post("/chat", headers={"X-Site-Key": "pk_1"},
+                        json={"message": "please contact me, Sam@Mail.com"})
+    assert r.json()["reply"] == "Someone will be in touch."
+    assert "Sam@Mail.com" not in str(seen) and "[email provided]" in seen[0][-1]["content"]
+    assert "EMAIL to team@school.com: reply-to sam@mail.com" in capsys.readouterr().out
+
+
+def test_model_failure_is_503(client):
+    from minichat.llm import LLMError
+    with patch("minichat.llm.complete_with_tools", side_effect=LLMError("Try again.")):
+        r = client.post("/chat", headers={"X-Site-Key": "pk_1"}, json={"message": "hi"})
+    assert r.status_code == 503 and r.json()["detail"] == "Try again."
+
+
+def test_chunks_carry_heading_paths():
+    chunks = chunk_markdown("# A\nintro\n## B\nbee\n### C\nsea\n## D\ndee", "t", "d")
+    assert [c.heading_path for c in chunks] == [["A"], ["A", "B"], ["A", "B", "C"], ["A", "D"]]</code></pre>
+  <p>Run <code>pytest -q</code>. Real output when this page was made:</p>
+<pre><code>.......                                                                  [100%]
+7 passed in 1.60s</code></pre>
+  <p>The techniques are exactly Sitechat's (<a href="https://claude.ai/artifact/KdgDyd9VuQVfjJu3dvHPv2">Phase 7, §3</a>): in-memory stores injected into <code>create_app</code>; <code>patch("minichat.llm.complete_with_tools", ...)</code> returning <code>MagicMock</code> messages with chosen content or a tool call; a fake <code>embed</code> that counts words, enough to rank chunks; <code>capsys</code> to capture what was printed (the "email").</p>
+  <div class="box challenge"><div class="tag">A bug met while writing this test</div><p>The first version of the email test stored the <code>messages</code> list each time the fake model was called, then checked the first call's last message. It failed: the agent keeps appending to the same list across tool rounds, so by the end the "first call's" list held the tool messages too. The fix was storing a copy, <code>seen.append(list(messages))</code>. Python lists are passed by reference; anything that keeps a list for later should copy it. (Sitechat's <code>_run_with_tools</code> makes its own copy, <code>conversation = list(messages)</code>, for the same reason.)</p></div>
+</section>
+
+<section>
+  <h2>Step 10. A widget in 60 lines</h2>
+  <p><code>static/widget.js</code>:</p>
+<pre><code>(function () {
+  "use strict";
+  var script = document.currentScript;
+  var siteKey = script.getAttribute("data-site-key");
+  var API = new URL(script.src).origin;
+  var conversationId = localStorage.getItem("minichat:" + siteKey);
+
+  var host = document.createElement("div");
+  var shadow = host.attachShadow({ mode: "open" });
+  var style = document.createElement("style");
+  style.textContent =
+    ".box{position:fixed;bottom:20px;right:20px;width:320px;font:15px/1.5 inherit;" +
+    "background:#fff;border:1px solid #ddd;border-radius:12px;padding:12px}" +
+    ".log{height:260px;overflow:auto;display:flex;flex-direction:column;gap:8px}" +
+    ".me{align-self:flex-end;background:#1f6f5c;color:#fff}.me,.bot{padding:8px 10px;border-radius:10px}" +
+    ".bot{background:#f2f4f3}";
+  shadow.appendChild(style);
+
+  var box = document.createElement("div");
+  box.className = "box";
+  var log = document.createElement("div");
+  log.className = "log";
+  var input = document.createElement("input");
+  input.placeholder = "Ask a question";
+  input.setAttribute("aria-label", "Your message");
+  box.appendChild(log);
+  box.appendChild(input);
+  shadow.appendChild(box);
+  document.body.appendChild(host);
+
+  function add(who, text) {
+    var p = document.createElement("p");
+    p.className = who;
+    p.textContent = text;          // text, never HTML
+    log.appendChild(p);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  input.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter" || !input.value.trim()) return;
+    var text = input.value.trim();
+    input.value = "";
+    add("me", text);
+    var body = { message: text };
+    if (conversationId) body.conversation_id = conversationId;
+    fetch(API + "/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Site-Key": siteKey },
+      body: JSON.stringify(body),
+    })
+      .then(function (r) {
+        if (!r.ok) throw new Error(String(r.status));
+        return r.json();
+      })
+      .then(function (data) {
+        conversationId = data.conversation_id;
+        localStorage.setItem("minichat:" + siteKey, conversationId);
+        add("bot", data.reply);
+      })
+      .catch(function () { add("bot", "That did not get through. Try again."); });
+  });
+})();</code></pre>
+  <p>The essentials of <a href="https://claude.ai/artifact/AHXQrMEzxpZ6x4ihiiiCm1">Phase 5</a>: an IIFE so nothing leaks into the page; the site key and API address from its own script tag; a shadow root so the page's CSS can't reach in; <code>textContent</code> only, never <code>innerHTML</code>; the conversation id in localStorage. Checked in Chromium against minichat on a local port, cross-origin, with a fake model replying <code>&lt;b&gt;Hello&lt;/b&gt; from the bot</code>. Real output:</p>
+<pre><code>['hi', '&lt;b&gt;Hello&lt;/b&gt; from the bot']
+bold tag rendered as element? 0</code></pre>
+  <p>The tags arrived as visible text and created no element: the XSS defence working.</p>
+  <p>To serve it, add to <code>create_app</code> in <code>main.py</code>: <code>from fastapi.staticfiles import StaticFiles</code> and <code>app.mount("/static", StaticFiles(directory="static"), name="static")</code>, then put <code>&lt;script src="http://localhost:8080/static/widget.js" data-site-key="pk_1"&gt;&lt;/script&gt;</code> on any HTML page.</p>
+</section>
+
+<section>
+  <h2>Step 11. Run it for real</h2>
+  <p>With an OpenAI key, a small script sets up a tenant, some facts and a document, then starts the server. Save as <code>run.py</code> next to the <code>minichat/</code> folder:</p>
+<pre><code>import os
+from types import SimpleNamespace
+
+import uvicorn
+
+from minichat.main import create_app
+from minichat.models import Fact, Tenant
+from minichat.retrieval import InMemoryVectorStore, chunk_markdown
+from minichat.stores import FactStore, InMemoryConversationStore, InMemoryTenantStore, LeadStore
+
+assert os.environ.get("OPENAI_API_KEY"), "set OPENAI_API_KEY first"
+
+stores = SimpleNamespace(tenants=InMemoryTenantStore(), conversations=InMemoryConversationStore(),
+                         facts=FactStore(), leads=LeadStore(), vectors=InMemoryVectorStore())
+stores.tenants.save(Tenant(tenant_id="demo", site_key="pk_1", display_name="Demo Yoga School",
+                           allowed_domains=["localhost", "127.0.0.1"], team_email="you@example.com"))
+stores.facts.save("demo", [Fact(category="Fees", label="200-hour course", value="USD 1,450 with meals")])
+stores.vectors.add("demo", chunk_markdown(
+    "# Demo Yoga School\n## Food\nThree vegetarian meals a day.\n## Rooms\nShared twin rooms.",
+    "demo", "about"))
+
+uvicorn.run(create_app(stores), host="127.0.0.1", port=8080)</code></pre>
+  <p>In PowerShell: <code>$env:OPENAI_API_KEY = "sk-..."</code> then <code>python run.py</code>. Then try it from a second terminal:</p>
+<pre><code>Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8080/chat `
+  -Headers @{"X-Site-Key" = "pk_1"} -ContentType "application/json" `
+  -Body '{"message": "What will I eat?"}'</code></pre>
+  <p>(PowerShell's own HTTP command, which avoids the quoting problems of passing JSON to <code>curl.exe</code>. The backtick at a line end continues the command on the next line. On macOS/Linux: <code>curl -s -X POST http://127.0.0.1:8080/chat -H "Content-Type: application/json" -H "X-Site-Key: pk_1" -d '{"message": "What will I eat?"}'</code>.) To keep the conversation going, add <code>"conversation_id": "..."</code> from the first reply.</p>
+  <p>Ask about food (from the document), fees (from the facts), something not covered (it should say it doesn't know), and "please have someone contact me, me@example.com" (watch the terminal print the "email"). Each real call costs a fraction of a cent.</p>
+</section>
+
+<section>
+  <h2>Part two: growing it into Sitechat</h2>
+  <p>Each exercise adds one real feature. Do them in order; each lists what to build, a test to write first, and where Sitechat does it.</p>
+  <div class="tablewrap"><table>
+    <tr><th>#</th><th>Exercise</th><th>Test to write first</th><th>Read</th></tr>
+    <tr><td>1</td><td>Settings with pydantic-settings and <code>.env</code>; keys as <code>SecretStr</code></td><td>Printing settings doesn't show the key</td><td>4a §2</td></tr>
+    <tr><td>2</td><td>Rate limits with slowapi: per visitor (from <code>X-Forwarded-For</code>, last entry) and per tenant</td><td>6th chat in a minute is 429</td><td>1 §10, 4a §3</td></tr>
+    <tr><td>3</td><td>Firestore stores for tenants and conversations, with a transaction in <code>append_turn</code>; <code>lifespan</code> builds them only if not injected</td><td>Tests still pass with no credentials</td><td>4a §1.2, 4e</td></tr>
+    <tr><td>4</td><td>Running summary after 16 messages, with the race-safe <code>apply_summary</code></td><td>A turn appended during summarising survives</td><td>4b §12, 4e §6.2</td></tr>
+    <tr><td>5</td><td>Record every visitor question on the conversation (<code>is_visitor_question</code>)</td><td>"okay" isn't a question; "what about fees" is</td><td>4b §10</td></tr>
+    <tr><td>6</td><td>Real lead email with Resend: team only, Reply-To the visitor, HTML escaped</td><td>No CC; <code>&lt;script&gt;</code> in a question arrives escaped</td><td>4d</td></tr>
+    <tr><td>7</td><td>Pinecone with a namespace per tenant; ingest script</td><td>Tenant A's search can't return tenant B's chunk</td><td>4c §8</td></tr>
+    <tr><td>8</td><td>An evaluation set of 10 questions labelled by section; recall and MRR</td><td>The metric functions on a hand example</td><td>3 §12, 4f</td></tr>
+    <tr><td>9</td><td>BM25 + RRF behind a flag; measure it against vector-only on your set</td><td>RRF on two hand-made lists</td><td>3 §10–11, 4c §10</td></tr>
+    <tr><td>10</td><td>Prompt rules for scope and injection; an attack set of 10 messages with deterministic checks</td><td>A reply containing a forbidden string fails the check</td><td>3 §17, 4f §10</td></tr>
+    <tr><td>11</td><td>Invisible-character stripping in <code>ChatRequest</code></td><td>A message of only tag characters is 422</td><td>4b §10</td></tr>
+    <tr><td>12</td><td>Daily token budget per tenant, failing open</td><td>Over budget → 503 before any model call</td><td>4b §2</td></tr>
+    <tr><td>13</td><td>Deadline for model calls inside 40 s</td><td>With 2 s left, no call is made</td><td>4b §8</td></tr>
+    <tr><td>14</td><td>Facts from a Google Sheet with validation and a diff</td><td>A row with no value is reported, not imported</td><td>4e §8–9</td></tr>
+    <tr><td>15</td><td>Request ids in JSON logs with contextvars</td><td>Every log line of a chat has the same id</td><td>4a §4–5</td></tr>
+    <tr><td>16</td><td>Dockerfile, then deploy to Cloud Run (only if you choose to; it's free-tier but needs a Google Cloud account)</td><td>The container answers <code>/health</code> locally</td><td>6</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2>What you can now say in an interview</h2>
+  <div class="box interview"><div class="tag">Say it in an interview</div><p>"I can rebuild the core from scratch: a FastAPI app built by a factory so tests inject in-memory stores; a dependency that resolves the tenant from a public site key and checks the Origin; an agent that strips contact details first, assembles rules, facts and retrieved chunks with their heading paths, and runs a bounded tool loop where the tool only records intent; storage and email in a background task; and tests that patch the model so the whole suite runs offline. The production version adds rate limiting, transactions, a race-safe summary, evaluation harnesses, prompt-injection defences, a token budget and deadlines, each of which I added for a specific reason I can explain."</p></div>
+  <p>If you can type minichat from memory and explain every line, you understand more of this project than most interviewers will ask about.</p>
+</section>
+
+<section>
+  <h2>Next: Phase 9, interview prep</h2>
+  <p>The pitch, the walkthrough, resume lines with defensible numbers, a question bank with model answers, challenge stories in a structured form, and how to talk about using AI tools to build it. <a href="https://claude.ai/artifact/99LTVwqoTPzBmFmHCZcsCS">Read Phase 9</a>.</p>
+</section>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,103 @@
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run tests, with a coverage floor
+        # 85% of app/ when this was added; fail if it drops under 80%.
+        run: pytest --cov=app --cov-report=term --cov-fail-under=80
+        env:
+          ENVIRONMENT: development
+          GCP_PROJECT_ID: test-project
+
+  lint:
+    # Likely bugs and unused code (ruff.toml), type errors in app/
+    # (mypy.ini), and insecure patterns (bandit; asserts are fine here).
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Ruff
+        run: ruff check .
+
+      - name: Mypy
+        run: mypy
+
+      - name: Bandit
+        run: bandit -q -r app scripts --skip B101
+
+  secrets:
+    # Keys, tokens or passwords committed anywhere in the history.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code, with full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # The gitleaks program itself, not gitleaks-action: the action calls
+      # GitHub's API on pull requests, which failed on Dependabot's. This
+      # scans the whole history the same way on every run.
+      - name: Gitleaks
+        env:
+          VERSION: 8.30.1
+          SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+        run: |
+          curl -sSfL -o gitleaks.tar.gz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz"
+          echo "${SHA256}  gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf gitleaks.tar.gz gitleaks
+          ./gitleaks git --redact --verbose .
+
+  dockerfile:
+    # Dockerfile best practices (hadolint).
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+
+  audit:
+    # Known vulnerabilities in what the service runs (requirements.txt),
+    # from the PyPI and OSV advisory databases. Fails the check if any.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Audit dependencies
+        run: |
+          pip install pip-audit
+          pip-audit -r requirements.txt

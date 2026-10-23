@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sitechat KT 4e: Data Stores</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,650&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  /* Layout: a reading column with a phase map on top; coloured callouts by role
+     (analogy, in this project, interview, try it); code blocks scroll inside themselves. */
+  :root {
+    --bg: #f5f6f4;
+    --paper: #ffffff;
+    --ink: #1b2725;
+    --muted: #5a6663;
+    --line: #dde3e0;
+    --accent: #1f6f5c;
+    --accent-soft: #e5f1ec;
+    --analogy: #7a4f9a;
+    --analogy-soft: #f2ecf7;
+    --interview: #a5630d;
+    --interview-soft: #fbf1e0;
+    --code-bg: #f0f3f1;
+    --display: "Literata", Georgia, "Times New Roman", serif;
+    --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121918; --paper: #1a2322; --ink: #e5ebe9; --muted: #9db0aa; --line: #2b3735;
+      --accent: #63c2a6; --accent-soft: #1d3530; --analogy: #c7a3e6; --analogy-soft: #2a2235;
+      --interview: #e3a64b; --interview-soft: #2e2416; --code-bg: #0f1514;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #121918; --paper: #1a2322; --ink: #e5ebe9; --muted: #9db0aa; --line: #2b3735;
+    --accent: #63c2a6; --accent-soft: #1d3530; --analogy: #c7a3e6; --analogy-soft: #2a2235;
+    --interview: #e3a64b; --interview-soft: #2e2416; --code-bg: #0f1514;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 17px/1.65 var(--body);
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 32px 80px;
+  }
+  main { max-width: 48rem; margin: 0 auto; display: grid; gap: 44px; }
+  header { display: grid; gap: 12px; }
+  .eyebrow { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  h1 { font: 650 clamp(30px, 5.5vw, 42px)/1.12 var(--display); margin: 0; text-wrap: balance; }
+  h2 { font: 650 clamp(23px, 3.6vw, 28px)/1.25 var(--display); margin: 0; text-wrap: balance; }
+  h3 { font: 700 18px/1.35 var(--body); margin: 8px 0 0; }
+  p, ul, ol { margin: 0; }
+  ul, ol { padding-left: 1.3em; display: grid; gap: 6px; }
+  li::marker { color: var(--accent); }
+  section { display: grid; gap: 16px; min-width: 0; }
+  .lede { color: var(--muted); font-size: 18px; }
+  a { color: var(--accent); }
+  code { font: 0.88em var(--mono); background: var(--code-bg); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+  pre {
+    margin: 0; background: var(--code-bg); border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 16px; overflow-x: auto; font: 14px/1.55 var(--mono);
+  }
+  pre code { background: none; padding: 0; font-size: inherit; overflow-wrap: normal; }
+  .file { font: 600 13px var(--mono); color: var(--muted); margin-bottom: -10px; }
+  .phases { display: flex; flex-wrap: wrap; gap: 6px; }
+  .phases span {
+    font-size: 13px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line);
+    color: var(--muted); background: var(--paper);
+  }
+  .phases span.now { background: var(--accent); color: var(--paper); border-color: var(--accent); font-weight: 600; }
+  .box { border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; border: 1px solid var(--line); background: var(--paper); }
+  .box .tag { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .analogy { background: var(--analogy-soft); border-color: transparent; }
+  .analogy .tag { color: var(--analogy); }
+  .project { background: var(--accent-soft); border-color: transparent; }
+  .project .tag { color: var(--accent); }
+  .interview { background: var(--interview-soft); border-color: transparent; }
+  .interview .tag { color: var(--interview); }
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
+  table { border-collapse: collapse; width: 100%; font-size: 15.5px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-weight: 700; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+  tr:last-child td { border-bottom: none; }
+  td:first-child { white-space: nowrap; }
+  .steps { list-style: none; padding: 0; counter-reset: s; display: grid; gap: 10px; }
+  .steps > li { counter-increment: s; display: grid; grid-template-columns: 2rem 1fr; gap: 10px; min-width: 0; }
+  .steps > li::before {
+    content: counter(s); width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+    font: 700 13px/1 var(--body); color: var(--accent); border: 1.5px solid var(--accent);
+  }
+  .steps > li > div { display: grid; gap: 6px; min-width: 0; }
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .flow .node { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: 15px; }
+  .flow .arrow { color: var(--accent); font-weight: 700; }
+  details { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+  details summary { cursor: pointer; font-weight: 600; }
+  details[open] summary { margin-bottom: 8px; }
+  details p { color: var(--ink); }
+  dl.gloss { display: grid; gap: 10px; margin: 0; }
+  dl.gloss div { display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr; gap: 12px; }
+  dl.gloss dt { font-weight: 700; }
+  dl.gloss dd { margin: 0; }
+  @media (max-width: 560px) { dl.gloss div { grid-template-columns: 1fr; gap: 2px; } td:first-child { white-space: normal; } }
+  .toc { columns: 2 16rem; column-gap: 28px; }
+  .toc li { break-inside: avoid; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 0; }
+  summary:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .machines { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 10px; }
+  .machine { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 6px; align-content: start; }
+  .machine b { font-family: var(--display); font-size: 17px; }
+  .machine.us { border-color: var(--accent); }
+  .lbl { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+
+  :root { --challenge: #a8322f; --challenge-soft: #fbecea; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --challenge: #f2958f; --challenge-soft: #3a2220; } }
+  :root[data-theme="dark"] { --challenge: #f2958f; --challenge-soft: #3a2220; }
+  .challenge { background: var(--challenge-soft); border-color: transparent; }
+  .challenge .tag { color: var(--challenge); }
+  .phases a { font-size: 13px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line);
+    color: var(--muted); background: var(--paper); text-decoration: none; }
+  .phases a:hover { border-color: var(--accent); color: var(--accent); }
+  .phases a.now { background: var(--accent); color: var(--paper); border-color: var(--accent); font-weight: 600; }
+  figure { margin: 0; display: grid; gap: 8px; justify-items: start; }
+  figure img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+  figcaption { font-size: 14px; color: var(--muted); }
+  .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 12px; }
+  .kv { display: grid; grid-template-columns: minmax(7rem, 11rem) 1fr; gap: 6px 14px; }
+  @media (max-width: 560px) { .kv { grid-template-columns: 1fr; gap: 2px; } }
+</style>
+
+</head>
+<body>
+<main>
+<header>
+  <div class="eyebrow">Sitechat knowledge transfer · Phase 4e of 10</div>
+  <h1>Data stores, file by file: what is saved, in what shape, and how it stays correct</h1>
+  <p class="lede">Every domain in Sitechat has a <b>model</b> (the shape of its data, a Pydantic class) and a <b>store</b> (how it's saved: an abstract interface, an in-memory version for tests, a Firestore version for production). This phase opens the remaining ones: <code>tenants</code>, <code>conversations</code>, <code>facts</code>, <code>usage</code>, <code>feedback</code> and the programme store, and shows how they're laid out in Firestore, how concurrent writes are kept safe, and how data expires.</p>
+  <div class="phases" aria-label="All phases">
+    <a href="https://claude.ai/artifact/QuxrXdoFv7vr5KKvNSML78">0 First principles</a><a href="https://claude.ai/artifact/MDdgNKEGibTrFVYqtGjGhs">1 How the web works</a><a href="https://claude.ai/artifact/VVYejQXYpWzuimyovij4CY">2 What Sitechat is</a><a href="https://claude.ai/artifact/RHDbDbJ6r8RmXdRsvAUK9S">3 AI fundamentals</a><a href="https://claude.ai/artifact/F1oZk1cyDLGAPio8khD7cY">4a API layer</a><a href="https://claude.ai/artifact/QKLydSMm3tKdXapho5kS1V">4b The agent</a><a href="https://claude.ai/artifact/2TNXtynh229R59PV9MwHc1">4c Retrieval</a><a href="https://claude.ai/artifact/Np1qbTsXtXtDL6UmGaMvFv">4d Leads</a><a class="now" href="https://claude.ai/artifact/S2dSYJnVDTPbqeAWJP6qd1">4e Data stores</a><a href="https://claude.ai/artifact/4hwNREB8CxkHtRrwgwRraL">4f Scripts and evals</a><a href="https://claude.ai/artifact/AHXQrMEzxpZ6x4ihiiiCm1">5 The chat widget</a><a href="https://claude.ai/artifact/BknbsJYd7gFx9geyWbBqKF">6 Cloud and data</a><a href="https://claude.ai/artifact/KdgDyd9VuQVfjJu3dvHPv2">7 Quality and safety</a><a href="https://claude.ai/artifact/QDifNPBS4Lu8CLhvZTJ5C4">8 Rebuild it yourself</a><a href="https://claude.ai/artifact/99LTVwqoTPzBmFmHCZcsCS">9 Interview prep</a><a href="https://claude.ai/artifact/NKGY4fDQXK9Cp41B55wiTs">10 Set it up</a>
+  </div>
+</header>
+
+<section>
+  <h2>How to read this phase</h2>
+  <p>The pattern was introduced in <a href="https://claude.ai/artifact/QuxrXdoFv7vr5KKvNSML78">Phase 0, section 8.12</a> with <code>TenantStore</code>; it repeats in every store, so once you've seen two, you've seen them all. The interesting differences are in what each store must guarantee: conversations need transactions and size caps; facts need validation and a change log; usage needs counters that two servers can update at once. The lead store was covered in <a href="https://claude.ai/artifact/Np1qbTsXtXtDL6UmGaMvFv">Phase 4d</a> and the chunk store in <a href="https://claude.ai/artifact/2TNXtynh229R59PV9MwHc1">Phase 4c</a>.</p>
+  <h3>In this phase</h3>
+  <ol class="toc">
+    <li>Firestore in five minutes</li>
+    <li>The whole database at a glance</li>
+    <li>Tenants: <code>models.py</code> and <code>Wording</code></li>
+    <li>Tenants: <code>store.py</code></li>
+    <li>Conversations: the model</li>
+    <li>Conversations: the store, method by method</li>
+    <li>Facts: the model and the store's cache</li>
+    <li>Facts: reading the Google Sheet</li>
+    <li>Facts: syncing, with a diff and a safety hold</li>
+    <li>Usage and feedback stores</li>
+    <li>Four caches, one pattern</li>
+    <li>What tests can and can't prove here</li>
+    <li>Challenges we faced</li>
+    <li>Glossary and check yourself</li>
+  </ol>
+</section>
+
+<section>
+  <h2>1. Firestore in five minutes</h2>
+  <p><b>Firestore</b> is Google's hosted document database. It isn't made of tables and rows like a spreadsheet-style (SQL) database; it's made of:</p>
+  <ul>
+    <li><b>Collections</b>: named groups, like <code>conversations</code>.</li>
+    <li><b>Documents</b>: inside a collection, each with an id you choose (like <code>pyramid-yogshala__1f1a1dca-...</code>) and contents that look like JSON: fields holding strings, numbers, dates, lists and nested maps. A document can be up to 1 MiB.</li>
+  </ul>
+  <p>The operations Sitechat uses:</p>
+  <div class="tablewrap"><table>
+    <tr><th>Operation</th><th>Code</th><th>Meaning</th></tr>
+    <tr><td>Read one</td><td><code>collection(C).document(id).get()</code></td><td>Fetch by id; <code>.exists</code> says whether it's there; <code>.to_dict()</code> gives the contents (or <code>None</code>).</td></tr>
+    <tr><td>Write whole</td><td><code>.set(data)</code></td><td>Replace the document entirely. Fields not in <code>data</code> are <b>deleted</b>.</td></tr>
+    <tr><td>Write some fields</td><td><code>.set(data, merge=True)</code></td><td>Change only the fields given; keep the rest.</td></tr>
+    <tr><td>Query</td><td><code>.where(filter=FieldFilter("tenant_id", "==", t)).stream()</code></td><td>All documents matching a condition. A single-field equality query uses an index Firestore builds automatically.</td></tr>
+    <tr><td>Transaction</td><td><code>@firestore.transactional</code></td><td>Read, decide, write; if the document changed in between, Firestore re-runs the function.</td></tr>
+    <tr><td>Batch</td><td><code>db.batch() ... .commit()</code></td><td>Many writes sent together (up to 500).</td></tr>
+    <tr><td>Server increment</td><td><code>firestore.Increment(n)</code></td><td>The database adds <i>n</i> itself, safe under concurrency.</td></tr>
+  </table></div>
+  <p>The free tier (50,000 reads, 20,000 writes and 20,000 deletes a day) shapes several decisions in this phase: caches, writing the digest flag only when it changes, and filtering dates in Python instead of creating paid-for composite indexes.</p>
+  <div class="box analogy"><div class="tag">Analogy</div><p>A filing cabinet (the database) with labelled drawers (collections). Each folder (document) has a name on its tab (the id) and can hold any papers you like (fields). You can pull a folder by its name instantly, or ask the clerk for "every folder whose tenant is Pyramid Yogshala". A transaction is pulling a folder, reading it, and only putting your changes in if nobody touched it while you were reading.</p></div>
+</section>
+
+<section>
+  <h2>2. The whole database at a glance</h2>
+  <div class="tablewrap"><table>
+    <tr><th>Collection</th><th>Document id</th><th>Model</th><th>Written by</th><th>Expires</th></tr>
+    <tr><td><code>tenants</code></td><td><code>pyramid-yogshala</code></td><td><code>Tenant</code></td><td><code>scripts/create_tenant.py</code></td><td>No</td></tr>
+    <tr><td><code>conversations</code></td><td><code>&lt;tenant&gt;__&lt;conversation&gt;</code></td><td><code>Conversation</code></td><td>every chat turn (background)</td><td>365 days after last write</td></tr>
+    <tr><td><code>leads</code></td><td><code>&lt;tenant&gt;__&lt;conversation&gt;</code></td><td><code>Lead</code></td><td>contact capture, tools, emails</td><td>365 days</td></tr>
+    <tr><td><code>feedback</code></td><td><code>&lt;tenant&gt;__&lt;conversation&gt;__&lt;reply&gt;</code></td><td><code>Feedback</code></td><td><code>POST /feedback</code></td><td>365 days</td></tr>
+    <tr><td><code>facts</code></td><td><code>&lt;tenant&gt;</code></td><td><code>FactSheet</code></td><td><code>sync_facts</code>, daily sync, <code>set_facts</code></td><td>No</td></tr>
+    <tr><td><code>programmes</code></td><td><code>&lt;tenant&gt;</code></td><td><code>ProgrammeCatalogue</code></td><td><code>scripts/ingest.py</code></td><td>No</td></tr>
+    <tr><td><code>documents</code>, <code>chunks</code></td><td><code>&lt;tenant&gt;__&lt;document&gt;</code>, <code>&lt;tenant&gt;__&lt;chunk&gt;</code></td><td><code>Document</code>, <code>Chunk</code></td><td><code>scripts/ingest.py</code></td><td>No</td></tr>
+    <tr><td><code>token_usage</code></td><td><code>&lt;tenant&gt;__&lt;YYYY-MM-DD&gt;</code></td><td>(counter)</td><td>every reply</td><td>No (no personal data)</td></tr>
+    <tr><td><code>lead_email_counts</code></td><td><code>&lt;tenant&gt;__&lt;YYYY-MM-DD&gt;</code></td><td>(counter)</td><td>every lead email</td><td>No</td></tr>
+  </table></div>
+  <p>Notice the ids. Tenant-scoped data puts the tenant in the id itself, separated by <code>__</code> (two underscores). A lookup builds the id from <i>both</i> the tenant and the conversation, so a valid conversation id from another tenant names a document that doesn't exist. That's why <code>__</code> is forbidden in conversation ids (<a href="https://claude.ai/artifact/F1oZk1cyDLGAPio8khD7cY">Phase 4a, §7</a>), and why <code>scripts/delete_tenant.py</code> finds documents both by their <code>tenant_id</code> field and by the <code>&lt;tenant&gt;__</code> prefix. A test fails if a new collection isn't covered by the delete script.</p>
+</section>
+
+<section>
+  <h2>3. Tenants: <code>models.py</code> and <code>Wording</code></h2>
+<pre><code>class Tenant(BaseModel):
+    tenant_id: str
+    site_key: str
+    display_name: str
+    allowed_domains: list[str] = Field(default_factory=list)
+    whatsapp_number: str = ""
+    greeting: str = "Hi! Ask me anything about our courses."
+    suggested_questions: list[str] = Field(default_factory=list)
+    website_url: HttpUrl | None = None
+    facts_sheet_id: str = ""
+    is_active: bool = True
+    team_email: str = ""
+    reply_time: str = ""
+    accent_colour: str = "#1f6f5c"
+    privacy_url: HttpUrl | None = None
+    rate_limit: str = Field(default="", pattern=r"^$|^\d+/(second|minute|hour|day)$")
+    daily_token_budget: int = Field(default=0, ge=0)
+    wording: Wording = Field(default_factory=Wording)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))</code></pre>
+  <div class="tablewrap"><table>
+    <tr><th>Field</th><th>Purpose and notes</th></tr>
+    <tr><td><code>tenant_id</code></td><td>Internal id; part of every storage key, so effectively permanent (renaming needed a script).</td></tr>
+    <tr><td><code>site_key</code></td><td>Public key in the school's HTML. "Not a secret: it only names the tenant. Security comes from the domain allowlist."</td></tr>
+    <tr><td><code>allowed_domains</code></td><td>Domains the key works on; subdomains included automatically.</td></tr>
+    <tr><td><code>greeting</code>, <code>suggested_questions</code>, <code>accent_colour</code>, <code>privacy_url</code></td><td>What <code>/config</code> sends the widget.</td></tr>
+    <tr><td><code>facts_sheet_id</code></td><td>The Google Sheet to read. "Set by you during onboarding, never by the customer. This is what stops an unrelated shared sheet from being read."</td></tr>
+    <tr><td><code>is_active</code></td><td>Turn a school off without deleting data (403 to the widget).</td></tr>
+    <tr><td><code>team_email</code>, <code>reply_time</code></td><td>Where lead emails go; what reply time the chat promises ("within 24 hours"). Empty reply time leaves the timing out: "only what the business has promised".</td></tr>
+    <tr><td><code>rate_limit</code></td><td>The school's own chat limit like "300/hour", validated by a regular expression: empty, or a number, a slash and a unit. A typo is rejected when the tenant is saved, not discovered as a crash at request time.</td></tr>
+    <tr><td><code>daily_token_budget</code></td><td><code>ge=0</code> means "greater than or equal to 0"; 0 uses the global default.</td></tr>
+    <tr><td><code>website_url</code>, <code>privacy_url</code></td><td><code>HttpUrl</code> rejects anything that isn't an http(s) URL, so a <code>javascript:</code> link can't sneak into the widget's privacy link.</td></tr>
+    <tr><td><code>whatsapp_number</code></td><td>Stored for a planned WhatsApp button; not used yet.</td></tr>
+  </table></div>
+  <h3><code>Wording</code>: serving any kind of business</h3>
+<pre><code>class Wording(BaseModel):
+    topics: str = "its courses and retreats, staying there, getting there, and booking"
+    offerings: str = "courses and retreats"
+    offering: str = "course or retreat"
+    the_business: str = "the school"
+    general_sections: str = "About, Contact, Booking, Our teachers, Certification"
+    choosing: str = ("ask about their experience, how long they can stay and where they "
+                     "would like to be")
+    audience: str = "prospective students, often from other countries"
+    plans: str = "where they are joining from and roughly when they are hoping to come"
+    interest: str = "course"
+    when_label: str = "Planning to join"</code></pre>
+  <p>Ten phrases, each slotting into a sentence in the prompt, the details tool or the lead email. The defaults are the yoga school's exact words, so the prompt didn't change for the existing tenant when this was added (<code>tests/test_wording.py</code> checks: same words, only line breaks moved). A guesthouse would set its own (an example is commented in <code>scripts/create_tenant.py</code>: "rooms and packages", "travellers planning a stay"...). Lead fields keep their stored names (<code>course_interest</code>); only the words around them change.</p>
+</section>
+
+<section>
+  <h2>4. Tenants: <code>store.py</code></h2>
+<pre><code>class TenantStore(ABC):
+    @abstractmethod
+    def get_by_site_key(self, site_key: str) -> Tenant | None: ...
+    @abstractmethod
+    def get_by_id(self, tenant_id: str) -> Tenant | None: ...
+    @abstractmethod
+    def save(self, tenant: Tenant) -> None: ...
+    @abstractmethod
+    def with_facts_sheet(self) -> list[Tenant]: ...
+
+
+class FirestoreTenantStore(TenantStore):
+    def get_by_site_key(self, site_key):
+        query = (self._db.collection(COLLECTION)
+                 .where(filter=firestore.FieldFilter("site_key", "==", site_key)).limit(1))
+        for doc in query.stream():
+            return Tenant(**(doc.to_dict() or {}))
+        return None
+
+    def get_by_id(self, tenant_id):
+        doc = self._db.collection(COLLECTION).document(tenant_id).get()
+        ...
+
+    def save(self, tenant):
+        self._db.collection(COLLECTION).document(tenant.tenant_id).set(tenant.model_dump(mode="json"))
+
+    def with_facts_sheet(self):
+        tenants = [Tenant(**(d.to_dict() or {})) for d in self._db.collection(COLLECTION).stream()]
+        return [t for t in tenants if t.is_active and t.facts_sheet_id]</code></pre>
+  <p>Phase 0 walked through this class in detail. Two details worth adding: <code>get_by_site_key</code> is a query (site keys aren't the document id), limited to 1; and <code>Tenant(**(doc.to_dict() or {}))</code> turns the stored dictionary back into a validated <code>Tenant</code> (<code>**</code> unpacks a dictionary into keyword arguments; <code>or {}</code> keeps the type checker happy when <code>to_dict()</code> could be <code>None</code>). <code>model_dump(mode="json")</code> does the reverse, turning dates and URLs into plain strings Firestore can store. <code>with_facts_sheet</code> reads every tenant and filters in Python: one read per tenant, "fine for tens of tenants every few minutes".</p>
+</section>
+
+<section>
+  <h2>5. Conversations: the model</h2>
+<pre><code>class Message(BaseModel):
+    role: str          # "user" or "assistant"
+    content: str
+    id: str = ""       # an assistant reply's id, for feedback
+    created_at: datetime = ...
+
+class Question(BaseModel):
+    text: str          # the visitor's message, contact details removed
+    reply: str         # the assistant's reply, cut to REPLY_LIMIT (500)
+    asked_at: datetime = ...
+    reply_id: str = ""
+    status: str = ""   # set when emailed: answered / partly / not_answered / comment / unchecked
+
+class Conversation(BaseModel):
+    conversation_id: str
+    tenant_id: str
+    messages: list[Message] = Field(default_factory=list)
+    summary: str = ""
+    questions: list[Question] = Field(default_factory=list)
+    questions_emailed: int = 0
+    focus: list[str] = Field(default_factory=list)
+    digest_due: bool = False
+    digest_claimed_at: datetime | None = None
+    created_at: datetime = ...
+    updated_at: datetime = ...</code></pre>
+  <p>One document holds a whole conversation. Each field exists for a reason you've met already:</p>
+  <ul>
+    <li><b><code>messages</code></b> and <b><code>summary</code></b>: the recent history and the running summary of older messages (<a href="https://claude.ai/artifact/QKLydSMm3tKdXapho5kS1V">Phase 4b, §12</a>).</li>
+    <li><b><code>questions</code></b>: every visitor question with the reply, "never summarised or trimmed: the lead email is built from this". <b><code>questions_emailed</code></b> counts how many have gone out, so the next email lists only new ones. <b><code>status</code></b> keeps each question's label after emailing, so <code>scripts.unanswered</code> needs no model calls.</li>
+    <li><b><code>focus</code></b>: the programme(s) the conversation is about.</li>
+    <li><b><code>digest_due</code></b>, <b><code>digest_claimed_at</code></b>: the digest flag and the sweep's lease.</li>
+    <li><b><code>updated_at</code></b>: last activity, which the digest's 15-minute idle check reads.</li>
+    <li><b><code>tenant_id</code></b> is required: "That field is the data boundary this product depends on, so it is required, not optional."</li>
+  </ul>
+</section>
+
+<section>
+  <h2>6. Conversations: the store, method by method</h2>
+  <div class="tablewrap"><table>
+    <tr><th>Method</th><th>What it does</th><th>How</th></tr>
+    <tr><td><code>get</code></td><td>The conversation, or <code>None</code></td><td>Read by id</td></tr>
+    <tr><td><code>append_turn</code></td><td>Visitor message + reply (+ question) in one write</td><td>Transaction</td></tr>
+    <tr><td><code>apply_summary</code></td><td>Set the summary, drop exactly the summarised messages</td><td>Transaction with a check</td></tr>
+    <tr><td><code>mark_questions_emailed</code></td><td>Advance the counter (never backwards), save labels</td><td>Transaction</td></tr>
+    <tr><td><code>set_focus</code></td><td>Save the programme focus</td><td><code>set(merge=True)</code></td></tr>
+    <tr><td><code>set_digest_due</code></td><td>Set or clear the flag (and clear the claim)</td><td><code>set(merge=True)</code></td></tr>
+    <tr><td><code>due_for_digest</code></td><td>Flagged conversations, across tenants</td><td>Query on <code>digest_due == True</code></td></tr>
+    <tr><td><code>claim_for_digest</code></td><td>Take a conversation for one sweep</td><td>Transaction</td></tr>
+    <tr><td><code>release_digest_claim</code></td><td>Give the claim back</td><td><code>set(merge=True)</code></td></tr>
+    <tr><td><code>append</code></td><td>One message (older API, used by a few tests)</td><td>Transaction</td></tr>
+  </table></div>
+  <h3>6.1 <code>append_turn</code> and the size caps</h3>
+<pre><code>MAX_QUESTIONS = 100
+MAX_MESSAGES = 100
+
+def _add_turn(convo, user_text, reply_text, is_question, reply_id="") -> None:
+    convo.messages.append(Message(role="user", content=user_text))
+    convo.messages.append(Message(role="assistant", content=reply_text, id=reply_id))
+    del convo.messages[:-MAX_MESSAGES]
+    convo.updated_at = datetime.now(timezone.utc)
+    if is_question:
+        if len(convo.questions) >= MAX_QUESTIONS:
+            logger.warning("Question cap reached for %s; not recording", convo.conversation_id)
+            return
+        convo.questions.append(Question(text=user_text, reply=reply_text[:REPLY_LIMIT], reply_id=reply_id))
+
+
+def append_turn(self, tenant_id, conversation_id, user_text, reply_text, is_question=False, reply_id=""):
+    doc_ref = self._db.collection(COLLECTION).document(self._doc_id(tenant_id, conversation_id))
+
+    @firestore.transactional
+    def update_in_transaction(transaction):
+        snapshot = doc_ref.get(transaction=transaction)
+        data = snapshot.to_dict() if snapshot.exists else {}
+        convo = Conversation(**data) if data else Conversation(conversation_id=conversation_id, tenant_id=tenant_id)
+        _add_turn(convo, user_text, reply_text, is_question, reply_id)
+        convo.updated_at = datetime.now(timezone.utc)
+        transaction.set(doc_ref, with_expiry(convo.model_dump(mode="json")))
+
+    update_in_transaction(self._db.transaction())</code></pre>
+  <ul>
+    <li><b>One write for the pair.</b> "Two separate appends means two round trips and two transactions. The pair always happens together, so they belong in one write." This was part of the latency work.</li>
+    <li><b><code>_add_turn</code> is shared</b> by the in-memory and Firestore stores, so both behave identically. The difference between them is only <i>how</i> the conversation is loaded and saved.</li>
+    <li><b>The caps.</b> Firestore refuses a document over 1 MiB, "and a conversation that cannot be written loses every later turn". A message is at most about 2,000 characters and a question about 2,500 with its reply, so 100 of each keeps a conversation well under half that. Summaries normally keep messages near 16; the message cap only bites if summarising keeps failing. <code>del convo.messages[:-100]</code> deletes everything except the last 100. Past 100 questions, it's a script, not a person, so further questions aren't recorded.</li>
+    <li><b><code>with_expiry</code></b> on every full write. <code>tests/test_retention.py</code> checks: a full <code>transaction.set</code> without it would make that document permanent.</li>
+  </ul>
+  <h3>6.2 <code>apply_summary</code>: the race-safe replace</h3>
+<pre><code>@firestore.transactional
+def update_in_transaction(transaction) -> bool:
+    snapshot = doc_ref.get(transaction=transaction)
+    if not snapshot.exists:
+        return False
+    convo = Conversation(**(snapshot.to_dict() or {}))
+    if convo.messages[: len(summarized)] != summarized:
+        return False
+    convo.summary = summary
+    convo.messages = convo.messages[len(summarized) :]
+    convo.updated_at = datetime.now(timezone.utc)
+    transaction.set(doc_ref, with_expiry(convo.model_dump(mode="json")))
+    return True</code></pre>
+  <p>The summary call takes seconds, and new turns can be stored meanwhile. So this doesn't overwrite the message list with an old copy; it checks the list still <i>starts</i> with the exact messages that were summarised (Pydantic models compare field by field), and if so removes only those from the front, keeping everything after. If not (another summary got there first), it changes nothing and returns False; those messages are summarised next time. It never touches <code>questions</code>.</p>
+  <h3>6.3 Merge writes, and claims</h3>
+<pre><code>def set_focus(self, tenant_id, conversation_id, focus):
+    self._db.collection(COLLECTION).document(doc_id).set(
+        with_expiry({"conversation_id": conversation_id, "tenant_id": tenant_id, "focus": list(focus)}),
+        merge=True)
+
+def claim_for_digest(self, tenant_id, conversation_id, now, lease) -> bool:
+    @firestore.transactional
+    def claim_in_transaction(transaction) -> bool:
+        snapshot = doc_ref.get(transaction=transaction)
+        if not snapshot.exists:
+            return False
+        if not _claimable(Conversation(**(snapshot.to_dict() or {})), now, lease):
+            return False
+        transaction.update(doc_ref, {"digest_claimed_at": now})
+        return True
+    return claim_in_transaction(self._db.transaction())</code></pre>
+  <p><code>set_focus</code> is a <b>merge</b> write: it changes one field without reading or rewriting the rest, and works even before the first turn exists (the focus is worked out before the reply; the turn is stored after). The ids are included because a stored conversation must have them. <code>claim_for_digest</code> uses a transaction "so two sweeps reading the same unclaimed document cannot both claim it: the second one's commit fails and is retried against the first one's claim", where <code>_claimable</code> then returns False.</p>
+  <p><code>due_for_digest</code> is a single-field equality query, which Firestore indexes automatically: no composite index to create. "Few conversations are due at any time, since the flag is cleared once they are sent." Known gap: it has no ordering, so with more than 40 flagged conversations at once, some could wait; ordering needs a composite index.</p>
+</section>
+
+<section>
+  <h2>7. Facts: the model and the store's cache</h2>
+<pre><code>class Fact(BaseModel):
+    label: str              # "200hr course fee"
+    value: str              # "USD 1,450 including accommodation"
+    category: str = "general"
+
+class FactSheet(BaseModel):
+    tenant_id: str
+    facts: list[Fact] = Field(default_factory=list)
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))</code></pre>
+  <p>"Deliberately simple key/value entries rather than a rigid schema. Different customers care about different things, and a fixed set of columns would mean a code change every time one of them needs a new field." One document per tenant. <code>updated_at</code> is when the facts were last synced, which the daily sync reads.</p>
+<pre><code>_cache: dict[str, tuple[FactSheet | None, float]] = {}
+
+def get_cached_facts(store: FactStore, tenant_id: str) -> FactSheet | None:
+    ttl = get_settings().tenant_cache_seconds
+    now = time.monotonic()
+    entry = _cache.get(tenant_id)
+    if entry and (now - entry[1]) &lt; ttl:
+        return entry[0]
+    sheet = store.get(tenant_id)
+    _cache[tenant_id] = (sheet, now)
+    return sheet</code></pre>
+  <p>Facts are sent with every message, so they're cached per server for 60 seconds. A changed price reaches the bot within a minute of the sync.</p>
+</section>
+
+<section>
+  <h2>8. Facts: reading the Google Sheet (<code>facts/sheets.py</code>)</h2>
+<pre><code>SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
+RANGE = "A1:C1000"
+
+def _get_service():
+    settings = get_settings()
+    if os.path.exists(settings.google_service_account_file):
+        credentials = service_account.Credentials.from_service_account_file(
+            settings.google_service_account_file, scopes=SCOPES)
+    else:
+        credentials, _ = google.auth.default(scopes=SCOPES)
+    return build("sheets", "v4", credentials=credentials)</code></pre>
+  <ul>
+    <li><b>Read-only scope.</b> "The service account can never modify a customer's sheet."</li>
+    <li><b>Two ways to authenticate.</b> Locally, a <b>service account</b> key file (<code>service-account.json</code>, a secret, never committed). On Cloud Run there's no file, so <code>google.auth.default</code> uses the service's own identity, <code>sitechat-runtime</code>. Either way, a sheet is only readable if the school shares it (as Viewer) with that account's email: sharing, not a permission role, is the gate.</li>
+    <li><b>The range has no tab name</b>, "so this works whatever the customer named their first tab".</li>
+  </ul>
+<pre><code>def read_facts(sheet_id: str) -> tuple[list[Fact], list[str]]:
+    try:
+        service = _get_service()
+        result = service.spreadsheets().values().get(spreadsheetId=sheet_id, range=RANGE).execute()
+    except Exception as exc:
+        raise SheetError(f"Could not read sheet {sheet_id}: {exc}") from exc
+    rows = result.get("values", [])
+    if not rows:
+        raise SheetError("The sheet is empty.")
+    header = [cell.strip().lower() for cell in rows[0]]
+    if header[:3] != ["category", "label", "value"]:
+        raise SheetError(f"Expected columns ['category', 'label', 'value'] in row 1, found {header[:3]}.")
+    facts, problems = [], []
+    for index, row in enumerate(rows[1:], start=2):
+        category = row[0].strip() if len(row) > 0 else ""
+        label = row[1].strip() if len(row) > 1 else ""
+        value = row[2].strip() if len(row) > 2 else ""
+        if not label and not value and not category:
+            continue
+        if not label:
+            problems.append(f"Row {index}: missing Label, skipped."); continue
+        if not value:
+            problems.append(f"Row {index}: '{label}' has no Value, skipped."); continue
+        found = instruction_like(" ".join((category, label, value)))
+        if found:
+            problems.append(f"Row {index}: '{label}' reads like an instruction to the assistant ({found!r}), skipped.")
+            continue
+        facts.append(Fact(category=category or "General", label=label, value=value))
+    return facts, problems</code></pre>
+  <p>"Customers edit these sheets themselves, so malformed rows are normal." Each problem becomes a sentence the operator can forward to the school, with the row number as the school sees it (<code>start=2</code>, because row 1 is the header). A row with a label but no value is <b>skipped</b>, not imported blank: "a fact with an empty value is worse than a missing fact: the model would state it confidently." Rows can be short (the Sheets API omits trailing empty cells), hence the length checks.</p>
+</section>
+
+<section>
+  <h2>9. Facts: syncing, with a diff and a safety hold (<code>facts/sync.py</code>)</h2>
+<pre><code>def _diff(old: list[Fact], new: list[Fact]) -> SyncResult:
+    result = SyncResult(total=len(new))
+    # Keyed by category and label: the same label ("Private room") appears
+    # under several categories, one per course.
+    old_by_key = {(f.category, f.label): f.value for f in old}
+    new_by_key = {(f.category, f.label): f.value for f in new}
+    for key, value in new_by_key.items():
+        name = _name(key)
+        if key not in old_by_key:
+            result.added.append(f"{name}: {value}")
+        elif old_by_key[key] != value:
+            result.changed.append(f"{name}: '{old_by_key[key]}' -> '{value}'")
+    for key in old_by_key:
+        if key not in new_by_key:
+            result.removed.append(_name(key))
+    return result
+
+def _looks_emptied(old, result) -> bool:
+    if not old:
+        return False
+    return result.total == 0 or len(result.removed) > len(old) / 2</code></pre>
+  <p><b>Real output</b>: a stored sheet with "Private room" at USD 320 (200-hour) and USD 300 (Mysore), synced from a sheet where the 200-hour price became USD 350, a deposit row has no value, one row tries to instruct the bot, and a location was added:</p>
+<pre><code>added    ['General / Location: Rishikesh']
+changed  ["200-hour course / Private room: 'USD 320' -> 'USD 350'"]
+removed  ['Old / Gone']
+problems ["Row 4: 'Deposit' has no Value, skipped.",
+          "Row 6: 'Tip' reads like an instruction to the assistant ('Ignore all previous instructions'), skipped."]</code></pre>
+  <p>And the safety hold, with a sheet that suddenly has 1 fact where there were 3:</p>
+<pre><code>Facts sync for t held: the sheet has 1 facts, 3 removed of 3. Keeping the old facts;
+run scripts.sync_facts to accept it.</code></pre>
+  <p>"A customer changing a price is normal; a price changing unexpectedly needs to be traceable." Every sync logs what changed. And because the scheduled sync runs with nobody watching (<code>careful=True</code>), a sheet that's empty or lost more than half its facts is <b>held</b>: probably an accidental clear or a bad paste, so the bot keeps the old facts and an error is logged. Running <code>sync_facts</code> by hand accepts it.</p>
+<pre><code>def sync_stale_facts(tenant_store, store, now=None) -> dict:
+    ...
+    for tenant in tenants:
+        if counts["synced"] + counts["held"] + counts["failed"] >= settings.facts_sync_batch:   # 2
+            break
+        tried = _attempts.get(tenant.tenant_id)
+        if tried and now - tried &lt; retry_after:            # failed reads retried hourly
+            continue
+        try:
+            sheet = store.get(tenant.tenant_id)
+            if sheet and now - sheet.updated_at &lt; stale_after:    # synced within 24 h
+                continue
+            _attempts[tenant.tenant_id] = now
+            result = sync_tenant_facts(tenant.tenant_id, tenant.facts_sheet_id, store, careful=True)
+        except Exception:
+            logger.exception("Facts sync failed for %s", tenant.tenant_id)
+            counts["failed"] += 1
+            continue
+        counts["held" if result.held else "synced"] += 1
+    return counts</code></pre>
+  <p>Run by the same 5-minute call as the lead digest (one free scheduler job for both): tenants whose facts are over 24 hours old are re-read, at most 2 per call, and a sheet that can't be read (most often: not shared with <code>sitechat-runtime</code>) is retried after an hour, not every 5 minutes. It "never raises: the digest it runs alongside matters more".</p>
+</section>
+
+<section>
+  <h2>10. Usage and feedback stores</h2>
+<pre><code>class FirestoreUsageStore(UsageStore):
+    def _doc(self, tenant_id, day):
+        return self._db.collection(COLLECTION).document(f"{tenant_id}__{day}")
+
+    def tokens_on(self, tenant_id, day) -> int:
+        doc = self._doc(tenant_id, day).get()
+        return int((doc.to_dict() or {}).get("tokens", 0)) if doc.exists else 0
+
+    def add_tokens(self, tenant_id, day, tokens) -> None:
+        self._doc(tenant_id, day).set(
+            {"tenant_id": tenant_id, "day": day, "tokens": firestore.Increment(tokens)}, merge=True)</code></pre>
+  <p>One small document per tenant per day, incremented on the server "so two instances adding at once both count". The logic that uses it (caching, fail-open) is in <a href="https://claude.ai/artifact/QKLydSMm3tKdXapho5kS1V">Phase 4b, §2</a>.</p>
+<pre><code>def _key(f: Feedback) -> str:
+    return f"{f.tenant_id}__{f.conversation_id}__{f.reply_id}"
+
+class FirestoreFeedbackStore(FeedbackStore):
+    def save(self, feedback):
+        self._db.collection(COLLECTION).document(_key(feedback)).set(with_expiry(feedback.model_dump(mode="json")))
+
+    def since(self, tenant_id, when):
+        query = self._db.collection(COLLECTION).where(filter=firestore.FieldFilter("tenant_id", "==", tenant_id))
+        found = [Feedback(**(d.to_dict() or {})) for d in query.stream()]
+        found = [f for f in found if f.updated_at >= when]
+        return sorted(found, key=lambda f: f.updated_at, reverse=True)</code></pre>
+  <p>One record per reply (the id includes the reply id), so "changing the rating replaces it rather than adding a second vote". Only ids are stored: the reply is written in the background, so a fast tap can arrive first; the review script looks up the text later. <code>since</code> filters dates in Python after an equality query, avoiding a composite index (the same choice as <code>LeadStore.since</code>).</p>
+</section>
+
+<section>
+  <h2>11. Four caches, one pattern</h2>
+  <div class="tablewrap"><table>
+    <tr><th>Cache</th><th>File</th><th>Key</th><th>Lifetime</th></tr>
+    <tr><td>Tenant by site key (incl. "not found")</td><td><code>api/dependencies.py</code></td><td>site key</td><td>60 s</td></tr>
+    <tr><td>Facts sheet</td><td><code>facts/store.py</code></td><td>tenant</td><td>60 s</td></tr>
+    <tr><td>Programme catalogue</td><td><code>programmes/store.py</code></td><td>tenant</td><td>60 s</td></tr>
+    <tr><td>Token usage</td><td><code>usage/budget.py</code></td><td>tenant, day</td><td>60 s, plus local additions</td></tr>
+    <tr><td>BM25 index (when enabled)</td><td><code>retrieval/keyword_search.py</code></td><td>tenant</td><td>5 min</td></tr>
+  </table></div>
+  <p>Each is a module-level dictionary from key to (value, time stored), checked with <code>time.monotonic()</code>. They live inside one server process, so each Cloud Run instance has its own, and a change takes up to a minute to be seen everywhere. They hold one entry per tenant, so they grow with the number of tenants, not over time (the site-key cache, which could grow with made-up keys, is cleared at 10,000 entries). This is a deliberately simple design: no Redis, no invalidation messages, a bounded staleness.</p>
+</section>
+
+<section>
+  <h2>12. What tests can and can't prove here</h2>
+  <p>The test suite uses the in-memory stores, so it proves the <i>logic</i> (what's stored, merging, caps, claims, the summary check) but not Firestore's own behaviour (transactions retrying, merge semantics, a field missing after a full <code>set</code>). Real coverage numbers from the last run:</p>
+  <div class="tablewrap"><table>
+    <tr><th>File</th><th>Coverage</th><th>Why</th></tr>
+    <tr><td><code>conversations/store.py</code></td><td>55%</td><td>The Firestore class isn't exercised.</td></tr>
+    <tr><td><code>leads/store.py</code></td><td>67%</td><td>Same.</td></tr>
+    <tr><td><code>tenants/store.py</code></td><td>66%</td><td>Same.</td></tr>
+    <tr><td><code>usage/budget.py</code>, <code>leads/notify.py</code></td><td>100%</td><td>Pure logic.</td></tr>
+    <tr><td>Whole of <code>app/</code></td><td>85.66%</td><td>CI requires at least 80%.</td></tr>
+  </table></div>
+  <p>The fix is known and on the backlog (item 25): tests against the <b>Firestore emulator</b>, a local fake Firestore that behaves like the real one, to cover <code>apply_summary</code>, <code>mark_items_sent</code>, <code>mark_questions_emailed</code> and <code>claim_for_digest</code> in real transactions. Saying this plainly in an interview is a strength: you know exactly where your tests stop.</p>
+</section>
+
+<section>
+  <h2>13. Challenges we faced</h2>
+  <div class="box challenge"><div class="tag">1. A full write silently wiped fields</div><p>An early <code>append_message</code> wrote the whole conversation with <code>set</code>, deleting fields (<code>todos</code>, <code>facts</code>) that a tool had written moments earlier. Only visible against real Firestore; the in-memory store has no such behaviour. <b>Fix:</b> every read-modify-write is a transaction that reads the latest document first, and single-field updates use <code>merge=True</code>. <b>Lesson (from the notes):</b> this is exactly the gap emulator tests would close, and they're still not built.</p></div>
+  <div class="box challenge"><div class="tag">2. The facts change log reported a change that didn't happen</div><p>The diff keyed facts by label only. With one "Private room" per course, it paired the 200-hour price with the Mysore one and reported a price change. The stored facts were always correct; only the report was wrong, which is still dangerous, because the change log is how unexpected price changes are traced. <b>Fix (16 Oct):</b> keyed and shown as "Category / Label".</p></div>
+  <div class="box challenge"><div class="tag">3. An emptied sheet would have wiped the bot's facts</div><p>Once syncing became automatic and daily (18 Oct), a school clearing its sheet by accident would have left the bot with no prices. <b>Fix:</b> the scheduled sync holds a sheet with no facts or more than half removed, keeping the old facts and logging an error.</p></div>
+  <div class="box challenge"><div class="tag">4. The production sync needed a different identity</div><p>Locally, sheets were read with <code>service-account.json</code>. Production has no such file (and shouldn't), so it reads as the service's own account, <code>sitechat-runtime</code>, and every school's sheet must be shared with that address. Until shared, the sync logs an error hourly and the bot keeps its facts. This is an operational step (and on your open list), not a code change.</p></div>
+  <div class="box challenge"><div class="tag">5. A conversation could grow until it couldn't be saved</div><p>Review finding L1: <code>questions</code> grew without limit against Firestore's 1 MiB cap, so a scripted visitor could make a conversation unwritable. <b>Fix (17 Oct):</b> 100 messages and 100 questions; model-supplied visitor details capped at 200 characters.</p></div>
+  <div class="box challenge"><div class="tag">6. Thirty type errors, mostly from one optional</div><p>When <code>mypy</code> was added to CI (18 Oct), it found 30 type errors, mostly because Firestore's <code>to_dict()</code> can return <code>None</code> and the code passed it straight to <code>Tenant(**...)</code>. <b>Fix:</b> <code>to_dict() or {}</code> everywhere. A missing document is already handled by <code>.exists</code>, so it never failed in practice; the type checker made the assumption explicit.</p></div>
+</section>
+
+<section>
+  <h2>Glossary</h2>
+  <dl class="gloss">
+    <div><dt>Collection / document</dt><dd>A named group in Firestore / one record in it, with an id and JSON-like fields.</dd></div>
+    <div><dt>Merge write</dt><dd><code>set(data, merge=True)</code>: change only the given fields.</dd></div>
+    <div><dt>Composite index</dt><dd>A Firestore index on several fields together, needed for some queries and created by hand.</dd></div>
+    <div><dt>Compound key</dt><dd>An id built from several parts, like <code>tenant__conversation</code>.</dd></div>
+    <div><dt>Service account</dt><dd>A Google identity for a program rather than a person.</dd></div>
+    <div><dt>OAuth scope</dt><dd>What an access token is allowed to do, e.g. read-only spreadsheets.</dd></div>
+    <div><dt>Diff</dt><dd>The list of what was added, changed and removed between two versions.</dd></div>
+    <div><dt>Emulator</dt><dd>A local program that imitates a cloud service for testing.</dd></div>
+    <div><dt>Staleness</dt><dd>How out of date cached data can be.</dd></div>
+    <div><dt>1 MiB</dt><dd>1,048,576 bytes: Firestore's maximum document size.</dd></div>
+    <div><dt><code>HttpUrl</code></dt><dd>A Pydantic type accepting only valid http(s) URLs.</dd></div>
+  </dl>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <details><summary>Why does a conversation's document id include the tenant?</summary><p>So a lookup needs both the tenant and the conversation id; another tenant's valid conversation id names a document that doesn't exist. Isolation by construction.</p></details>
+  <details><summary>What's the difference between <code>set(data)</code> and <code>set(data, merge=True)</code>, and which bug came from it?</summary><p>The first replaces the whole document, deleting fields not in <code>data</code>; the second changes only the given fields. A full <code>set</code> once wiped fields a tool had just written.</p></details>
+  <details><summary>Why does <code>apply_summary</code> compare the start of the message list before writing?</summary><p>Turns may have been stored during the slow summary call; it removes only the summarised messages if they're still at the front, and keeps everything after. Otherwise new turns would be lost.</p></details>
+  <details><summary>Why are facts with no value skipped instead of stored empty?</summary><p>The model would state an empty fact confidently; a missing fact makes it say it doesn't know.</p></details>
+  <details><summary>The scheduled sync sees a sheet with 2 facts where there were 40. What happens?</summary><p>It's held: more than half were removed, so the old facts stay and an error is logged. Running <code>sync_facts</code> by hand accepts it.</p></details>
+  <details><summary>Why can't the tests catch a missing <code>merge=True</code>?</summary><p>They use in-memory stores, which don't imitate Firestore's write semantics. Emulator tests would.</p></details>
+  <details><summary>Why is "Private room" a problem for a label-only diff?</summary><p>Several courses each have a "Private room" fact; keyed by label alone, different courses' prices get compared with each other. The key must be category plus label.</p></details>
+</section>
+
+<section>
+  <h2>Next: Phase 4f, scripts and evaluation</h2>
+  <p>Every operator script, what it touches and how it protects you from mistakes, and the evaluation harness: the 82 questions, the metrics, the judges and the 29 attacks. <a href="https://claude.ai/artifact/4hwNREB8CxkHtRrwgwRraL">Read Phase 4f</a>.</p>
+</section>
+
+</main>
+</body>
+</html>

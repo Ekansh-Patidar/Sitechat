@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sitechat KT 4a: API Layer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,650&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  /* Layout: a reading column with a phase map on top; coloured callouts by role
+     (analogy, in this project, interview, try it); code blocks scroll inside themselves. */
+  :root {
+    --bg: #f5f6f4;
+    --paper: #ffffff;
+    --ink: #1b2725;
+    --muted: #5a6663;
+    --line: #dde3e0;
+    --accent: #1f6f5c;
+    --accent-soft: #e5f1ec;
+    --analogy: #7a4f9a;
+    --analogy-soft: #f2ecf7;
+    --interview: #a5630d;
+    --interview-soft: #fbf1e0;
+    --code-bg: #f0f3f1;
+    --display: "Literata", Georgia, "Times New Roman", serif;
+    --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121918; --paper: #1a2322; --ink: #e5ebe9; --muted: #9db0aa; --line: #2b3735;
+      --accent: #63c2a6; --accent-soft: #1d3530; --analogy: #c7a3e6; --analogy-soft: #2a2235;
+      --interview: #e3a64b; --interview-soft: #2e2416; --code-bg: #0f1514;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #121918; --paper: #1a2322; --ink: #e5ebe9; --muted: #9db0aa; --line: #2b3735;
+    --accent: #63c2a6; --accent-soft: #1d3530; --analogy: #c7a3e6; --analogy-soft: #2a2235;
+    --interview: #e3a64b; --interview-soft: #2e2416; --code-bg: #0f1514;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 17px/1.65 var(--body);
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 32px 80px;
+  }
+  main { max-width: 48rem; margin: 0 auto; display: grid; gap: 44px; }
+  header { display: grid; gap: 12px; }
+  .eyebrow { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  h1 { font: 650 clamp(30px, 5.5vw, 42px)/1.12 var(--display); margin: 0; text-wrap: balance; }
+  h2 { font: 650 clamp(23px, 3.6vw, 28px)/1.25 var(--display); margin: 0; text-wrap: balance; }
+  h3 { font: 700 18px/1.35 var(--body); margin: 8px 0 0; }
+  p, ul, ol { margin: 0; }
+  ul, ol { padding-left: 1.3em; display: grid; gap: 6px; }
+  li::marker { color: var(--accent); }
+  section { display: grid; gap: 16px; min-width: 0; }
+  .lede { color: var(--muted); font-size: 18px; }
+  a { color: var(--accent); }
+  code { font: 0.88em var(--mono); background: var(--code-bg); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+  pre {
+    margin: 0; background: var(--code-bg); border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 16px; overflow-x: auto; font: 14px/1.55 var(--mono);
+  }
+  pre code { background: none; padding: 0; font-size: inherit; overflow-wrap: normal; }
+  .file { font: 600 13px var(--mono); color: var(--muted); margin-bottom: -10px; }
+  .phases { display: flex; flex-wrap: wrap; gap: 6px; }
+  .phases span {
+    font-size: 13px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line);
+    color: var(--muted); background: var(--paper);
+  }
+  .phases span.now { background: var(--accent); color: var(--paper); border-color: var(--accent); font-weight: 600; }
+  .box { border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; border: 1px solid var(--line); background: var(--paper); }
+  .box .tag { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .analogy { background: var(--analogy-soft); border-color: transparent; }
+  .analogy .tag { color: var(--analogy); }
+  .project { background: var(--accent-soft); border-color: transparent; }
+  .project .tag { color: var(--accent); }
+  .interview { background: var(--interview-soft); border-color: transparent; }
+  .interview .tag { color: var(--interview); }
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
+  table { border-collapse: collapse; width: 100%; font-size: 15.5px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-weight: 700; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+  tr:last-child td { border-bottom: none; }
+  td:first-child { white-space: nowrap; }
+  .steps { list-style: none; padding: 0; counter-reset: s; display: grid; gap: 10px; }
+  .steps > li { counter-increment: s; display: grid; grid-template-columns: 2rem 1fr; gap: 10px; min-width: 0; }
+  .steps > li::before {
+    content: counter(s); width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+    font: 700 13px/1 var(--body); color: var(--accent); border: 1.5px solid var(--accent);
+  }
+  .steps > li > div { display: grid; gap: 6px; min-width: 0; }
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .flow .node { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: 15px; }
+  .flow .arrow { color: var(--accent); font-weight: 700; }
+  details { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+  details summary { cursor: pointer; font-weight: 600; }
+  details[open] summary { margin-bottom: 8px; }
+  details p { color: var(--ink); }
+  dl.gloss { display: grid; gap: 10px; margin: 0; }
+  dl.gloss div { display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr; gap: 12px; }
+  dl.gloss dt { font-weight: 700; }
+  dl.gloss dd { margin: 0; }
+  @media (max-width: 560px) { dl.gloss div { grid-template-columns: 1fr; gap: 2px; } td:first-child { white-space: normal; } }
+  .toc { columns: 2 16rem; column-gap: 28px; }
+  .toc li { break-inside: avoid; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 0; }
+  summary:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .machines { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 10px; }
+  .machine { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 6px; align-content: start; }
+  .machine b { font-family: var(--display); font-size: 17px; }
+  .machine.us { border-color: var(--accent); }
+  .lbl { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+
+  :root { --challenge: #a8322f; --challenge-soft: #fbecea; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --challenge: #f2958f; --challenge-soft: #3a2220; } }
+  :root[data-theme="dark"] { --challenge: #f2958f; --challenge-soft: #3a2220; }
+  .challenge { background: var(--challenge-soft); border-color: transparent; }
+  .challenge .tag { color: var(--challenge); }
+  .phases a { font-size: 13px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line);
+    color: var(--muted); background: var(--paper); text-decoration: none; }
+  .phases a:hover { border-color: var(--accent); color: var(--accent); }
+  .phases a.now { background: var(--accent); color: var(--paper); border-color: var(--accent); font-weight: 600; }
+  figure { margin: 0; display: grid; gap: 8px; justify-items: start; }
+  figure img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+  figcaption { font-size: 14px; color: var(--muted); }
+  .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 12px; }
+  .kv { display: grid; grid-template-columns: minmax(7rem, 11rem) 1fr; gap: 6px 14px; }
+  @media (max-width: 560px) { .kv { grid-template-columns: 1fr; gap: 2px; } }
+</style>
+
+</head>
+<body>
+<main>
+<header>
+  <div class="eyebrow">Sitechat knowledge transfer · Phase 4a of 10</div>
+  <h1>The API layer, file by file: how a request gets in</h1>
+  <p class="lede">This is the front door of the server. We open every file that runs before the AI is involved: <code>main.py</code> (building the app), <code>config.py</code> (every setting), <code>rate_limit.py</code>, <code>request_context.py</code> and <code>logging_setup.py</code> (knowing which request a log line belongs to), <code>retention.py</code>, and the four files in <code>app/api/</code>. For each: what it's for, the real code, what each important line does, and why it was written that way. Real responses are captured from the app running on this laptop.</p>
+  <div class="phases" aria-label="All phases">
+    <a href="https://claude.ai/artifact/QuxrXdoFv7vr5KKvNSML78">0 First principles</a><a href="https://claude.ai/artifact/MDdgNKEGibTrFVYqtGjGhs">1 How the web works</a><a href="https://claude.ai/artifact/VVYejQXYpWzuimyovij4CY">2 What Sitechat is</a><a href="https://claude.ai/artifact/RHDbDbJ6r8RmXdRsvAUK9S">3 AI fundamentals</a><a class="now" href="https://claude.ai/artifact/F1oZk1cyDLGAPio8khD7cY">4a API layer</a><a href="https://claude.ai/artifact/QKLydSMm3tKdXapho5kS1V">4b The agent</a><a href="https://claude.ai/artifact/2TNXtynh229R59PV9MwHc1">4c Retrieval</a><a href="https://claude.ai/artifact/Np1qbTsXtXtDL6UmGaMvFv">4d Leads</a><a href="https://claude.ai/artifact/S2dSYJnVDTPbqeAWJP6qd1">4e Data stores</a><a href="https://claude.ai/artifact/4hwNREB8CxkHtRrwgwRraL">4f Scripts and evals</a><a href="https://claude.ai/artifact/AHXQrMEzxpZ6x4ihiiiCm1">5 The chat widget</a><a href="https://claude.ai/artifact/BknbsJYd7gFx9geyWbBqKF">6 Cloud and data</a><a href="https://claude.ai/artifact/KdgDyd9VuQVfjJu3dvHPv2">7 Quality and safety</a><a href="https://claude.ai/artifact/QDifNPBS4Lu8CLhvZTJ5C4">8 Rebuild it yourself</a><a href="https://claude.ai/artifact/99LTVwqoTPzBmFmHCZcsCS">9 Interview prep</a><a href="https://claude.ai/artifact/NKGY4fDQXK9Cp41B55wiTs">10 Set it up</a>
+  </div>
+</header>
+
+<section>
+  <h2>How to read this phase</h2>
+  <p>Phase 1 explained the web ideas (HTTP, CORS, X-Forwarded-For) using this code. This phase goes underneath: the Python mechanisms that make it work (decorators, context managers, context variables, dependency injection, middleware) and the details Phase 1 skipped. Where Phase 1 already covered something, there's a link instead of a repeat.</p>
+  <p>Code blocks are copied from the repo. "…" marks lines left out. Line numbers aren't shown because they change; search for the function name instead.</p>
+  <h3>Files in this phase</h3>
+  <ol class="toc">
+    <li><code>app/main.py</code>: building the application</li>
+    <li><code>app/config.py</code>: every setting, validated once</li>
+    <li><code>app/rate_limit.py</code>: the limiter and who a visitor is</li>
+    <li><code>app/request_context.py</code>: request ids that follow the work</li>
+    <li><code>app/logging_setup.py</code>: log lines Google can search</li>
+    <li><code>app/retention.py</code>: an expiry date on personal data</li>
+    <li><code>app/api/schemas.py</code>: the shapes going in and out</li>
+    <li><code>app/api/dependencies.py</code>: who is this request for?</li>
+    <li><code>app/api/routes.py</code>: <code>/config</code>, <code>/chat</code>, <code>/feedback</code></li>
+    <li><code>app/api/internal.py</code>: the endpoint only Google may call</li>
+    <li>The order everything runs in</li>
+    <li>Challenges we faced</li>
+    <li>Glossary and check yourself</li>
+  </ol>
+</section>
+
+<section>
+  <h2>1. <code>app/main.py</code>: building the application</h2>
+  <p><b>Job:</b> create the FastAPI application object, attach the storage objects ("stores"), add the middleware, register the routes, and serve the widget's files. When Cloud Run starts the container, it runs <code>uvicorn app.main:app</code>, which means "import the module <code>app.main</code> and serve the object called <code>app</code> in it". So the very last line of the file matters:</p>
+<pre><code>app = create_app()</code></pre>
+  <p>Importing the module runs <code>create_app()</code> once and names the result <code>app</code>.</p>
+
+  <h3>1.1 <code>create_app</code>: the factory</h3>
+<pre><code>def create_app(
+    tenant_store=None,
+    conversation_store=None,
+    fact_store=None,
+    vector_store=None,
+    chunk_store=None,
+    lead_store=None,
+    programme_store=None,
+    usage_store=None,
+    feedback_store=None,
+) -> FastAPI:
+    # No /docs, /redoc or /openapi.json in production: they would publish
+    # every route, /internal ones included, to anyone who asks.
+    docs: dict[str, Any] = {} if not get_settings().is_production else dict(
+        docs_url=None, redoc_url=None, openapi_url=None
+    )
+    app = FastAPI(title="Sitechat API", lifespan=lifespan, **docs)
+
+    if tenant_store is not None:
+        app.state.tenant_store = tenant_store
+    ...                                   # the same for the other eight stores
+
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["Content-Type", "X-Site-Key"],
+    )
+    # Added last, so it is outermost: every log line of a request, its
+    # background tasks included, carries the request id.
+    app.add_middleware(RequestContextMiddleware)
+
+    @app.get("/health")
+    def health_check():
+        return {"status": "ok"}
+
+    app.include_router(router)
+    app.include_router(internal_router)
+    app.mount("/widget", StaticFiles(directory="static"), name="widget")
+    return app</code></pre>
+  <p>Line by line, the parts that need explaining:</p>
+  <ul>
+    <li><b>A function that builds the app</b> (a "factory") rather than building it at the top of the file. Tests call <code>create_app(tenant_store=InMemoryTenantStore(), ...)</code> to get a fresh app wired to in-memory stores; production calls it with nothing. This is the dependency injection from <a href="https://claude.ai/artifact/QuxrXdoFv7vr5KKvNSML78">Phase 0, section 8.12</a>.</li>
+    <li><b><code>**docs</code></b> unpacks a dictionary into keyword arguments. In production it becomes <code>FastAPI(..., docs_url=None, redoc_url=None, openapi_url=None)</code>, which turns off the automatic API documentation pages. Locally they stay on (useful for trying routes at <code>/docs</code>). Real output below: <code>/docs</code> returns 200 locally; in production it's 404.</li>
+    <li><b><code>app.state</code></b> is a place FastAPI gives you to hang your own objects on the app. Each route later reads <code>request.app.state.conversation_store</code>, without knowing which kind it is.</li>
+    <li><b><code>add_exception_handler(RateLimitExceeded, ...)</code></b>: when a rate limit is exceeded, slowapi raises an exception; this handler turns it into a 429 response with <code>{"error": "Rate limit exceeded: 5 per 1 minute"}</code> instead of a 500.</li>
+    <li><b>Middleware order.</b> Each <code>add_middleware</code> wraps everything added before it, so the <i>last</i> one added runs <i>first</i>. <code>RequestContextMiddleware</code> is added last so it's outermost: the request id exists before CORS handling, the route and the background tasks run (section 4). CORS is explained in <a href="https://claude.ai/artifact/MDdgNKEGibTrFVYqtGjGhs">Phase 1, section 9</a>.</li>
+    <li><b><code>/health</code></b> is the simplest possible route: if this answers, the process is alive. It's named <code>/health</code>, not the more common <code>/healthz</code>, because Google's front end intercepts <code>/healthz</code> before it reaches the container (a challenge below).</li>
+    <li><b><code>include_router</code></b> attaches the routes defined in <code>app/api/routes.py</code> and <code>internal.py</code>. <b><code>mount("/widget", StaticFiles(...))</code></b> serves files from the <code>static/</code> folder as they are, so <code>/widget/widget.js</code> is the chat widget and <code>/widget/test-page.html</code> a page to try it on.</li>
+  </ul>
+
+  <h3>1.2 <code>lifespan</code>: start-up and shut-down</h3>
+<pre><code>@asynccontextmanager
+async def lifespan(app: FastAPI):
+    settings = get_settings()
+    setup_logging(settings.log_level, as_json=settings.is_production)
+
+    if settings.sentry_dsn.get_secret_value():
+        import sentry_sdk
+        sentry_sdk.init(**sentry_options(settings))
+        logger.info("Sentry enabled")
+
+    logger.info("Starting up in %s mode", settings.environment)
+
+    # Only build real cloud clients if stores were not supplied.
+    # Tests pass their own, so nothing touches Google credentials.
+    if not hasattr(app.state, "tenant_store"):
+        app.state.tenant_store = FirestoreTenantStore(settings.gcp_project_id)
+    ...                                   # the same for the other eight stores
+
+    yield
+
+    logger.info("Shutting down")</code></pre>
+  <p>A <b>lifespan</b> is code FastAPI runs once when the server starts and once when it stops. The <code>yield</code> is the dividing line: everything before it runs at start-up; then the server serves requests for as long as it lives; everything after it runs at shut-down. <code>@asynccontextmanager</code> is the decorator that turns a function with one <code>yield</code> into that start/stop pair (the same idea as <code>with open(...)</code>, from Phase 0).</p>
+  <p>The important line is <code>if not hasattr(app.state, "tenant_store")</code>: "only create a real Firestore store if nobody supplied one". Tests supply in-memory stores through <code>create_app</code>, so their lifespan creates nothing that needs Google credentials. This exact pattern was added after the very first CI failure, when tests built real Firestore clients and failed on GitHub's machines, which have no credentials.</p>
+
+  <h3>1.3 <code>sentry_options</code>: error reports without personal data</h3>
+<pre><code>def sentry_options(settings) -> dict:
+    return dict(
+        dsn=settings.sentry_dsn.get_secret_value(),
+        environment=settings.environment,
+        traces_sample_rate=0.1,
+        send_default_pii=False,
+        include_local_variables=False,
+        max_request_body_size="never",
+    )</code></pre>
+  <p>Sentry is a service that collects error reports (stack traces) from the running server. The three privacy settings each close a different leak: <code>send_default_pii=False</code> stops it sending things like IP addresses and cookies; <code>include_local_variables=False</code> stops it attaching every variable's value at each line of the stack (which would include the visitor's message, and sometimes their email); <code>max_request_body_size="never"</code> stops it attaching the request body (the message itself). The second and third were added after testing showed the first alone still sent the visitor's email from a local variable. <code>tests/test_sentry_privacy.py</code> uses the real Sentry library with an in-memory transport to prove nothing personal leaves.</p>
+</section>
+
+<section>
+  <h2>2. <code>app/config.py</code>: every setting, validated once</h2>
+  <p><b>Job:</b> one class, <code>Settings</code>, that lists every configurable value with its type and default, reads overrides from environment variables (or a local <code>.env</code> file), and checks them all at start-up. A missing or malformed value fails immediately with a clear message, not deep inside a request later.</p>
+<pre><code>class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    environment: Literal["development", "production"] = "development"
+    log_level: str = "INFO"
+    gcp_project_id: str = ""
+    rate_limit_per_visitor: str = "5/minute"
+    ...
+    openai_api_key: SecretStr = SecretStr("")
+    openai_model: str = "gpt-4o-mini"
+    ...
+
+    @property
+    def is_production(self) -> bool:
+        return self.environment == "production"
+
+
+@lru_cache
+def get_settings() -> Settings:
+    """Return the settings, building them only once per process."""
+    return Settings()</code></pre>
+  <ul>
+    <li><b><code>BaseSettings</code></b> (from the <code>pydantic-settings</code> library) is a Pydantic model that fills itself from the environment. The field <code>openai_api_key</code> is read from an environment variable named <code>OPENAI_API_KEY</code> (case doesn't matter). If it isn't set, the default is used.</li>
+    <li><b><code>env_file=".env"</code></b>: locally, values come from a file named <code>.env</code> in the folder you run from. In production there's no file: Cloud Run sets real environment variables, and secrets come from Secret Manager (Phase 6). <b><code>extra="ignore"</code></b>: unknown variables in <code>.env</code> are ignored rather than an error.</li>
+    <li><b><code>Literal["development", "production"]</code></b>: the only two values allowed. <code>ENVIRONMENT=prod</code> would fail at start-up instead of quietly running with development behaviour.</li>
+    <li><b><code>SecretStr</code></b>: a string that prints as asterisks. A failing test, a logged exception or a Sentry report can print the settings object; with <code>SecretStr</code> the keys don't appear. Code that needs the real value calls <code>.get_secret_value()</code>. Real output: <code>repr(s.openai_api_key)</code> gives <code>SecretStr('**********')</code>, while <code>get_secret_value()</code> gives <code>sk-test-123</code>.</li>
+    <li><b><code>@property</code></b> makes <code>settings.is_production</code> read like a field while being computed.</li>
+    <li><b><code>@lru_cache</code></b> on <code>get_settings</code> means the function's result is remembered: the first call builds <code>Settings()</code> (reading the environment), every later call returns the same object. One settings object per process, created on first use.</li>
+  </ul>
+  <p>The settings, grouped (defaults shown; the reason for each is written beside it in the file):</p>
+  <div class="tablewrap"><table>
+    <tr><th>Group</th><th>Settings and defaults</th></tr>
+    <tr><td>Environment</td><td><code>environment</code> development · <code>log_level</code> INFO · <code>gcp_project_id</code> ""</td></tr>
+    <tr><td>Rate limits</td><td><code>rate_limit_per_visitor</code> 5/minute · <code>rate_limit_per_tenant</code> 60/hour · <code>rate_limit_config_per_visitor</code> 30/minute · <code>rate_limit_feedback_per_visitor</code> 30/minute · <code>rate_limit_rejected_per_visitor</code> 20/minute · <code>trusted_proxy_hops</code> 1 · <code>tenant_cache_seconds</code> 60</td></tr>
+    <tr><td>OpenAI</td><td><code>openai_api_key</code> · <code>openai_model</code> gpt-4o-mini · <code>eval_judge_model</code> "" · <code>openai_timeout_seconds</code> 15 · <code>openai_max_retries</code> 1 · <code>embedding_timeout_seconds</code> 5 · <code>reply_deadline_seconds</code> 40 · <code>reply_max_tokens</code> 600 · <code>daily_token_budget</code> 3,000,000</td></tr>
+    <tr><td>Conversation memory</td><td><code>history_window</code> 12 · <code>summarize_trigger</code> 16</td></tr>
+    <tr><td>Google Sheets</td><td><code>google_service_account_file</code> service-account.json</td></tr>
+    <tr><td>Retrieval</td><td><code>pinecone_api_key</code> · <code>pinecone_index_name</code> sitechat · <code>embedding_model</code> text-embedding-3-small · <code>embedding_dimension</code> 1536 · <code>retrieval_top_k</code> 5 · <code>retrieval_candidates</code> 5 · <code>use_keyword_search</code> False · <code>use_rerank</code> False · <code>vector_weight</code> 1.0 · <code>keyword_weight</code> 0.3 · <code>cohere_api_key</code> · <code>rerank_model</code> rerank-v3.5 · <code>throttle_rerank</code> True · <code>focus_boost</code> 0.08</td></tr>
+    <tr><td>Email</td><td><code>resend_api_key</code> · <code>notification_from_email</code> onboarding@resend.dev · <code>retry_failed_lead_emails</code> False · <code>lead_email_cooldown_minutes</code> 10 · <code>lead_emails_per_day</code> 50</td></tr>
+    <tr><td>Lead digest</td><td><code>lead_digest_idle_minutes</code> 15 · <code>lead_digest_batch</code> 10 · <code>lead_digest_claim_minutes</code> 10 · <code>lead_digest_invoker</code> "" · <code>lead_digest_audience</code> sitechat-lead-digest</td></tr>
+    <tr><td>Facts sync</td><td><code>facts_sync_hours</code> 24 · <code>facts_sync_batch</code> 2 · <code>facts_sync_retry_minutes</code> 60</td></tr>
+    <tr><td>Privacy, errors</td><td><code>retention_days</code> 365 · <code>sentry_dsn</code> ""</td></tr>
+  </table></div>
+  <div class="box project"><div class="tag">In Sitechat</div><p>The comments in <code>config.py</code> are a record of decisions. Next to <code>use_keyword_search = False</code>: "Measured on a 28-chunk corpus it dropped semantic MRR from 0.93 to 0.62 ... This is a scale decision, not a verdict on the technique." Next to <code>focus_boost = 0.08</code>: the five values tried and the MRR each gave. Next to the rate limits: why they're per instance and what the worst case is. A setting with its reason beside it is a decision someone can revisit; a bare number is a mystery.</p></div>
+</section>
+
+<section>
+  <h2>3. <code>app/rate_limit.py</code>: the limiter and who a visitor is</h2>
+  <p><b>Job:</b> create the one shared rate limiter, and decide what "one visitor" and "one tenant" mean for counting. <a href="https://claude.ai/artifact/MDdgNKEGibTrFVYqtGjGhs">Phase 1, section 10</a> explained why <code>client_ip</code> reads the <i>last</i> entry of <code>X-Forwarded-For</code> and why IPv6 addresses are grouped by /64. Here's what the rest of the file does.</p>
+<pre><code>def site_key(request: Request) -> str:
+    """Key for the per-tenant limit. get_tenant has already validated it."""
+    return "site:" + request.headers.get("x-site-key", "")
+
+
+limiter = Limiter(key_func=client_ip)</code></pre>
+  <p><b>slowapi</b> is the rate-limiting library. A <code>Limiter</code> counts requests per <b>key</b> and refuses once a key passes its limit within the time window. <code>key_func=client_ip</code> sets the default key: the visitor's address. Individual routes can count by another key, as <code>/chat</code> does with <code>key_func=site_key</code> for its per-tenant limit (section 9). The "site:" prefix keeps tenant counters from ever colliding with visitor counters.</p>
+  <p><b>Why its own file?</b> The limiter is used by <code>routes.py</code> (to decorate routes) and by <code>main.py</code> (to attach it to the app). When it lived in <code>main.py</code>, <code>routes.py</code> had to import <code>main</code>, while <code>main</code> imported <code>routes</code>: a circular import, which Python can't resolve (one module ends up half-loaded). Moving the shared object to a third module that both import is the standard fix.</p>
+  <p><b>Counters live in memory.</b> There's no <code>storage_uri</code>, so each server process keeps its own counts. Cloud Run may run up to 10 copies ("instances") under load, each counting separately, so the real worst case is 10 times each limit. At today's traffic there's one instance, so the limits are effectively exact. The plan, written in <code>config.py</code>: shared counters (a hosted Redis) once there's regularly more than one instance.</p>
+</section>
+
+<section>
+  <h2>4. <code>app/request_context.py</code>: request ids that follow the work</h2>
+  <p><b>Job:</b> make every log line say which request, which tenant and which conversation it belongs to, so "show me everything that happened in this conversation" is one search instead of guesswork.</p>
+  <h3>4.1 The problem with a global variable</h3>
+  <p>The obvious approach, a global variable <code>current_tenant = "..."</code>, breaks immediately: the server handles many requests at once, so two requests would overwrite each other's value. What's needed is a variable whose value is <i>per request</i>.</p>
+  <h3>4.2 Context variables</h3>
+<pre><code>request_id: contextvars.ContextVar[str] = contextvars.ContextVar(
+    "request_id", default=""
+)
+tenant_id: contextvars.ContextVar[str] = contextvars.ContextVar(
+    "tenant_id", default=""
+)
+conversation_id: contextvars.ContextVar[str] = contextvars.ContextVar(
+    "conversation_id", default=""
+)</code></pre>
+  <p>A <b>ContextVar</b> (from Python's standard <code>contextvars</code> module) is a variable that can hold a different value in each "context". Each request runs in its own context, so <code>tenant_id.set("pyramid-yogshala")</code> in one request is invisible to another. <code>.get()</code> reads the current context's value, or the default.</p>
+  <h3>4.3 The middleware that gives each request an id</h3>
+<pre><code>class RequestContextMiddleware:
+    def __init__(self, app) -> None:
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            return await self.app(scope, receive, send)
+        token = request_id.set(new_request_id())
+        try:
+            await self.app(scope, receive, send)
+        finally:
+            request_id.reset(token)</code></pre>
+  <p>This is <b>raw ASGI middleware</b>. ASGI is the standard interface between a Python web server (uvicorn) and a web app (FastAPI): an app is anything that can be called with <code>(scope, receive, send)</code>, where <code>scope</code> describes the request, <code>receive</code> gets its body and <code>send</code> sends the response. A middleware is an app that wraps another app: it does something, calls the inner app, and does something after.</p>
+  <p>Here: for HTTP requests (not other connection types), set a fresh 12-character id, run the entire inner app (routing, the route, <i>and the background tasks after the response</i>, which Starlette runs inside this same call), then <code>reset</code> the variable using the token <code>set</code> returned, restoring whatever it was before. <code>try/finally</code> guarantees the reset even if the request fails.</p>
+  <h3>4.4 Threads, and why <code>bound()</code> exists</h3>
+<pre><code>@contextlib.contextmanager
+def bound(tenant: str, conversation: str = ""):
+    """Tag every log line inside the block with this tenant and conversation.
+
+    Set where the code runs, not in a dependency: FastAPI runs sync
+    dependencies and background tasks in worker threads, each with its own
+    copy of the context, so a value set in one is gone in the next.
+    """
+    tokens = (tenant_id.set(tenant), conversation_id.set(conversation))
+    try:
+        yield
+    finally:
+        tenant_id.reset(tokens[0])
+        conversation_id.reset(tokens[1])</code></pre>
+  <p>Sitechat's routes are ordinary (<code>def</code>, not <code>async def</code>) functions, so FastAPI runs each one in a <b>worker thread</b> to avoid blocking the server. Each worker thread starts with a <i>copy</i> of the context. A copy inherits the request id set by the middleware, but anything set inside one thread is lost when it finishes. The first version set the tenant id in the <code>get_tenant</code> dependency, which runs in its own thread, so the value vanished before the route ran: a review found that <b>no production log line had a tenant id at all</b>.</p>
+  <p>The fix sets values where the work happens: the <code>/chat</code> route sets them at its start (they last for the route's thread), and background work and each digest conversation run inside <code>with bound(tenant, conversation):</code>. One more trap: a new thread pool starts with an <i>empty</i> context, so the orchestrator's parallel retrieval submits its tasks with <code>contextvars.copy_context().run</code> (Phase 4b).</p>
+</section>
+
+<section>
+  <h2>5. <code>app/logging_setup.py</code>: log lines Google can search</h2>
+  <p><b>Job:</b> configure Python's logging once at start-up. Locally, plain readable text. In production, one JSON object per line, because Google Cloud Logging turns JSON fields into searchable, filterable fields.</p>
+<pre><code>class JsonFormatter(logging.Formatter):
+    def format(self, record: logging.LogRecord) -> str:
+        from app.request_context import conversation_id, request_id, tenant_id
+
+        payload = {
+            "severity": record.levelname,
+            "message": record.getMessage(),
+            "logger": record.name,
+        }
+        rid = request_id.get()
+        if rid:
+            payload["request_id"] = rid
+        ...                                   # tenant_id and conversation_id the same way
+        if record.exc_info:
+            payload["exception"] = self.formatException(record.exc_info)
+        return json.dumps(payload)</code></pre>
+  <p><b>Real output</b>: the log lines of one <code>/chat</code> request, captured with this formatter:</p>
+<pre><code>{"severity": "INFO", "message": "Chat request", "logger": "app.api.routes", "request_id": "81bc602e421c", "tenant_id": "pyramid-yogshala", "conversation_id": "1f1a1dca-710d-460e-b109-8119c256d1bb"}
+{"severity": "INFO", "message": "Timing for 1f1a1dca-...: read+retrieve 0.0s, model 0.0s", "logger": "app.agent.orchestrator", "request_id": "81bc602e421c", "tenant_id": "pyramid-yogshala", "conversation_id": "1f1a1dca-..."}
+{"severity": "INFO", "message": "Persisted 1f1a1dca-... in 0.0s", "logger": "app.agent.orchestrator", "request_id": "81bc602e421c", "tenant_id": "pyramid-yogshala", "conversation_id": "1f1a1dca-..."}</code></pre>
+  <p>All three lines carry the same three ids, including the last one, written by the background task after the response was sent. <code>severity</code> is the field name Cloud Logging uses for levels, so errors show in red and can be alerted on. In Logs Explorer, <code>jsonPayload.conversation_id="1f1a..."</code> finds every line of that conversation.</p>
+  <p><code>setup_logging</code> also removes any existing handlers first (so calling it twice doesn't print every line twice) and turns down the chatty <code>httpx</code> and <code>google</code> libraries to warnings unless you're debugging.</p>
+</section>
+
+<section>
+  <h2>6. <code>app/retention.py</code>: an expiry date on personal data</h2>
+<pre><code>FIELD = "expire_at"
+
+def with_expiry(data: dict) -> dict:
+    """data with expire_at set, or unchanged if retention is off (0 days)."""
+    days = get_settings().retention_days
+    if days > 0:
+        data[FIELD] = datetime.now(timezone.utc) + timedelta(days=days)
+    return data</code></pre>
+  <p>Every write of a conversation, lead or feedback record passes through this, which adds a date 365 days ahead. A Firestore <b>TTL policy</b> on <code>expire_at</code> (set up once with <code>gcloud</code>, in <code>notes/retention-setup.md</code>) deletes documents after that date. Because each write moves the date, an active conversation keeps living; a quiet one disappears a year after its last activity. It must be a real date object, not text: Firestore only honours TTL on real timestamps, which is why it's added after <code>model_dump(mode="json")</code> has turned the model's own dates into strings. Phase 4e shows where it's called, and <code>tests/test_retention.py</code> fails if any full write forgets it.</p>
+</section>
+
+<section>
+  <h2>7. <code>app/api/schemas.py</code>: the shapes going in and out</h2>
+  <p><a href="https://claude.ai/artifact/MDdgNKEGibTrFVYqtGjGhs">Phase 1, section 8</a> walked through <code>ChatRequest</code> and <code>ChatResponse</code> as an API contract. What's left is how validation works and the two other models.</p>
+<pre><code>class ChatRequest(BaseModel):
+    message: str = Field(min_length=1, max_length=2000)
+
+    @field_validator("message")
+    @classmethod
+    def _visible_only(cls, value: str) -> str:
+        value = strip_invisible(value)
+        if not value.strip():
+            raise ValueError("Message is empty")
+        return value
+
+    conversation_id: str | None = Field(
+        default=None, pattern=r"^[A-Za-z0-9-]{1,64}$"
+    )</code></pre>
+  <ul>
+    <li><b><code>Field(min_length=1, max_length=2000)</code></b>: Pydantic rejects an empty or over-long message before any of our code runs; FastAPI turns that into a 422 response listing what's wrong.</li>
+    <li><b><code>@field_validator("message")</code></b> runs our own function after the type checks. It removes invisible characters (Phase 3, section 17) and refuses a message that was <i>nothing but</i> invisible characters. Whatever it returns becomes the field's value, so the rest of the app only ever sees the cleaned message. <code>@classmethod</code> is required by Pydantic for validators: it receives the class, not an instance.</li>
+    <li><b>The <code>conversation_id</code> pattern</b> allows 1 to 64 letters, digits and hyphens. Two reasons, both learned the hard way: a <code>/</code> splits a Firestore document path and caused a 500, and <code>__</code> is the separator between tenant and conversation in document ids. Server-issued ids (uuid4, e.g. <code>1f1a1dca-710d-...</code>) always match.</li>
+  </ul>
+  <p><b>Real output</b>, a conversation id with a slash:</p>
+<pre><code>422 {"detail": [{"type": "string_pattern_mismatch", "loc": ["body", "conversation_id"],
+      "msg": "String should match pattern '^[A-Za-z0-9-]{1,64}$'", "input": "abc/def", ...}]}</code></pre>
+<pre><code>class FeedbackRequest(BaseModel):
+    """A thumbs up or down on one reply. Sending again replaces it."""
+    conversation_id: str = Field(pattern=r"^[A-Za-z0-9-]{1,64}$")
+    reply_id: str = Field(pattern=r"^[a-f0-9]{16}$")
+    rating: Rating              # Literal["up", "down"]
+    reason: Reason | None = None  # Literal["wrong", "not_answered", "other"]
+
+
+class WidgetConfig(BaseModel):
+    display_name: str
+    greeting: str
+    suggested_questions: list[str]
+    accent_colour: str
+    privacy_url: str | None = None</code></pre>
+  <p><code>FeedbackRequest</code> accepts only the exact shapes the widget sends: a 16-hex-character reply id (what <code>/chat</code> issues), "up" or "down", and one of three reasons. <code>WidgetConfig</code> is the <code>response_model</code> of <code>/config</code>: FastAPI sends only these fields, so even if the tenant object has a team email or a facts sheet id, they can't leak out through this route (a test checks exactly that).</p>
+</section>
+
+<section>
+  <h2>8. <code>app/api/dependencies.py</code>: who is this request for?</h2>
+  <p><b>Job:</b> the <code>get_tenant</code> function, which runs before the route on every <code>/config</code>, <code>/chat</code> and <code>/feedback</code> request. It turns the site key into a tenant, refuses inactive tenants and wrong domains, and protects the database from floods of made-up keys. Phase 1 explained the Origin check (<code>_origin_allowed</code>, dot-boundary matching). Here's the rest.</p>
+  <h3>8.1 FastAPI dependencies</h3>
+  <p>A route declares <code>tenant: Tenant = Depends(get_tenant)</code>. Before calling the route, FastAPI calls <code>get_tenant</code>, giving it what it asks for: the <code>Request</code>, and headers by name (<code>x_site_key: str = Header(...)</code> reads <code>X-Site-Key</code>; <code>...</code> means required, so a missing header is a 422). If it raises <code>HTTPException</code>, the route never runs and the client gets that status. If it returns, the route receives the tenant. Write the check once, use it on every route.</p>
+  <h3>8.2 The cache, including "not found"</h3>
+<pre><code># site_key -> (tenant, or None for a key that matched none, time cached).
+_cache: dict[str, tuple[Tenant | None, float]] = {}
+
+MAX_SITE_KEY_LENGTH = 64
+MAX_CACHED_KEYS = 10_000
+
+
+def _cached_lookup(store: TenantStore, site_key: str) -> Tenant | None:
+    ttl = get_settings().tenant_cache_seconds
+    now = time.monotonic()
+
+    entry = _cache.get(site_key)
+    if entry and (now - entry[1]) < ttl:
+        return entry[0]
+
+    tenant = store.get_by_site_key(site_key)
+    if len(_cache) >= MAX_CACHED_KEYS:
+        _cache.clear()
+    _cache[site_key] = (tenant, now)
+    return tenant</code></pre>
+  <ul>
+    <li>Looking a tenant up in Firestore on every message would cost a database read each time. The cache keeps each answer for 60 seconds (<code>tenant_cache_seconds</code>). The trade-off: a change to a tenant (say, a new allowed domain) takes up to a minute to apply.</li>
+    <li><b><code>time.monotonic()</code></b>, not the clock time: a monotonic clock only moves forward, so a computer adjusting its clock can't make a cache entry live forever or expire early.</li>
+    <li><b>"Not found" is cached too</b> (the <code>None</code>). Originally only found tenants were cached, so a loop sending made-up keys was one Firestore read per request: enough to burn through the 50,000 free daily reads and start billing. Now repeating a made-up key costs one read per minute.</li>
+    <li><b>Two memory guards</b>: keys longer than 64 characters are refused without a lookup (real keys are short), and if made-up keys ever fill the cache to 10,000 entries it's cleared, so a flood can't grow memory without bound.</li>
+  </ul>
+  <h3>8.3 Counting refusals against the visitor</h3>
+<pre><code>def _reject(request: Request, code: int, detail: str) -> NoReturn:
+    """Refuse the request, counting it against the visitor."""
+    limiter.limiter.hit(_rejected_limit(), "rejected", client_ip(request))
+    raise HTTPException(status_code=code, detail=detail)
+
+
+def get_tenant(request: Request, x_site_key: str = Header(...),
+               origin: str | None = Header(default=None)) -> Tenant:
+    store: TenantStore = request.app.state.tenant_store
+
+    if not limiter.limiter.test(_rejected_limit(), "rejected", client_ip(request)):
+        raise HTTPException(status_code=429, detail="Too many requests")
+
+    tenant = None
+    if len(x_site_key) <= MAX_SITE_KEY_LENGTH:
+        tenant = _cached_lookup(store, x_site_key)
+    if tenant is None:
+        logger.warning("Unknown site key")
+        _reject(request, status.HTTP_401_UNAUTHORIZED, "Invalid site key")
+
+    if not tenant.is_active:
+        _reject(request, status.HTTP_403_FORBIDDEN, "This chat is not currently available")
+
+    if not _origin_allowed(tenant, origin):
+        logger.warning("Blocked origin %s for tenant %s", origin, tenant.tenant_id)
+        _reject(request, status.HTTP_403_FORBIDDEN, "This domain is not allowed to use this site key")
+
+    return tenant</code></pre>
+  <p>Here's a subtle ordering problem. slowapi's route limits run <i>after</i> dependencies. So a request refused by <code>get_tenant</code> never reached the limiter and was never counted: a script could send unlimited bad requests, each costing a lookup. The fix uses the limiter's lower-level object directly (<code>limiter.limiter</code>, from the <code>limits</code> library): <code>hit</code> adds one to a counter, <code>test</code> asks "would one more be allowed?" without adding. Every refusal is a <code>hit</code> under the key <code>("rejected", visitor)</code>; every request first <code>test</code>s it. Past 20 refusals a minute, the visitor is refused <b>before</b> the lookup, even with a valid key. <code>NoReturn</code> tells the type checker <code>_reject</code> always raises, so it knows <code>tenant</code> can't be <code>None</code> after it.</p>
+  <p><b>Real output</b>: one visitor sends 22 requests with made-up keys, then one with the real key; then a different visitor uses the real key:</p>
+<pre><code>[401, 401, 401, 401, 401, 401, 401, 401, 401, 401, 401, 401, 401, 401, 401, 401, 401, 401, 401, 401, 429, 429]
+then the real key from the same visitor: 429 {'detail': 'Too many requests'}
+real key, another visitor: 200</code></pre>
+  <h3>8.4 <code>cached_tenant</code></h3>
+<pre><code>def cached_tenant(site_key: str) -> Tenant | None:
+    entry = _cache.get(site_key)
+    return entry[0] if entry else None</code></pre>
+  <p>Used by the per-tenant rate limit in <code>routes.py</code> to read the tenant's own limit without a second lookup: <code>get_tenant</code> has always just put it in the cache.</p>
+</section>
+
+<section>
+  <h2>9. <code>app/api/routes.py</code>: <code>/config</code>, <code>/chat</code>, <code>/feedback</code></h2>
+  <p>The file's opening comment states its boundary: "HTTP concerns only: tenant resolution, rate limits, mapping model failures to a 503 and scheduling background work. What a reply is made of lives in app/agent/orchestrator.py."</p>
+  <h3>9.1 <code>GET /config</code></h3>
+<pre><code>@router.get("/config", response_model=WidgetConfig)
+@limiter.limit(lambda: get_settings().rate_limit_config_per_visitor)
+def get_config(request: Request, tenant: Tenant = Depends(get_tenant)) -> WidgetConfig:
+    return WidgetConfig(
+        display_name=tenant.display_name,
+        greeting=tenant.greeting,
+        suggested_questions=tenant.suggested_questions,
+        accent_colour=tenant.accent_colour,
+        privacy_url=str(tenant.privacy_url) if tenant.privacy_url else None,
+    )</code></pre>
+  <ul>
+    <li><b>Two decorators, order matters.</b> Decorators apply bottom-up: <code>@limiter.limit</code> wraps the function first, then <code>@router.get</code> registers the wrapped version as the route. slowapi requires this order, and requires the function to take a <code>request: Request</code> parameter (it reads the visitor's address from it).</li>
+    <li><b>A <code>lambda</code> as the limit</b>: a tiny function that returns the limit string when called. slowapi calls it per request, so the limit is read from settings at that moment rather than frozen at import time (which helps tests change it).</li>
+  </ul>
+  <h3>9.2 <code>POST /chat</code></h3>
+<pre><code>def _tenant_limit(key: str) -> str:
+    tenant = cached_tenant(key.removeprefix("site:"))
+    if tenant is not None and tenant.rate_limit:
+        return tenant.rate_limit
+    return get_settings().rate_limit_per_tenant
+
+
+@router.post("/chat", response_model=ChatResponse)
+@limiter.limit(lambda: get_settings().rate_limit_per_visitor)
+@limiter.limit(_tenant_limit, key_func=site_key)
+def chat(request: Request, body: ChatRequest, background: BackgroundTasks,
+         tenant: Tenant = Depends(get_tenant)) -> ChatResponse:
+    conversation_id = body.conversation_id or str(uuid.uuid4())
+    reply_id = uuid.uuid4().hex[:16]
+    store = request.app.state.conversation_store
+    fact_store = request.app.state.fact_store
+
+    # Lasts for this worker thread, which runs the whole reply.
+    request_context.tenant_id.set(tenant.tenant_id)
+    request_context.conversation_id.set(conversation_id)
+    logger.info("Chat request")
+
+    lead_store = request.app.state.lead_store
+    # Before the turn, so the card shows only on the turn that placed it.
+    was_waiting = request_is_waiting(lead_store, tenant.tenant_id, conversation_id)
+
+    try:
+        reply, _, stored_message = generate_reply(
+            tenant, conversation_id, body.message, store, fact_store,
+            request.app.state.vector_store, request.app.state.chunk_store,
+            request.app.state.lead_store,
+            programme_store=getattr(request.app.state, "programme_store", None),
+            usage_store=getattr(request.app.state, "usage_store", None),
+        )
+    except LLMError as exc:
+        raise HTTPException(status_code=503, detail=exc.user_message) from exc
+
+    background.add_task(after_reply, tenant, conversation_id, stored_message, reply,
+                        store, request.app.state.lead_store, get_settings(), reply_id)
+
+    return ChatResponse(
+        reply=reply,
+        conversation_id=conversation_id,
+        confirmation=request_confirmation(tenant, lead_store, conversation_id, was_waiting),
+        reply_id=reply_id,
+    )</code></pre>
+  <p>Step by step:</p>
+  <ol class="steps">
+    <li><div><b>Two limits.</b> Per visitor (5 a minute, keyed by address) and per tenant (keyed by <code>site:&lt;key&gt;</code>, with the limit from <code>_tenant_limit</code>: the tenant's own <code>rate_limit</code> such as "300/hour" if set, else 60/hour). Sizing a customer's limit is a data change, not a deploy. Real output, one visitor sending 7 chats in a row: <code>[200, 200, 200, 200, 200, 429, 429]</code> with <code>{"error":"Rate limit exceeded: 5 per 1 minute"}</code>.</div></li>
+    <li><div><b>Ids.</b> A new conversation gets a uuid4 (random, practically unique). Every reply gets a 16-character <code>reply_id</code>, which the widget sends back with thumbs up/down.</div></li>
+    <li><div><b>Log context</b> is set for this thread (section 4).</div></li>
+    <li><div><b><code>was_waiting</code></b> is read <i>before</i> the reply: was a contact request with contact details already waiting? After the reply, the same question is asked again; the confirmation card is shown only if the answer changed from no to yes on this turn. Otherwise the card would reappear on every later message.</div></li>
+    <li><div><b>The reply.</b> All the AI work is one call, <code>generate_reply</code> (Phase 4b). It returns three things; the middle one (retrieved passages, used by the evaluation) is ignored here with <code>_</code>. <code>stored_message</code> is the visitor's message with contact details removed, which is what gets stored. <code>getattr(..., None)</code> tolerates apps built without those two stores (older tests).</div></li>
+    <li><div><b>AI failure → 503.</b> <code>LLMError</code> carries a message written for visitors ("We're a bit busy right now..."). <code>raise ... from exc</code> keeps the original error attached for logs and Sentry. The 503 status lets monitoring count failures that a 200 would hide (<a href="https://claude.ai/artifact/MDdgNKEGibTrFVYqtGjGhs">Phase 1, section 7</a>).</div></li>
+    <li><div><b>Background work.</b> <code>background.add_task(after_reply, ...)</code> schedules a function to run <i>after</i> the response has been sent: storing the turn, summarising, emailing the team. The visitor doesn't wait for any of it. <code>after_reply</code> is the subject of Phase 4b.</div></li>
+  </ol>
+  <h3>9.3 <code>POST /feedback</code></h3>
+<pre><code>@router.post("/feedback", status_code=status.HTTP_204_NO_CONTENT)
+@limiter.limit(lambda: get_settings().rate_limit_feedback_per_visitor)
+def feedback(request: Request, body: FeedbackRequest,
+             tenant: Tenant = Depends(get_tenant)) -> None:
+    store = getattr(request.app.state, "feedback_store", None)
+    if store is None:
+        return
+    store.save(Feedback(
+        tenant_id=tenant.tenant_id,
+        conversation_id=body.conversation_id,
+        reply_id=body.reply_id,
+        rating=body.rating,
+        reason=body.reason if body.rating == "down" else None,
+    ))</code></pre>
+  <p>204 No Content means "done, nothing to send back". A reason is kept only with a thumbs down (changing from down to up clears it). Feedback changes nothing the bot does; it's for reviewing replies with <code>scripts/feedback.py</code>. Only ids are stored, because the reply itself is written in the background and a quick tap can arrive before it exists.</p>
+</section>
+
+<section>
+  <h2>10. <code>app/api/internal.py</code>: the endpoint only Google may call</h2>
+  <p><b>Job:</b> <code>POST /internal/lead-digest</code>, called every 5 minutes by Google Cloud Scheduler. It sends due lead emails (Phase 4b) and refreshes any tenant's facts more than a day old (Phase 4e). The problem: the service must be public (the widget needs it), so how do you make one route callable only by Google's scheduler?</p>
+<pre><code>def require_scheduler(authorization: str | None) -> None:
+    settings = get_settings()
+    if not settings.lead_digest_invoker:
+        # Off until configured: indistinguishable from no endpoint at all.
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+    try:
+        claims = _verify_identity_token(
+            authorization.removeprefix("Bearer "), settings.lead_digest_audience
+        )
+    except Exception:
+        logger.warning("Lead digest: invalid identity token")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED) from None
+
+    if claims.get("email") != settings.lead_digest_invoker or not claims.get("email_verified"):
+        logger.warning("Lead digest: token from %s refused", claims.get("email"))
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)</code></pre>
+  <p>Cloud Scheduler is configured to attach an <b>OIDC identity token</b> to each call: a short-lived, signed statement from Google saying "this request comes from the service account <code>lead-digest@...</code>, intended for the audience <code>sitechat-lead-digest</code>". The checks, in order:</p>
+  <ol class="steps">
+    <li><div><b>Not configured → 404.</b> Until <code>LEAD_DIGEST_INVOKER</code> is set, the route pretends not to exist. Real output: <code>404 {'detail': 'Not Found'}</code>.</div></li>
+    <li><div><b>No token → 401.</b> The <code>Authorization</code> header must be <code>Bearer &lt;token&gt;</code>.</div></li>
+    <li><div><b>Signature, expiry and audience.</b> <code>id_token.verify_oauth2_token</code> (Google's library) checks the token was signed by Google's published keys, hasn't expired, and was issued for our audience. A token made for another service is refused, so a token leaked from elsewhere can't be replayed here. Any failure → 401. <code>from None</code> hides the library's internal error from the chain, since the log line says what matters.</div></li>
+    <li><div><b>Right account → else 403.</b> The token is real, but is it <i>our</i> scheduler? The email in it must equal the configured invoker, and be verified.</div></li>
+  </ol>
+  <p>No password or shared secret is stored anywhere: the trust comes from Google's signature. The route then calls <code>send_due_digests</code> and <code>sync_stale_facts</code> and returns their counts, which appear in the log as <code>Lead digest sweep: {'due': ..., 'sent': ...}</code>.</p>
+  <div class="box interview"><div class="tag">Say it in an interview</div><p>"The service is public because the widget needs it, so the internal endpoint authenticates the caller cryptographically: Cloud Scheduler attaches a Google-signed OIDC token, and we verify the signature, expiry and audience, then require the token's email to be the one service account allowed. No shared secret to leak or rotate. And until it's configured, it returns 404, so it isn't even discoverable."</p></div>
+</section>
+
+<section>
+  <h2>11. The order everything runs in</h2>
+  <p>For one <code>POST /chat</code>, the layers in order. Each refusal happens before anything more expensive:</p>
+  <ol class="steps">
+    <li><div><code>RequestContextMiddleware</code>: a new request id.</div></li>
+    <li><div><code>CORSMiddleware</code>: answers preflights; adds the CORS header to the response.</div></li>
+    <li><div>Routing: <code>POST /chat</code> → <code>chat</code>.</div></li>
+    <li><div>Dependencies: <code>get_tenant</code> (refusal limit, key, active, domain). Then the body is parsed into <code>ChatRequest</code> (422 if invalid). Checked for real in Phase 1: a bad key plus an empty message gives 401, so the dependency runs first.</div></li>
+    <li><div>slowapi route limits: per visitor, per tenant (429).</div></li>
+    <li><div>The route body: <code>generate_reply</code> (the only step that costs money), 503 on AI failure.</div></li>
+    <li><div>The response is sent.</div></li>
+    <li><div>Background: <code>after_reply</code>, still inside the middleware's call, so its log lines carry the request id.</div></li>
+  </ol>
+</section>
+
+<section>
+  <h2>12. Challenges we faced</h2>
+  <div class="box challenge"><div class="tag">1. The circular import</div><p><b>What happened:</b> <code>main.py</code> imported the router from <code>routes.py</code>, and <code>routes.py</code> imported the limiter from <code>main.py</code>. Python loads a module top to bottom; when <code>routes</code> asked for <code>main.limiter</code>, <code>main</code> was only half-loaded and the name didn't exist yet. <b>Fix:</b> the limiter moved to its own module, <code>app/rate_limit.py</code>, which both import. <b>Lesson:</b> shared objects go in a module that depends on neither user.</p></div>
+  <div class="box challenge"><div class="tag">2. Three commits to fix one duplicated line</div><p><b>What happened (12 Oct):</b> during an edit, the router and the static files mount were registered twice in <code>create_app</code>. Two mounts on the same path broke the app, with the confusing error <code>'NoneType' object is not callable</code> and "ASGI 'lifespan' protocol appears unsupported". While removing the duplicates, the module-level <code>app = create_app()</code> line was deleted too, giving <code>Attribute "app" not found in module "app.main"</code>. The fix took three commits with the same message. <b>Lesson (recorded in the notes):</b> for a file edited many times, look at the whole file, not a description of the edit; and check for unsaved files before testing (it cost about an hour more than once).</p></div>
+  <div class="box challenge"><div class="tag">3. <code>/healthz</code> returned Google's 404</div><p><b>What happened:</b> the health route was called <code>/healthz</code> (a common convention) and returned 404 on Cloud Run. The clue: the 404 page was Google's HTML, not FastAPI's <code>{"detail":"Not Found"}</code> JSON, so the request never reached the container. Cloud Run's front end reserves that path. <b>Fix:</b> renamed to <code>/health</code>; it worked immediately. <b>Lesson:</b> read <i>whose</i> error page you're looking at.</p></div>
+  <div class="box challenge"><div class="tag">4. Every visitor was one visitor</div><p><b>What happened:</b> the limiter first keyed on <code>request.client.host</code>. On Cloud Run that is Google's front end, <code>169.254.169.126</code>, for every visitor, so all visitors shared one bucket: five messages a minute for the whole world. Nobody knew for sure what the headers looked like in production, so a temporary log line recorded them, it was deployed, and the real shape was read before choosing. <b>Fix (15 Oct):</b> <code>client_ip</code> takes the <code>X-Forwarded-For</code> entry <code>trusted_proxy_hops</code> from the end (1, measured), with IPv6 grouped by /64; the per-tenant limit, defined but never applied, was applied. <b>Lesson:</b> when you don't know what production sends, measure it before writing the code.</p></div>
+  <div class="box challenge"><div class="tag">5. A slash in a conversation id crashed the request</div><p><b>What happened:</b> <code>conversation_id</code> was unchecked client input going straight into Firestore document ids. A <code>/</code> made an odd-length document path and a 500. <b>Fix:</b> the pattern <code>^[A-Za-z0-9-]{1,64}$</code>, which also keeps out <code>__</code>, the tenant separator. <b>Lesson:</b> anything a client sends that ends up in a key or path must be validated at the edge.</p></div>
+  <div class="box challenge"><div class="tag">6. No log line had a tenant id</div><p>Section 4.4: values set in a sync dependency vanished because it ran in its own thread with a copied context. Found by a review checking production logs, not by any test, so a test now checks every line of a chat carries its ids (<code>tests/test_log_context.py</code>).</p></div>
+  <div class="box challenge"><div class="tag">7. Bad keys could run up the database bill</div><p>Section 8: unknown keys weren't cached, <code>/config</code> had no limit, and refusals were never counted because route limits run after dependencies. Fixed with negative caching, a <code>/config</code> limit, the refusal counter and key-length and cache-size guards.</p></div>
+  <div class="box challenge"><div class="tag">8. Smaller hardening from the 16 Oct review</div><ul><li><b>API docs public in production</b>: <code>/docs</code> listed <code>/internal/lead-digest</code> to anyone. Not exploitable alone, but it published the attack surface. Now off in production (a test checks).</li><li><b>Keys printable</b>: API keys were plain strings, so a printed settings object would show them. Now <code>SecretStr</code> (a test checks they don't appear when printed).</li><li><b>Sentry received personal data</b>: confirmed by test before fixing (section 1.3).</li></ul></div>
+</section>
+
+<section>
+  <h2>Glossary</h2>
+  <dl class="gloss">
+    <div><dt>Factory function</dt><dd>A function that builds and returns a configured object (<code>create_app</code>).</dd></div>
+    <div><dt>Lifespan</dt><dd>Code run once when the server starts (before <code>yield</code>) and once when it stops (after).</dd></div>
+    <div><dt>Middleware</dt><dd>A layer wrapping the whole app, run for every request before and after the route.</dd></div>
+    <div><dt>ASGI</dt><dd>The standard interface between Python web servers and apps: an app is called with <code>(scope, receive, send)</code>.</dd></div>
+    <div><dt>uvicorn</dt><dd>The server program that runs the FastAPI app and speaks HTTP.</dd></div>
+    <div><dt>Router</dt><dd>A group of routes defined in one file and attached to the app.</dd></div>
+    <div><dt>Dependency (FastAPI)</dt><dd>A function FastAPI runs before a route, declared with <code>Depends</code>; its return value is passed in.</dd></div>
+    <div><dt>Decorator</dt><dd>A function that wraps another; written <code>@name</code> above it. Stacked decorators apply bottom-up.</dd></div>
+    <div><dt>pydantic-settings / BaseSettings</dt><dd>A Pydantic model that fills itself from environment variables and <code>.env</code>.</dd></div>
+    <div><dt>SecretStr</dt><dd>A string type that prints as asterisks.</dd></div>
+    <div><dt>lru_cache</dt><dd>A decorator that remembers a function's result so later calls return it without recomputing.</dd></div>
+    <div><dt>ContextVar</dt><dd>A variable with a separate value per request (per context).</dd></div>
+    <div><dt>Worker thread</dt><dd>A separate thread FastAPI runs sync functions in, so the server isn't blocked.</dd></div>
+    <div><dt>Monotonic clock</dt><dd>A clock that only moves forward; used for measuring durations.</dd></div>
+    <div><dt>Negative caching</dt><dd>Remembering that something was <i>not</i> found, to avoid looking again.</dd></div>
+    <div><dt>BackgroundTasks</dt><dd>FastAPI's way to run work after the response is sent.</dd></div>
+    <div><dt>OIDC identity token</dt><dd>A short-lived token signed by Google naming who is calling and for which audience.</dd></div>
+    <div><dt>Audience</dt><dd>The intended recipient named inside a token; tokens for other audiences are refused.</dd></div>
+    <div><dt>Circular import</dt><dd>Two modules importing each other, which Python can't resolve cleanly.</dd></div>
+    <div><dt>TTL policy</dt><dd>A Firestore rule deleting documents after the date in a named field.</dd></div>
+  </dl>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <details><summary>Why is <code>app = create_app()</code> at the bottom of <code>main.py</code> essential, and why is <code>create_app</code> a function at all?</summary><p>uvicorn is started with <code>app.main:app</code>, so it imports the module and looks for the name <code>app</code>; without that line it fails to start. It's a function so tests can build fresh apps wired to in-memory stores.</p></details>
+  <details><summary>In <code>lifespan</code>, what does <code>if not hasattr(app.state, "tenant_store")</code> protect against?</summary><p>Building a real Firestore client when a test already supplied an in-memory store. Without it, tests would need Google credentials and fail in CI.</p></details>
+  <details><summary>Why is <code>RequestContextMiddleware</code> added last?</summary><p>The last middleware added is the outermost, so it runs first and its context covers everything inside: CORS, the route and the background tasks.</p></details>
+  <details><summary>A tenant id set inside <code>get_tenant</code> didn't appear in logs. Why?</summary><p>Sync dependencies run in a worker thread with a copied context; values set there are lost when it finishes. The value must be set where the work runs.</p></details>
+  <details><summary>Why does <code>get_tenant</code> count refusals itself instead of relying on <code>@limiter.limit</code>?</summary><p>Route limits run after dependencies, so a request refused by the dependency never reached them and was never counted.</p></details>
+  <details><summary>Why cache "not found" for unknown site keys?</summary><p>Otherwise each request with a made-up key is a Firestore read, so a loop could exhaust the free tier. Cached, it's one read per key per minute.</p></details>
+  <details><summary>A company wants 300 chats an hour. What changes: code, config or data?</summary><p>Data: set <code>rate_limit="300/hour"</code> on their tenant record. <code>_tenant_limit</code> reads it from the cached tenant.</p></details>
+  <details><summary>Someone copies a valid OIDC token Cloud Scheduler made for a different service. Can they call the digest?</summary><p>No. The token's audience must be <code>sitechat-lead-digest</code>, and its email must be our <code>lead-digest</code> account.</p></details>
+  <details><summary>Why does <code>WidgetConfig</code> exist when the route could return the tenant object?</summary><p>As the <code>response_model</code>, it limits the response to public fields, so the team email or facts sheet id can't leak.</p></details>
+</section>
+
+<section>
+  <h2>Next: Phase 4b, the agent</h2>
+  <p><code>generate_reply</code> and everything after the reply: the prompt, the tool loop, the AI wrapper with its deadlines, recording questions, the lead email decision, the digest sweep and the running summary. <a href="https://claude.ai/artifact/QKLydSMm3tKdXapho5kS1V">Read Phase 4b</a>.</p>
+</section>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,15 @@
+.venv
+.env
+env.yaml
+service-account.json
+__pycache__
+*.pyc
+.git
+.github
+.pytest_cache
+docs/
+evaluation/history/
+scripts/
+tests/
+conftest.py
+*.md

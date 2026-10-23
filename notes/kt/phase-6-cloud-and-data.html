@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sitechat KT 6: Cloud</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,650&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  /* Layout: a reading column with a phase map on top; coloured callouts by role
+     (analogy, in this project, interview, try it); code blocks scroll inside themselves. */
+  :root {
+    --bg: #f5f6f4;
+    --paper: #ffffff;
+    --ink: #1b2725;
+    --muted: #5a6663;
+    --line: #dde3e0;
+    --accent: #1f6f5c;
+    --accent-soft: #e5f1ec;
+    --analogy: #7a4f9a;
+    --analogy-soft: #f2ecf7;
+    --interview: #a5630d;
+    --interview-soft: #fbf1e0;
+    --code-bg: #f0f3f1;
+    --display: "Literata", Georgia, "Times New Roman", serif;
+    --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121918; --paper: #1a2322; --ink: #e5ebe9; --muted: #9db0aa; --line: #2b3735;
+      --accent: #63c2a6; --accent-soft: #1d3530; --analogy: #c7a3e6; --analogy-soft: #2a2235;
+      --interview: #e3a64b; --interview-soft: #2e2416; --code-bg: #0f1514;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #121918; --paper: #1a2322; --ink: #e5ebe9; --muted: #9db0aa; --line: #2b3735;
+    --accent: #63c2a6; --accent-soft: #1d3530; --analogy: #c7a3e6; --analogy-soft: #2a2235;
+    --interview: #e3a64b; --interview-soft: #2e2416; --code-bg: #0f1514;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 17px/1.65 var(--body);
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 32px 80px;
+  }
+  main { max-width: 48rem; margin: 0 auto; display: grid; gap: 44px; }
+  header { display: grid; gap: 12px; }
+  .eyebrow { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  h1 { font: 650 clamp(30px, 5.5vw, 42px)/1.12 var(--display); margin: 0; text-wrap: balance; }
+  h2 { font: 650 clamp(23px, 3.6vw, 28px)/1.25 var(--display); margin: 0; text-wrap: balance; }
+  h3 { font: 700 18px/1.35 var(--body); margin: 8px 0 0; }
+  p, ul, ol { margin: 0; }
+  ul, ol { padding-left: 1.3em; display: grid; gap: 6px; }
+  li::marker { color: var(--accent); }
+  section { display: grid; gap: 16px; min-width: 0; }
+  .lede { color: var(--muted); font-size: 18px; }
+  a { color: var(--accent); }
+  code { font: 0.88em var(--mono); background: var(--code-bg); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+  pre {
+    margin: 0; background: var(--code-bg); border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 16px; overflow-x: auto; font: 14px/1.55 var(--mono);
+  }
+  pre code { background: none; padding: 0; font-size: inherit; overflow-wrap: normal; }
+  .file { font: 600 13px var(--mono); color: var(--muted); margin-bottom: -10px; }
+  .phases { display: flex; flex-wrap: wrap; gap: 6px; }
+  .phases span {
+    font-size: 13px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line);
+    color: var(--muted); background: var(--paper);
+  }
+  .phases span.now { background: var(--accent); color: var(--paper); border-color: var(--accent); font-weight: 600; }
+  .box { border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; border: 1px solid var(--line); background: var(--paper); }
+  .box .tag { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .analogy { background: var(--analogy-soft); border-color: transparent; }
+  .analogy .tag { color: var(--analogy); }
+  .project { background: var(--accent-soft); border-color: transparent; }
+  .project .tag { color: var(--accent); }
+  .interview { background: var(--interview-soft); border-color: transparent; }
+  .interview .tag { color: var(--interview); }
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
+  table { border-collapse: collapse; width: 100%; font-size: 15.5px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-weight: 700; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+  tr:last-child td { border-bottom: none; }
+  td:first-child { white-space: nowrap; }
+  .steps { list-style: none; padding: 0; counter-reset: s; display: grid; gap: 10px; }
+  .steps > li { counter-increment: s; display: grid; grid-template-columns: 2rem 1fr; gap: 10px; min-width: 0; }
+  .steps > li::before {
+    content: counter(s); width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+    font: 700 13px/1 var(--body); color: var(--accent); border: 1.5px solid var(--accent);
+  }
+  .steps > li > div { display: grid; gap: 6px; min-width: 0; }
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .flow .node { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: 15px; }
+  .flow .arrow { color: var(--accent); font-weight: 700; }
+  details { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+  details summary { cursor: pointer; font-weight: 600; }
+  details[open] summary { margin-bottom: 8px; }
+  details p { color: var(--ink); }
+  dl.gloss { display: grid; gap: 10px; margin: 0; }
+  dl.gloss div { display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr; gap: 12px; }
+  dl.gloss dt { font-weight: 700; }
+  dl.gloss dd { margin: 0; }
+  @media (max-width: 560px) { dl.gloss div { grid-template-columns: 1fr; gap: 2px; } td:first-child { white-space: normal; } }
+  .toc { columns: 2 16rem; column-gap: 28px; }
+  .toc li { break-inside: avoid; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 0; }
+  summary:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .machines { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 10px; }
+  .machine { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 6px; align-content: start; }
+  .machine b { font-family: var(--display); font-size: 17px; }
+  .machine.us { border-color: var(--accent); }
+  .lbl { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+
+  :root { --challenge: #a8322f; --challenge-soft: #fbecea; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --challenge: #f2958f; --challenge-soft: #3a2220; } }
+  :root[data-theme="dark"] { --challenge: #f2958f; --challenge-soft: #3a2220; }
+  .challenge { background: var(--challenge-soft); border-color: transparent; }
+  .challenge .tag { color: var(--challenge); }
+  .phases a { font-size: 13px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line);
+    color: var(--muted); background: var(--paper); text-decoration: none; }
+  .phases a:hover { border-color: var(--accent); color: var(--accent); }
+  .phases a.now { background: var(--accent); color: var(--paper); border-color: var(--accent); font-weight: 600; }
+  figure { margin: 0; display: grid; gap: 8px; justify-items: start; }
+  figure img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+  figcaption { font-size: 14px; color: var(--muted); }
+  .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 12px; }
+  .kv { display: grid; grid-template-columns: minmax(7rem, 11rem) 1fr; gap: 6px 14px; }
+  @media (max-width: 560px) { .kv { grid-template-columns: 1fr; gap: 2px; } }
+</style>
+
+</head>
+<body>
+<main>
+<header>
+  <div class="eyebrow">Sitechat knowledge transfer · Phase 6 of 10</div>
+  <h1>Cloud and data: how the code becomes a running service</h1>
+  <p class="lede">Everything so far was code. This phase is about where it runs: the container image (<code>Dockerfile</code>), the pipeline that tests, builds and deploys it on every push (<code>cloudbuild.yaml</code>), Google Cloud Run, Secret Manager, service accounts, Cloud Scheduler, Firestore and Pinecone in production, logs, error reports and costs. Settings shown are read from the live project (read-only commands) or copied from the repo.</p>
+  <div class="phases" aria-label="All phases">
+    <a href="https://claude.ai/artifact/QuxrXdoFv7vr5KKvNSML78">0 First principles</a><a href="https://claude.ai/artifact/MDdgNKEGibTrFVYqtGjGhs">1 How the web works</a><a href="https://claude.ai/artifact/VVYejQXYpWzuimyovij4CY">2 What Sitechat is</a><a href="https://claude.ai/artifact/RHDbDbJ6r8RmXdRsvAUK9S">3 AI fundamentals</a><a href="https://claude.ai/artifact/F1oZk1cyDLGAPio8khD7cY">4a API layer</a><a href="https://claude.ai/artifact/QKLydSMm3tKdXapho5kS1V">4b The agent</a><a href="https://claude.ai/artifact/2TNXtynh229R59PV9MwHc1">4c Retrieval</a><a href="https://claude.ai/artifact/Np1qbTsXtXtDL6UmGaMvFv">4d Leads</a><a href="https://claude.ai/artifact/S2dSYJnVDTPbqeAWJP6qd1">4e Data stores</a><a href="https://claude.ai/artifact/4hwNREB8CxkHtRrwgwRraL">4f Scripts and evals</a><a href="https://claude.ai/artifact/AHXQrMEzxpZ6x4ihiiiCm1">5 The chat widget</a><a class="now" href="https://claude.ai/artifact/BknbsJYd7gFx9geyWbBqKF">6 Cloud and data</a><a href="https://claude.ai/artifact/KdgDyd9VuQVfjJu3dvHPv2">7 Quality and safety</a><a href="https://claude.ai/artifact/QDifNPBS4Lu8CLhvZTJ5C4">8 Rebuild it yourself</a><a href="https://claude.ai/artifact/99LTVwqoTPzBmFmHCZcsCS">9 Interview prep</a><a href="https://claude.ai/artifact/NKGY4fDQXK9Cp41B55wiTs">10 Set it up</a>
+  </div>
+</header>
+
+<section>
+  <h2>How to read this phase</h2>
+  <p>Cloud vocabulary is dense, so every service is introduced with what problem it solves before how Sitechat uses it. The order follows a change you make: you push code → Cloud Build tests and builds a container image → it's stored in Artifact Registry → Cloud Run runs it with secrets from Secret Manager, as a service account allowed only what it needs → it reads and writes Firestore and Pinecone, calls OpenAI and Resend → Cloud Scheduler pokes it every 5 minutes → logs go to Cloud Logging, errors to Sentry.</p>
+  <h3>In this phase</h3>
+  <ol class="toc">
+    <li>The map: every service and why</li>
+    <li>Containers and the <code>Dockerfile</code>, line by line</li>
+    <li>Cloud Run: what "serverless containers" means</li>
+    <li>Cold starts, and how the digest fixed them</li>
+    <li>Cloud Build: tests, then build, then deploy</li>
+    <li>Secrets: <code>.env</code> locally, Secret Manager in production</li>
+    <li>Service accounts and least privilege</li>
+    <li>Cloud Scheduler and signed calls</li>
+    <li>Firestore in production</li>
+    <li>Pinecone, OpenAI, Resend, Sentry</li>
+    <li>Logs and observability</li>
+    <li>Costs and the free tier</li>
+    <li>What's missing for production</li>
+    <li>Challenges we faced</li>
+    <li>Glossary and check yourself</li>
+  </ol>
+</section>
+
+<section>
+  <h2>1. The map: every service and why</h2>
+  <div class="tablewrap"><table>
+    <tr><th>Service</th><th>Problem it solves</th><th>Sitechat's use</th></tr>
+    <tr><td>GitHub</td><td>Storing code and its history</td><td>Repo <code>Sandeepdot4/sitechat</code>; GitHub Actions runs checks on every push.</td></tr>
+    <tr><td>Cloud Build</td><td>Turning a push into a deployed service automatically</td><td>A trigger on pushes to <code>main</code> runs <code>cloudbuild.yaml</code>: tests → image → deploy.</td></tr>
+    <tr><td>Artifact Registry</td><td>Storing container images</td><td>Repository <code>sitechat</code> in us-central1.</td></tr>
+    <tr><td>Cloud Run</td><td>Running a container on the internet without managing servers</td><td>Service <code>sitechat-api</code>, us-central1.</td></tr>
+    <tr><td>Secret Manager</td><td>Keeping API keys out of code and images</td><td>Five secrets: OpenAI, Pinecone, Cohere, Resend keys and the Sentry DSN.</td></tr>
+    <tr><td>IAM / service accounts</td><td>Deciding what each program may do</td><td><code>sitechat-runtime</code> (the API), <code>lead-digest</code> (the scheduler's identity).</td></tr>
+    <tr><td>Cloud Scheduler</td><td>Running something on a timer</td><td><code>sitechat-lead-digest</code>, every 5 minutes.</td></tr>
+    <tr><td>Firestore</td><td>A database that scales without managing servers</td><td>Native mode, us-central1: all data except embeddings.</td></tr>
+    <tr><td>Cloud Logging</td><td>Collecting and searching logs</td><td>Everything the container prints, as JSON.</td></tr>
+    <tr><td>Pinecone</td><td>Vector search</td><td>Index <code>sitechat</code>, AWS us-east-1, namespace per tenant.</td></tr>
+    <tr><td>OpenAI</td><td>Language model and embeddings</td><td><code>gpt-4o-mini</code>, <code>text-embedding-3-small</code>.</td></tr>
+    <tr><td>Resend</td><td>Sending email through an API</td><td>Lead emails, from <code>onboarding@resend.dev</code> (test sender until a domain exists).</td></tr>
+    <tr><td>Sentry</td><td>Error reports with stack traces</td><td>Errors from production, with no personal data.</td></tr>
+  </table></div>
+  <p>Google Cloud groups resources in a <b>project</b>: here <code>sitechat-511008</code>. One project holds everything for now (development and production together), a deliberate simplification until the first customer.</p>
+</section>
+
+<section>
+  <h2>2. Containers and the <code>Dockerfile</code>, line by line</h2>
+  <p>A <b>container image</b> is a sealed package of everything the program needs to run: a slice of an operating system, Python, the libraries, and our code. Run it anywhere that runs containers, and it behaves the same. The <b>Dockerfile</b> is the recipe for building it. Here is Sitechat's whole Dockerfile, with its comments shortened:</p>
+<pre><code>FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY app/ app/
+COPY static/ static/
+
+RUN useradd --create-home --uid 1000 appuser &amp;&amp; chown -R appuser:appuser /app
+USER 1000
+
+EXPOSE 8080
+
+CMD exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080} --workers 1</code></pre>
+  <div class="tablewrap"><table>
+    <tr><th>Line</th><th>What and why</th></tr>
+    <tr><td><code>FROM python:3.12-slim</code></td><td>Start from an official image with Python 3.12 on a minimal Debian. Pinned to a minor version: "python:3.12" plain "would silently move under you and turn a deploy into an unplanned upgrade". <i>Slim</i> leaves out compilers and tools we don't need.</td></tr>
+    <tr><td><code>ENV PYTHONDONTWRITEBYTECODE=1</code>, <code>PYTHONUNBUFFERED=1</code></td><td>Don't write <code>.pyc</code> files (useless in a container); don't buffer output, because "buffering means logs appear late or not at all on a crash".</td></tr>
+    <tr><td><code>WORKDIR /app</code></td><td>The folder inside the image where everything goes.</td></tr>
+    <tr><td><code>COPY requirements.txt</code> then <code>RUN pip install</code>, <i>before</i> copying the code</td><td><b>Layer caching.</b> Docker caches each step; a step is re-run only if its inputs changed. Dependencies change rarely and code often, so this order means editing code doesn't reinstall every package. <code>--no-cache-dir</code> keeps pip's download cache out of the image.</td></tr>
+    <tr><td><code>COPY app/ app/</code>, <code>COPY static/ static/</code></td><td>Only the service and the widget. Tests, scripts, docs, notes and secrets are kept out by <code>.dockerignore</code> (which lists <code>.env</code>, <code>service-account.json</code>, <code>scripts/</code>, <code>tests/</code>, <code>docs/</code>...).</td></tr>
+    <tr><td><code>useradd ... USER 1000</code></td><td>Run as an ordinary user, not root: "If the process is ever compromised, it should not own the filesystem it is running on." By number, "so the platform can tell it is not root without a passwd file".</td></tr>
+    <tr><td><code>EXPOSE 8080</code></td><td>Documentation: the port the app listens on.</td></tr>
+    <tr><td><code>CMD exec uvicorn ...</code></td><td>The command the container runs. Shell form so <code>${PORT:-8080}</code> is expanded (Cloud Run sets <code>PORT</code> and health-checks exactly that port; <code>:-8080</code> is the default when unset). <code>exec</code> replaces the shell with uvicorn so uvicorn receives the shut-down signal itself (challenge 4). One worker, because "Cloud Run scales by adding instances, so a second worker inside one container competes for the same CPU rather than adding capacity". <code>--host 0.0.0.0</code>: listen on all interfaces (<a href="https://claude.ai/artifact/MDdgNKEGibTrFVYqtGjGhs">Phase 1, §3</a>).</td></tr>
+  </table></div>
+  <p>The image installs <code>requirements.txt</code> only. Test tools live in <code>requirements-dev.txt</code>, which adds them on top (<code>-r requirements.txt</code>), so pytest and friends never ship to production. Both files list exact versions (<code>fastapi==0.142.4</code>), so a build next month installs the same code as today.</p>
+</section>
+
+<section>
+  <h2>3. Cloud Run: what "serverless containers" means</h2>
+  <p><b>Cloud Run</b> takes a container image and runs it behind an HTTPS address, starting more copies (<b>instances</b>) when traffic rises and stopping them when it falls, down to zero. You don't manage machines; you pay for the time instances are handling requests. Sitechat's real settings, read from the live service:</p>
+<pre><code>autoscaling.knative.dev/maxScale: '10'           # at most 10 instances
+run.googleapis.com/startup-cpu-boost: 'true'     # extra CPU while starting
+containerConcurrency: 80                         # up to 80 requests at once per instance
+serviceAccountName: sitechat-runtime@sitechat-511008.iam.gserviceaccount.com
+timeoutSeconds: 60                               # a request is cut off at 60 s</code></pre>
+  <p>plus, from <code>cloudbuild.yaml</code>: <code>--min-instances=0</code> (scale to zero when idle), <code>--memory=1Gi</code>, <code>--cpu=1</code>, <code>--allow-unauthenticated</code> (anyone may call it: the widget needs that; protection is per route, as earlier phases showed).</p>
+  <p>What each setting means for the code:</p>
+  <ul>
+    <li><b>60-second timeout</b> → every model call has a deadline inside 40 s (<a href="https://claude.ai/artifact/QKLydSMm3tKdXapho5kS1V">Phase 4b, §8</a>), and the digest sends at most 10 emails per run.</li>
+    <li><b>Up to 10 instances</b> → rate-limit counters, caches and the token-usage cache are per instance, so the worst case is 10 times each limit (<a href="https://claude.ai/artifact/F1oZk1cyDLGAPio8khD7cY">Phase 4a, §3</a>).</li>
+    <li><b>80 requests per instance</b>, but routes are ordinary functions running in a thread pool of about 40 threads, so under heavy load requests would queue inside the container. Recorded as the reason for a future load test and possible async rewrite (backlog 45).</li>
+    <li><b>Request-based billing</b> → CPU is fully available only while a request is in flight. Background tasks after the response (the immediate lead email) run on throttled CPU, which is why those emails arrived 12 to 24 s late.</li>
+    <li><b>Instances are disposable</b> → nothing important may live only in memory; everything is in Firestore, and memory holds only caches.</li>
+  </ul>
+  <p>Google's front end (the "GFE") sits in front of the container: it terminates HTTPS, appends the visitor's address to <code>X-Forwarded-For</code>, and reserves some paths like <code>/healthz</code> (two challenges from <a href="https://claude.ai/artifact/F1oZk1cyDLGAPio8khD7cY">Phase 4a</a>).</p>
+  <div class="box analogy"><div class="tag">Analogy</div><p>A food truck company. You hand them your recipe and sealed ingredients box (the image). When customers queue, they send out more trucks (instances), up to ten; when nobody's around, every truck goes back to the depot (scale to zero). Each truck can serve 80 people at once but has one cook. And a truck that's just been sent out has to heat up before the first order (a cold start).</p></div>
+</section>
+
+<section>
+  <h2>4. Cold starts, and how the digest fixed them</h2>
+  <p>With <code>--min-instances=0</code>, the first request after a quiet spell must wait for a new instance: download the image, start Python, import every library, run the lifespan. Measured on 15 Oct after the smoke test timed out: <b>43.4 seconds</b> (about 37 s for the container and Python to start, 6 s for the app), with 16 cold starts in the previous 36 hours, so real visitors met them.</p>
+  <p>Options recorded: <code>--min-instances=1</code> (always one instance warm, roughly ₹1,500 a month: against your constraints), CPU boost during start-up (turned on), and making start-up itself cheaper (lazy Pinecone index handle, smaller image).</p>
+  <p>Then the lead digest went live, calling the service every 5 minutes. Measured on 17 Oct from logs: in the 15.7 hours after the job started (including 11.7 quiet overnight hours), 190 calls, all 200, never more than 5.7 minutes apart, and <b>no idle cold start at all</b>; the only new instances were deploys. With request-based billing an idle instance isn't charged. So a free scheduled job removed the cold-start problem as a side effect. The first request after each deploy still goes to a fresh instance.</p>
+  <div class="box interview"><div class="tag">Say it in an interview</div><p>"Scale-to-zero gave us a measured 43-second cold start. The paid fix was a minimum instance. Instead, the lead-digest job we needed anyway hits the service every five minutes, which in practice keeps an instance warm: we checked the logs and saw no idle cold starts over a 16-hour window. We kept startup CPU boost on and made the Pinecone client lazy so a new instance does less before serving."</p></div>
+</section>
+
+<section>
+  <h2>5. Cloud Build: tests, then build, then deploy</h2>
+  <p><b>CI/CD</b> means continuous integration (automatically checking every change) and continuous delivery (automatically releasing it). Sitechat has two systems: <b>GitHub Actions</b> runs all the checks on every push and pull request (Phase 7), and a <b>Cloud Build trigger</b> deploys every push to <code>main</code>. The whole <code>cloudbuild.yaml</code>:</p>
+<pre><code>steps:
+  # Tests first: a failing test stops the build here.
+  - name: 'python:3.12-slim'
+    entrypoint: bash
+    env: ['ENVIRONMENT=development', 'GCP_PROJECT_ID=test-project', 'PIP_DISABLE_PIP_VERSION_CHECK=1']
+    args: ['-c', 'pip install --quiet --no-cache-dir -r requirements-dev.txt &amp;&amp; python -m pytest -q']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/sitechat/api:$SHORT_SHA',
+           '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/sitechat/api:latest', '.']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '--all-tags', 'us-central1-docker.pkg.dev/$PROJECT_ID/sitechat/api']
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'sitechat-api'
+      - '--image=us-central1-docker.pkg.dev/$PROJECT_ID/sitechat/api:$SHORT_SHA'
+      - '--region=us-central1'
+      - '--allow-unauthenticated'
+      - '--service-account=sitechat-runtime@$PROJECT_ID.iam.gserviceaccount.com'
+      - '--set-secrets=OPENAI_API_KEY=OPENAI_API_KEY:latest,PINECONE_API_KEY=PINECONE_API_KEY:latest,...'
+      - '--set-env-vars=ENVIRONMENT=production,GCP_PROJECT_ID=$PROJECT_ID,THROTTLE_RERANK=false,LEAD_DIGEST_INVOKER=lead-digest@$PROJECT_ID.iam.gserviceaccount.com'
+      - '--min-instances=0'
+      - '--max-instances=10'
+      - '--memory=1Gi'
+      - '--cpu=1'
+      - '--timeout=60'</code></pre>
+  <ol class="steps">
+    <li><div><b>Test.</b> In a clean Python 3.12 container, install the dev requirements and run pytest, with the same settings as GitHub Actions. Any failure stops the build: nothing is built or deployed. Checked in a clean container: about 45 seconds, and a failing test exits 1. (Browser tests skip themselves: Playwright isn't installed there.)</div></li>
+    <li><div><b>Build</b> the image, tagged twice: with <code>$SHORT_SHA</code> (the commit's short id, so every deploy names exactly which code it is) and <code>latest</code>.</div></li>
+    <li><div><b>Push</b> both tags to Artifact Registry.</div></li>
+    <li><div><b>Deploy</b> that exact image (by commit tag, not <code>latest</code>) to Cloud Run, with the service account, secrets, environment and limits. Cloud Run creates a new <b>revision</b> and moves traffic to it once it starts; the previous revision stays available for rollback (<code>gcloud run services update-traffic ... --to-revisions=PREVIOUS=100</code>, written in <code>notes/runtime-sa-setup.md</code>).</div></li>
+  </ol>
+  <p>Each step runs in its own container image (<code>name:</code>): Python for tests, Docker for building, the Cloud SDK for deploying. <code>$PROJECT_ID</code> and <code>$SHORT_SHA</code> are filled in by Cloud Build. <code>tests/test_cloudbuild.py</code> checks the file itself: for instance, that every secret in <code>--set-secrets</code> is granted to the runtime account in the setup notes.</p>
+</section>
+
+<section>
+  <h2>6. Secrets: <code>.env</code> locally, Secret Manager in production</h2>
+  <p>A <b>secret</b> is anything that grants access: API keys, the Sentry DSN, a service-account key file. Rules Sitechat follows:</p>
+  <ul>
+    <li><b>Never in code or git.</b> <code>.env</code> and <code>service-account.json</code> are in <code>.gitignore</code> and <code>.dockerignore</code>. CI runs <b>gitleaks</b> over the entire history on every push to catch an accidental commit (none found).</li>
+    <li><b>Locally</b>: <code>.env</code>, read by pydantic-settings. The current file defines <code>ENVIRONMENT</code>, <code>LOG_LEVEL</code>, <code>GCP_PROJECT_ID</code>, <code>OPENAI_API_KEY</code>, <code>GOOGLE_SERVICE_ACCOUNT_FILE</code>, <code>PINECONE_API_KEY</code>, <code>PINECONE_INDEX_NAME</code>, <code>COHERE_API_KEY</code>, <code>RESEND_API_KEY</code>, <code>NOTIFICATION_FROM_EMAIL</code> and <code>SENTRY_DSN</code> (names only; the values are never shown).</li>
+    <li><b>In production</b>: <b>Secret Manager</b> stores each secret, versioned. <code>--set-secrets=OPENAI_API_KEY=OPENAI_API_KEY:latest</code> tells Cloud Run to inject the latest version as an environment variable when an instance starts. The image contains no keys. Real list: <code>COHERE_API_KEY</code>, <code>OPENAI_API_KEY</code>, <code>PINECONE_API_KEY</code>, <code>RESEND_API_KEY</code>, <code>SENTRY_DSN</code>.</li>
+    <li><b>In code</b>: <code>SecretStr</code>, so printed settings show asterisks (<a href="https://claude.ai/artifact/F1oZk1cyDLGAPio8khD7cY">Phase 4a, §2</a>).</li>
+    <li><b>No file key in production.</b> The Google Sheets reader uses <code>service-account.json</code> only if the file exists; on Cloud Run it uses the service's own identity, so there's no long-lived key to leak there.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>7. Service accounts and least privilege</h2>
+  <p>A <b>service account</b> is a Google identity for a program. <b>IAM</b> (Identity and Access Management) grants identities <b>roles</b>, each a bundle of permissions. The principle of <b>least privilege</b>: give each identity only what it needs, so a compromise can do as little as possible.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Account</th><th>Used by</th><th>Allowed</th></tr>
+    <tr><td><code>sitechat-runtime</code></td><td>The API on Cloud Run</td><td><code>roles/datastore.user</code> (Firestore) on the project; <code>roles/secretmanager.secretAccessor</code> on each of the five secrets only. Plus Viewer on each school's facts sheet, by sharing.</td></tr>
+    <tr><td><code>lead-digest</code></td><td>Cloud Scheduler signs its calls as this account</td><td>Nothing. The endpoint only checks <i>who</i> signed the token.</td></tr>
+    <tr><td>Default compute account</td><td>Cloud Build (likely)</td><td>Editor on the project (broad); allowed to deploy as <code>sitechat-runtime</code>.</td></tr>
+  </table></div>
+  <p>What the runtime account does <b>not</b> need, per <code>notes/runtime-sa-setup.md</code>: logging (Cloud Run collects output itself), Pinecone/OpenAI/Resend/Cohere/Sentry (API keys, not Google permissions), the digest token check (Google's public keys), and Sheets (sharing, not a role).</p>
+  <div class="box challenge"><div class="tag">Challenge we faced: the service ran with near-owner power</div><p>The 16 Oct review (finding H2) confirmed the service ran as the default compute account, which held <code>roles/editor</code>, <code>roles/run.admin</code> and <code>roles/artifactregistry.writer</code>. "Any code execution in the app or a dependency would give near-owner control of the project: read every secret, delete Firestore, deploy other images." <b>Fix (17 to 18 Oct):</b> the dedicated <code>sitechat-runtime</code> account with only Firestore and its five secrets; the setup commands documented to run <i>before</i> pushing (or the deploy fails safely and the old revision keeps serving); a test that every deployed secret is granted. Still open, optional: a separate Cloud Build account and removing Editor from the default one.</p></div>
+</section>
+
+<section>
+  <h2>8. Cloud Scheduler and signed calls</h2>
+  <p>Real job, from the live project:</p>
+<pre><code>ID                    SCHEDULE     STATE
+sitechat-lead-digest  */5 * * * *  ENABLED</code></pre>
+  <p><code>*/5 * * * *</code> is <b>cron</b> syntax: five fields for minute, hour, day of month, month, day of week; <code>*/5</code> in the minute field means "every 5 minutes", and <code>*</code> means "every". The job sends <code>POST /internal/lead-digest</code> with an <b>OIDC token</b> signed by Google for the <code>lead-digest</code> account and the audience <code>sitechat-lead-digest</code>, which the endpoint verifies (<a href="https://claude.ai/artifact/F1oZk1cyDLGAPio8khD7cY">Phase 4a, §10</a>). The creation command is in <code>notes/lead-digest-setup.md</code>, along with how to run it once by hand (<code>gcloud scheduler jobs run ...</code>), what to look for in the logs, and how to pause it.</p>
+</section>
+
+<section>
+  <h2>9. Firestore in production</h2>
+<pre><code>NAME       LOCATION_ID  TYPE
+(default)  us-central1  FIRESTORE_NATIVE</code></pre>
+  <ul>
+    <li><b>Same region as Cloud Run</b> (us-central1), so database calls from the server stay inside one Google region.</li>
+    <li><b>Native mode</b>: the document database with transactions and real-time features (the alternative "Datastore mode" is an older API).</li>
+    <li><b>Indexes</b>: every query Sitechat makes is a single-field equality (<code>tenant_id ==</code>, <code>site_key ==</code>, <code>digest_due ==</code>), which Firestore indexes automatically. Date filtering and sorting happen in Python, so no composite indexes needed creating.</li>
+    <li><b>TTL deletion</b>: real state, <code>gcloud firestore fields ttls list</code>:
+<pre><code>NAME       STATE
+expire_at  ACTIVE
+expire_at  ACTIVE</code></pre>
+    Two policies are active. <code>notes/retention-setup.md</code> lists three (conversations, leads, feedback; the feedback one was added last, on 18 Oct "run it if not yet"), so one still needs its single <code>gcloud</code> command. Worth checking which.</li>
+    <li><b>Backups</b>: point-in-time recovery restore has never been tested (backlog 59).</li>
+    <li><b>Security rules</b>: the server uses the admin SDK, which bypasses Firestore's client security rules; rules matter only if a browser client is ever pointed at the database. The review listed checking they deny everything as an open item.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>10. Pinecone, OpenAI, Resend, Sentry</h2>
+  <div class="tablewrap"><table>
+    <tr><th>Service</th><th>Production notes</th></tr>
+    <tr><td>Pinecone</td><td>One managed index, <code>sitechat</code>, on AWS us-east-1 with a document schema; namespace per tenant; 95 vectors for the one tenant. Cross-cloud from us-central1 adds latency (searches took 1.4 to 2.6 s when measured from India during development).</td></tr>
+    <tr><td>OpenAI</td><td>Two clients (chat and embeddings) with short timeouts and one retry. Errors become 503s with visitor-safe messages. Account rate limits have never been measured (backlog 53).</td></tr>
+    <tr><td>Resend</td><td>Sends from <code>onboarding@resend.dev</code>, the test sender, which only delivers to the account owner's address: fine with no customer, a blocker for one. Needs a verified domain (and <code>NOTIFICATION_FROM_EMAIL</code> set), which needs a domain. Free plan: 100 emails a day, hence the per-school cap of 50.</td></tr>
+    <tr><td>Sentry</td><td>Enabled when <code>SENTRY_DSN</code> is set; 10% of requests traced for performance; no personal data (<a href="https://claude.ai/artifact/F1oZk1cyDLGAPio8khD7cY">Phase 4a, §1.3</a>). Every <code>logger.exception</code> and <code>logger.error</code> becomes a report.</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2>11. Logs and observability</h2>
+  <p><b>Observability</b> is being able to tell what a running system is doing from the outside. Sitechat's three sources:</p>
+  <ul>
+    <li><b>Structured logs</b>: one JSON object per line, with <code>severity</code>, <code>message</code>, <code>logger</code>, <code>request_id</code>, <code>tenant_id</code>, <code>conversation_id</code> (<a href="https://claude.ai/artifact/F1oZk1cyDLGAPio8khD7cY">Phase 4a, §5</a>). In Logs Explorer, <code>jsonPayload.tenant_id="pyramid-yogshala"</code> shows a school's activity; <code>severity&gt;=ERROR</code> shows problems.</li>
+    <li><b>Timing lines</b>: every reply logs "read+retrieve X s, model Y s"; retrieval logs embed and search milliseconds and the chunk ids chosen; persistence logs its duration. Measured in production: read plus retrieve 0.5 to 1.5 s, model 0.7 to 1.9 s.</li>
+    <li><b>Sweep summaries</b>: <code>Lead digest sweep: {'due': ..., 'sent': ..., 'held': ...}</code> every 5 minutes, and facts sync counts.</li>
+  </ul>
+  <p>Missing (backlog 22): <b>alerting</b>, meaning a message to you when the error rate or latency rises. Today, problems are seen by looking.</p>
+</section>
+
+<section>
+  <h2>12. Costs and the free tier</h2>
+  <p>Within free tiers today. The guard rails that keep a surprise bill from happening:</p>
+  <ul>
+    <li>Firestore reads: caches for tenants, facts and catalogues; negative caching of bad site keys; the refusal limit; the digest flag written only when it changes.</li>
+    <li>OpenAI: the per-tenant daily token budget, the 600-token reply cap, triage skipping retrieval, and every expensive call happening last.</li>
+    <li>Email: the daily cap per school.</li>
+    <li>Cloud Run: scale to zero; max 10 instances.</li>
+    <li>Cloud Build: the test step adds about 2 minutes per build, inside the free 120 build-minutes a day.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>13. What's missing for production</h2>
+  <p>Honest list, from <code>notes/backlog.md</code> ("Blocking the first real customer") and the review:</p>
+  <div class="tablewrap"><table>
+    <tr><th>Item</th><th>Why it matters</th><th>Needs</th></tr>
+    <tr><td>Verified email domain</td><td>The test sender only reaches the account owner</td><td>A domain</td></tr>
+    <tr><td>Production / development split</td><td>A bad deploy currently hits the only environment</td><td>A second project</td></tr>
+    <tr><td>Alerting</td><td>Errors are only seen when someone looks</td><td>Cloud Monitoring policies</td></tr>
+    <tr><td>Shared rate-limit counters</td><td>Per-instance counts multiply under scale-out</td><td>Redis (paid), once instances are regularly &gt; 1</td></tr>
+    <tr><td>Firestore emulator tests</td><td>Transactions are only tested in memory</td><td>Test set-up work</td></tr>
+    <tr><td>Load test</td><td>Thread pool vs concurrency 80 is unmeasured</td><td>A staging environment</td></tr>
+    <tr><td>Bot protection on leads</td><td>Fake leads are limited, not prevented</td><td>Cloudflare Turnstile, which needs a domain</td></tr>
+    <tr><td>Post-deploy smoke test in the pipeline</td><td>The script exists but is run by hand</td><td>One more build step</td></tr>
+  </table></div>
+  <p>Per your constraints, the paid and domain items wait for a customer.</p>
+</section>
+
+<section>
+  <h2>14. Challenges we faced</h2>
+  <div class="box challenge"><div class="tag">1. A missing space blocked a deploy</div><p>A deploy failed with permission denied on secrets. <code>SENTRY_DSN</code> had been created but its access grant never ran, because the command had a missing space: <code>SENTRY_DSN--member=...</code> was parsed as one word. <b>Lesson:</b> when a cloud command "succeeds" oddly, read exactly what it did; and test that every secret is granted (<code>tests/test_cloudbuild.py</code> now does).</p></div>
+  <div class="box challenge"><div class="tag">2. An account that didn't exist yet</div><p>Setting up the deploy failed because the default compute service account didn't exist: Google creates it lazily, the first time the Compute Engine API is enabled.</p></div>
+  <div class="box challenge"><div class="tag">3. Deploys weren't gated on tests</div><p>Review finding H3: the Cloud Build trigger built and deployed every push to <code>main</code>, whatever GitHub Actions said, so a red test run still shipped. <b>Fix (17 Oct):</b> pytest is the first build step; a failure stops everything.</p></div>
+  <div class="box challenge"><div class="tag">4. The container ignored the shut-down signal</div><p>The <code>CMD</code> ran uvicorn under <code>/bin/sh</code>, which became process 1 and didn't pass on Cloud Run's SIGTERM ("please stop"). After 10 seconds the platform killed everything (exit code 137), mid-request and mid-email. Checked in a local container: before, <code>docker stop</code> killed it with 137 and no shutdown log; after adding <code>exec</code>, uvicorn is process 1, logs "Shutting down", finishes in-flight work, and exits 0, with <code>PORT</code> still honoured.</p></div>
+  <div class="box challenge"><div class="tag">5. Test packages in the production image</div><p>Review finding M7: pytest and several heavy packages were in the image. Split into runtime and dev requirements (666 → 650 MB). Cohere's dependencies stay, because rerank is a supported switch and Cohere imports lazily (1.5 ms), so it costs image size, not start time. A related trap: <code>pip freeze &gt; file</code> in PowerShell writes UTF-16, which pip then can't read; the files are kept UTF-8 (noted in CLAUDE.md).</p></div>
+  <div class="box challenge"><div class="tag">6. Python 3.14 locally, 3.12 everywhere else</div><p>The local virtual environment runs Python 3.14 (confirmed when generating this course), while CI, Cloud Build and the image use 3.12. A 3.14-only feature would pass locally and fail in deploy. The Cloud Build test step now catches that before anything ships; recreating the local environment on 3.12 is your call.</p></div>
+  <div class="box challenge"><div class="tag">7. The 43-second cold start</div><p>Section 4: found because the smoke test's first run timed out; measured from logs; solved, as a side effect, by the 5-minute digest job, confirmed from logs two days later.</p></div>
+  <div class="box challenge"><div class="tag">8. A faster deploy image, tried and reverted</div><p>The full Cloud SDK image (about 1.2 GB) took about 70 seconds to download when a new version came out; a slim one (about 350 MB) also has <code>gcloud run deploy</code>. Tried on 19 Oct as a trial commit and reverted with the rest of that day's changes at your request.</p></div>
+  <div class="box challenge"><div class="tag">9. Geography is latency</div><p>Measured during development from India: Firestore writes 1.8 to 4.7 s, Pinecone searches 1.4 to 2.6 s, partly because the services sit in the US (Firestore and Cloud Run in us-central1, Pinecone in us-east-1). Moving writes to background tasks and parallelising removed most of the visitor's wait; the rest is distance.</p></div>
+</section>
+
+<section>
+  <h2>Glossary</h2>
+  <dl class="gloss">
+    <div><dt>Container image</dt><dd>A sealed package of an OS slice, runtime, libraries and code.</dd></div>
+    <div><dt>Dockerfile</dt><dd>The recipe for building an image, one instruction per line.</dd></div>
+    <div><dt>Layer caching</dt><dd>Docker reusing unchanged build steps; why dependencies are installed before code is copied.</dd></div>
+    <div><dt>PID 1 / SIGTERM</dt><dd>The first process in a container / the signal asking a process to stop gracefully.</dd></div>
+    <div><dt>Cloud Run instance / revision</dt><dd>One running copy of the container / one deployed version of the service.</dd></div>
+    <div><dt>Scale to zero</dt><dd>Running no instances when there's no traffic.</dd></div>
+    <div><dt>Cold start</dt><dd>The delay while a new instance starts before serving its first request.</dd></div>
+    <div><dt>Concurrency</dt><dd>How many requests one instance handles at once (80 here).</dd></div>
+    <div><dt>CI/CD</dt><dd>Automatically checking every change / automatically deploying it.</dd></div>
+    <div><dt>Artifact Registry</dt><dd>Google's store for container images.</dd></div>
+    <div><dt>Secret Manager</dt><dd>Google's versioned store for secrets, injected at run time.</dd></div>
+    <div><dt>IAM role</dt><dd>A named bundle of permissions granted to an identity.</dd></div>
+    <div><dt>Least privilege</dt><dd>Granting only the permissions actually needed.</dd></div>
+    <div><dt>Cron</dt><dd>A five-field schedule syntax (minute, hour, day, month, weekday).</dd></div>
+    <div><dt>Observability</dt><dd>Understanding a running system from its logs, metrics and traces.</dd></div>
+    <div><dt>Rollback</dt><dd>Sending traffic back to a previous working revision.</dd></div>
+  </dl>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <details><summary>Why does the Dockerfile copy <code>requirements.txt</code> and install it before copying <code>app/</code>?</summary><p>Layer caching: dependencies change rarely, code often. With this order, a code change reuses the cached install layer instead of reinstalling everything.</p></details>
+  <details><summary>What does <code>exec</code> in the <code>CMD</code> fix?</summary><p>Without it, the shell is process 1 and doesn't pass on SIGTERM, so the container is killed mid-request. With it, uvicorn receives the signal and shuts down cleanly.</p></details>
+  <details><summary>Why is the image deployed by its commit tag rather than <code>latest</code>?</summary><p>So each deploy names exactly which code is running, and a rollback or comparison is unambiguous.</p></details>
+  <details><summary>How do API keys get into the running container without being in the image?</summary><p>Secret Manager stores them; <code>--set-secrets</code> makes Cloud Run inject them as environment variables at start-up; pydantic-settings reads them.</p></details>
+  <details><summary>The runtime account has no role for Google Sheets. How does it read schools' sheets?</summary><p>Each school shares its sheet (Viewer) with the account's email address. Sharing is the permission.</p></details>
+  <details><summary>What does <code>*/5 * * * *</code> mean?</summary><p>Every 5 minutes, every hour, every day.</p></details>
+  <details><summary>Why did scale-to-zero stop causing cold starts without paying for a minimum instance?</summary><p>The 5-minute digest job keeps calling the service, so an instance stays warm; logs showed no idle cold starts afterwards.</p></details>
+  <details><summary>Name three things missing before a first customer, and what each needs.</summary><p>A verified email domain (a domain), a production/development split (a second project), alerting (monitoring policies); also bot protection (Turnstile, a domain), shared rate limits (Redis), emulator tests.</p></details>
+</section>
+
+<section>
+  <h2>Next: Phase 7, quality and safety</h2>
+  <p>How the project knows it works: 492 tests and how they avoid the network, the CI checks, coverage, the evaluations as quality gates, and the full map of safety and privacy defences against the OWASP list. <a href="https://claude.ai/artifact/KdgDyd9VuQVfjJu3dvHPv2">Read Phase 7</a>.</p>
+</section>
+
+</main>
+</body>
+</html>

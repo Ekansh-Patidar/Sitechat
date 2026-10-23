@@ -1,0 +1,15 @@
+# Tests and local tools, on top of what the service needs. CI and Cloud Build
+# install this; the Docker image installs requirements.txt only.
+-r requirements.txt
+colorama==0.4.6
+iniconfig==2.3.1
+pluggy==1.6.0
+Pygments==2.21.0
+pytest==9.1.1
+# Checks run in CI (.github/workflows/tests.yml); config in ruff.toml, mypy.ini.
+bandit==1.9.4
+coverage==7.16.2
+mypy==2.4.0
+pytest-cov==7.1.0
+ruff==0.17.1
+types-PyYAML==6.0.12.20260906

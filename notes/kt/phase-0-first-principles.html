@@ -1,0 +1,814 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sitechat KT 0: First Principles</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,650&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  /* Layout: a reading column with a phase map on top; coloured callouts by role
+     (analogy, in this project, interview, try it); code blocks scroll inside themselves. */
+  :root {
+    --bg: #f5f6f4;
+    --paper: #ffffff;
+    --ink: #1b2725;
+    --muted: #5a6663;
+    --line: #dde3e0;
+    --accent: #1f6f5c;
+    --accent-soft: #e5f1ec;
+    --analogy: #7a4f9a;
+    --analogy-soft: #f2ecf7;
+    --interview: #a5630d;
+    --interview-soft: #fbf1e0;
+    --code-bg: #f0f3f1;
+    --display: "Literata", Georgia, "Times New Roman", serif;
+    --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121918; --paper: #1a2322; --ink: #e5ebe9; --muted: #9db0aa; --line: #2b3735;
+      --accent: #63c2a6; --accent-soft: #1d3530; --analogy: #c7a3e6; --analogy-soft: #2a2235;
+      --interview: #e3a64b; --interview-soft: #2e2416; --code-bg: #0f1514;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #121918; --paper: #1a2322; --ink: #e5ebe9; --muted: #9db0aa; --line: #2b3735;
+    --accent: #63c2a6; --accent-soft: #1d3530; --analogy: #c7a3e6; --analogy-soft: #2a2235;
+    --interview: #e3a64b; --interview-soft: #2e2416; --code-bg: #0f1514;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 17px/1.65 var(--body);
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 32px 80px;
+  }
+  main { max-width: 48rem; margin: 0 auto; display: grid; gap: 44px; }
+  header { display: grid; gap: 12px; }
+  .eyebrow { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  h1 { font: 650 clamp(30px, 5.5vw, 42px)/1.12 var(--display); margin: 0; text-wrap: balance; }
+  h2 { font: 650 clamp(23px, 3.6vw, 28px)/1.25 var(--display); margin: 0; text-wrap: balance; }
+  h3 { font: 700 18px/1.35 var(--body); margin: 8px 0 0; }
+  p, ul, ol { margin: 0; }
+  ul, ol { padding-left: 1.3em; display: grid; gap: 6px; }
+  li::marker { color: var(--accent); }
+  section { display: grid; gap: 16px; min-width: 0; }
+  .lede { color: var(--muted); font-size: 18px; }
+  a { color: var(--accent); }
+  code { font: 0.88em var(--mono); background: var(--code-bg); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+  pre {
+    margin: 0; background: var(--code-bg); border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 16px; overflow-x: auto; font: 14px/1.55 var(--mono);
+  }
+  pre code { background: none; padding: 0; font-size: inherit; overflow-wrap: normal; }
+  .file { font: 600 13px var(--mono); color: var(--muted); margin-bottom: -10px; }
+  .phases { display: flex; flex-wrap: wrap; gap: 6px; }
+  .phases span {
+    font-size: 13px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line);
+    color: var(--muted); background: var(--paper);
+  }
+  .phases span.now { background: var(--accent); color: var(--paper); border-color: var(--accent); font-weight: 600; }
+  .box { border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; border: 1px solid var(--line); background: var(--paper); }
+  .box .tag { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .analogy { background: var(--analogy-soft); border-color: transparent; }
+  .analogy .tag { color: var(--analogy); }
+  .project { background: var(--accent-soft); border-color: transparent; }
+  .project .tag { color: var(--accent); }
+  .interview { background: var(--interview-soft); border-color: transparent; }
+  .interview .tag { color: var(--interview); }
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
+  table { border-collapse: collapse; width: 100%; font-size: 15.5px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-weight: 700; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+  tr:last-child td { border-bottom: none; }
+  td:first-child { white-space: nowrap; }
+  .steps { list-style: none; padding: 0; counter-reset: s; display: grid; gap: 10px; }
+  .steps > li { counter-increment: s; display: grid; grid-template-columns: 2rem 1fr; gap: 10px; min-width: 0; }
+  .steps > li::before {
+    content: counter(s); width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+    font: 700 13px/1 var(--body); color: var(--accent); border: 1.5px solid var(--accent);
+  }
+  .steps > li > div { display: grid; gap: 6px; min-width: 0; }
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .flow .node { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: 15px; }
+  .flow .arrow { color: var(--accent); font-weight: 700; }
+  details { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+  details summary { cursor: pointer; font-weight: 600; }
+  details[open] summary { margin-bottom: 8px; }
+  details p { color: var(--ink); }
+  dl.gloss { display: grid; gap: 10px; margin: 0; }
+  dl.gloss div { display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr; gap: 12px; }
+  dl.gloss dt { font-weight: 700; }
+  dl.gloss dd { margin: 0; }
+  @media (max-width: 560px) { dl.gloss div { grid-template-columns: 1fr; gap: 2px; } td:first-child { white-space: normal; } }
+  .toc { columns: 2 16rem; column-gap: 28px; }
+  .toc li { break-inside: avoid; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 0; }
+  summary:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  :root { --challenge: #a8322f; --challenge-soft: #fbecea; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --challenge: #f2958f; --challenge-soft: #3a2220; } }
+  :root[data-theme="dark"] { --challenge: #f2958f; --challenge-soft: #3a2220; }
+  .challenge { background: var(--challenge-soft); border-color: transparent; }
+  .challenge .tag { color: var(--challenge); }
+  .phases a { font-size: 13px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line);
+    color: var(--muted); background: var(--paper); text-decoration: none; }
+  .phases a:hover { border-color: var(--accent); color: var(--accent); }
+  .phases a.now { background: var(--accent); color: var(--paper); border-color: var(--accent); font-weight: 600; }
+  figure { margin: 0; display: grid; gap: 8px; justify-items: start; }
+  figure img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+  figcaption { font-size: 14px; color: var(--muted); }
+  .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 12px; }
+  .kv { display: grid; grid-template-columns: minmax(7rem, 11rem) 1fr; gap: 6px 14px; }
+  @media (max-width: 560px) { .kv { grid-template-columns: 1fr; gap: 2px; } }
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <div class="eyebrow">Sitechat knowledge transfer · Phase 0 of 10</div>
+  <h1>First principles: the tools you need before the code</h1>
+  <p class="lede">Before we read a single line of Sitechat, this phase gives you the basic ideas everything else stands on: what a program is, files and folders, the terminal, just enough Python, packages, Git, and secrets. Every idea is explained with an everyday comparison and then shown in the real Sitechat code.</p>
+  <p class="box"><span><b>Updated 23 Oct 2026:</b> new <b>Challenges we faced</b> section before the glossary (real problems from the project that come down to this phase's Python basics), and links to every phase at the top.</span></p>
+  <p class="box"><span><b>Updated 21 Oct 2026:</b> <a href="#abc">8.12 Abstract classes</a> rewritten in six steps with the full real code, a comparison table, what Python does when a method is missing, and how tests swap in the dictionary store (dependency injection). New glossary entries and two new check-yourself questions.</span></p>
+  <div class="phases" aria-label="All phases">
+    <a class="now" href="https://claude.ai/artifact/QuxrXdoFv7vr5KKvNSML78">0 First principles</a><a href="https://claude.ai/artifact/MDdgNKEGibTrFVYqtGjGhs">1 How the web works</a><a href="https://claude.ai/artifact/VVYejQXYpWzuimyovij4CY">2 What Sitechat is</a><a href="https://claude.ai/artifact/RHDbDbJ6r8RmXdRsvAUK9S">3 AI fundamentals</a><a href="https://claude.ai/artifact/F1oZk1cyDLGAPio8khD7cY">4a API layer</a><a href="https://claude.ai/artifact/QKLydSMm3tKdXapho5kS1V">4b The agent</a><a href="https://claude.ai/artifact/2TNXtynh229R59PV9MwHc1">4c Retrieval</a><a href="https://claude.ai/artifact/Np1qbTsXtXtDL6UmGaMvFv">4d Leads</a><a href="https://claude.ai/artifact/S2dSYJnVDTPbqeAWJP6qd1">4e Data stores</a><a href="https://claude.ai/artifact/4hwNREB8CxkHtRrwgwRraL">4f Scripts and evals</a><a href="https://claude.ai/artifact/AHXQrMEzxpZ6x4ihiiiCm1">5 The chat widget</a><a href="https://claude.ai/artifact/BknbsJYd7gFx9geyWbBqKF">6 Cloud and data</a><a href="https://claude.ai/artifact/KdgDyd9VuQVfjJu3dvHPv2">7 Quality and safety</a><a href="https://claude.ai/artifact/QDifNPBS4Lu8CLhvZTJ5C4">8 Rebuild it yourself</a><a href="https://claude.ai/artifact/99LTVwqoTPzBmFmHCZcsCS">9 Interview prep</a><a href="https://claude.ai/artifact/NKGY4fDQXK9Cp41B55wiTs">10 Set it up</a>
+  </div>
+</header>
+
+<section>
+  <h2>How to read these notes</h2>
+  <p>Read top to bottom; each section builds on the one before. Four kinds of boxes appear throughout:</p>
+  <div class="box analogy"><div class="tag">Analogy</div><p>An everyday comparison for a new idea.</p></div>
+  <div class="box project"><div class="tag">In Sitechat</div><p>Where the idea shows up in this project, with the real file name.</p></div>
+  <div class="box interview"><div class="tag">Say it in an interview</div><p>A sentence or two you could say out loud to an interviewer.</p></div>
+  <p>Each phase ends with a glossary and "check yourself" questions; click a question to see the answer. If something is unclear or missing, note it and ask; it goes into the next phase.</p>
+  <h3>In this phase</h3>
+  <ol class="toc">
+    <li>Sitechat in one paragraph</li>
+    <li>What a program is</li>
+    <li>Files, folders and paths</li>
+    <li>The terminal</li>
+    <li>Python and its versions</li>
+    <li>Virtual environments</li>
+    <li>Packages and requirements files</li>
+    <li>Python, the parts this project uses</li>
+    <li>Git and GitHub</li>
+    <li>Settings and secrets</li>
+    <li>The files at the top of the project</li>
+    <li>Starting a project like this from nothing</li>
+    <li>Glossary and check yourself</li>
+  </ol>
+</section>
+
+<section>
+  <h2>1. Sitechat in one paragraph</h2>
+  <p>Sitechat is a chat assistant that a business puts on its website. A visitor clicks a small chat bubble and types a question, like "How much is the 200-hour course?". Our server finds the right information in that business's own documents and price sheet, asks an AI model to write a short answer using only that information, and sends the answer back to the bubble. If the visitor leaves an email address or asks to be contacted, the server emails the business with everything the visitor asked. One copy of Sitechat serves many businesses at once; each business is called a <b>tenant</b>. The first tenant is a yoga school, Pyramid Yogshala.</p>
+  <div class="flow" aria-label="The big picture">
+    <span class="node">Visitor types a question</span><span class="arrow">→</span>
+    <span class="node">Chat bubble sends it to our server</span><span class="arrow">→</span>
+    <span class="node">Server finds the school's information</span><span class="arrow">→</span>
+    <span class="node">AI writes an answer from it</span><span class="arrow">→</span>
+    <span class="node">Answer shown in the bubble</span>
+  </div>
+  <p>Phases 1 to 3 explain each arrow in that picture. This phase covers the ground they stand on.</p>
+</section>
+
+<section>
+  <h2>2. What a program is</h2>
+  <p>A computer only does exactly what it is told, one small step at a time. A <b>program</b> is a written list of those steps. The text we write is called <b>source code</b> (or just "code"), and it lives in ordinary text files.</p>
+  <div class="box analogy"><div class="tag">Analogy</div><p>A program is a recipe. The recipe (code) is written once; cooking it (running the program) can happen many times. A recipe that says "add salt" without saying how much leaves the cook guessing; computers never guess, so code must be exact.</p></div>
+  <p>There are many programming languages. Sitechat's server is written in <b>Python</b>, and the chat bubble that runs inside the visitor's browser is written in <b>JavaScript</b>, because browsers only run JavaScript.</p>
+  <p>Python is <b>interpreted</b>: a program called the Python interpreter reads your code and carries it out line by line. You run a Python file by asking the interpreter to read it:</p>
+  <pre><code>python hello.py</code></pre>
+  <p>If <code>hello.py</code> contains <code>print("Hello")</code>, the screen shows <code>Hello</code>. That is the whole idea; everything else is detail.</p>
+  <h3>A server is a program that waits</h3>
+  <p>Most programs start, do their job and stop. A <b>server</b> starts and then waits, sometimes for months, listening for requests. When one arrives, it does the work and replies, then waits again. Sitechat's backend is a server: it waits for chat messages.</p>
+</section>
+
+<section>
+  <h2>3. Files, folders and paths</h2>
+  <p>A <b>file</b> holds content (text, an image). A <b>folder</b> (also called a <b>directory</b>) holds files and other folders. A <b>path</b> is the address of a file, listing the folders you go through to reach it.</p>
+  <div class="box project"><div class="tag">In Sitechat</div><p>The whole project lives in one folder on your computer: <code>D:\projects\sitechat</code>. Inside it, the chat logic is in <code>D:\projects\sitechat\app\agent\orchestrator.py</code>. Inside the project we usually write paths relative to the project folder, with forward slashes: <code>app/agent/orchestrator.py</code>.</p></div>
+  <p>The last part of a file name after the dot is its <b>extension</b>; it tells you (and programs) what kind of file it is.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Extension</th><th>What it holds</th><th>Example in Sitechat</th></tr></thead>
+    <tbody>
+      <tr><td><code>.py</code></td><td>Python code</td><td><code>app/main.py</code></td></tr>
+      <tr><td><code>.js</code></td><td>JavaScript code (runs in browsers)</td><td><code>static/widget.js</code>, the chat bubble</td></tr>
+      <tr><td><code>.html</code></td><td>A web page</td><td><code>static/test-page.html</code>; these notes</td></tr>
+      <tr><td><code>.md</code></td><td>Markdown: plain text with light formatting (<code>#</code> for headings, <code>-</code> for lists)</td><td><code>notes/backlog.md</code>, <code>CLAUDE.md</code></td></tr>
+      <tr><td><code>.txt</code></td><td>Plain text</td><td><code>requirements.txt</code></td></tr>
+      <tr><td><code>.yaml</code> / <code>.yml</code></td><td>Settings written as indented "name: value" lines</td><td><code>cloudbuild.yaml</code> (how to deploy), <code>.github/workflows/tests.yml</code></td></tr>
+      <tr><td><code>.toml</code>, <code>.ini</code></td><td>Settings files for tools</td><td><code>ruff.toml</code>, <code>mypy.ini</code></td></tr>
+      <tr><td><code>.json</code></td><td>Data written as <code>{"name": "value"}</code>; the common language between programs</td><td><code>service-account.json</code> (a secret key file, never shared)</td></tr>
+      <tr><td>no extension</td><td>Some tools use fixed names</td><td><code>Dockerfile</code>, <code>.gitignore</code>, <code>.env</code></td></tr>
+    </tbody>
+  </table></div>
+  <p>A name starting with a dot, like <code>.env</code> or <code>.gitignore</code>, is a <b>hidden file</b> by convention: file browsers often hide it. It is still a normal file.</p>
+</section>
+
+<section>
+  <h2>4. The terminal</h2>
+  <p>The <b>terminal</b> (also called the command line or shell) is a window where you type commands instead of clicking. Developers use it because it is precise, repeatable and can be written down: "run this command" is easier to share than "click here, then there".</p>
+  <div class="box analogy"><div class="tag">Analogy</div><p>Clicking around a file browser is like pointing at things in a shop. The terminal is like handing the shopkeeper a written list: exact, fast, and you can reuse the list next time.</p></div>
+  <p>On Windows you have two common shells: <b>PowerShell</b> (Windows' own) and <b>Git Bash</b> (installed with Git, uses Linux-style commands). The project's commands work in both, with small differences.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+    <tbody>
+      <tr><td><code>cd D:\projects\sitechat</code></td><td>"Change directory": move into a folder. Every command after it runs there.</td></tr>
+      <tr><td><code>ls</code> (or <code>dir</code>)</td><td>List what is in the current folder.</td></tr>
+      <tr><td><code>mkdir notes</code></td><td>"Make directory": create a folder.</td></tr>
+      <tr><td><code>python --version</code></td><td>Ask which Python is installed.</td></tr>
+      <tr><td><code>python -m pytest</code></td><td>Run a Python tool (here, the tests). <code>-m</code> means "run this module".</td></tr>
+      <tr><td><code>pip install fastapi</code></td><td>Download and install a package.</td></tr>
+      <tr><td><code>git status</code></td><td>Show which files have changed since the last save point.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="box project"><div class="tag">In Sitechat</div><p>Everything you ran yourself during this project was a terminal command: <code>python -m scripts.create_tenant</code>, <code>python -m scripts.ingest pyramid-yogshala docs/pyramid-yogshala</code>, <code>gcloud firestore fields ttls update …</code>. Each is a program, started with some <b>arguments</b> (the words after the command name) that tell it what to work on.</p></div>
+</section>
+
+<section>
+  <h2>5. Python and its versions</h2>
+  <p>Python is released in numbered versions: 3.12, 3.13, 3.14 and so on. Newer versions add features and occasionally remove old ones, so the same code can behave differently on two versions.</p>
+  <div class="box project"><div class="tag">In Sitechat</div>
+    <p>Your laptop runs Python 3.14 (in the project's <code>.venv</code> folder). The live server and the automatic checks on GitHub run Python <b>3.12</b>, fixed in the <code>Dockerfile</code> (<code>FROM python:3.12-slim</code>) and in <code>.github/workflows/tests.yml</code>. Fixing one version for production means a Python update on your laptop can never surprise the live server.</p>
+  </div>
+</section>
+
+<section>
+  <h2>6. Virtual environments</h2>
+  <p>Python projects use <b>packages</b>: code written by other people that you download (next section). Different projects may need different versions of the same package. A <b>virtual environment</b> is a private folder of packages for one project, so projects don't interfere with each other.</p>
+  <div class="box analogy"><div class="tag">Analogy</div><p>A virtual environment is a separate toolbox for each job. The plumbing job's box never gets mixed up with the electrical job's box, even if both contain a "screwdriver" of different sizes.</p></div>
+  <pre><code># create it once, in the project folder
+python -m venv .venv
+
+# use it: either "activate" it, or call its Python directly
+.venv\Scripts\activate            # PowerShell / cmd
+.venv/Scripts/python.exe -m pytest  # call it directly (what I use in this project)</code></pre>
+  <div class="box project"><div class="tag">In Sitechat</div><p>The folder <code>.venv/</code> in the project is the virtual environment. It is listed in <code>.gitignore</code>, so it is never uploaded: anyone can recreate it from the requirements files.</p></div>
+</section>
+
+<section>
+  <h2>7. Packages and requirements files</h2>
+  <p>A <b>package</b> (or <b>library</b>) is ready-made code you install instead of writing yourself, for example a package that knows how to talk to OpenAI. Packages are published on <b>PyPI</b> (the Python Package Index) and installed with <b>pip</b>, Python's installer.</p>
+  <p>A project lists the packages it needs in a <b>requirements file</b>, so anyone can install exactly the same set with one command:</p>
+  <pre><code>pip install -r requirements-dev.txt</code></pre>
+  <p>Each line pins an exact version with <code>==</code>, such as <code>fastapi==0.142.4</code>. Pinning means the live server and your laptop run the same code; without it, a package update could change behaviour without anyone touching Sitechat.</p>
+  <h3>Two files, two audiences</h3>
+  <ul>
+    <li><code>requirements.txt</code>: what the <b>live server</b> needs to run.</li>
+    <li><code>requirements-dev.txt</code>: everything in the first file, plus tools only developers need (tests, code checkers). The live server does not install these, which keeps it smaller.</li>
+  </ul>
+  <h3>The packages that matter, and their job in Sitechat</h3>
+  <p><code>requirements.txt</code> has about 70 lines, but most are <b>dependencies of dependencies</b>: packages that the important ones need. These are the ones Sitechat uses directly:</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Package</th><th>Its job in Sitechat</th><th>Explained in</th></tr></thead>
+    <tbody>
+      <tr><td><code>fastapi</code></td><td>The web framework: turns Python functions into web addresses the chat bubble can call</td><td>Phases 1, 4</td></tr>
+      <tr><td><code>uvicorn</code></td><td>The web server program that runs the FastAPI app and listens for requests</td><td>Phases 1, 6</td></tr>
+      <tr><td><code>starlette</code></td><td>The layer FastAPI is built on (requests, responses, middleware)</td><td>Phase 4</td></tr>
+      <tr><td><code>pydantic</code></td><td>Describes the shape of data (a tenant, a message) and checks it automatically</td><td>This phase, Phase 4</td></tr>
+      <tr><td><code>pydantic-settings</code>, <code>python-dotenv</code></td><td>Read settings and secrets from the environment and the <code>.env</code> file</td><td>This phase</td></tr>
+      <tr><td><code>openai</code></td><td>Talks to OpenAI: the AI model that writes answers, and embeddings for search</td><td>Phase 3</td></tr>
+      <tr><td><code>pinecone</code></td><td>Talks to Pinecone, the vector database that finds relevant document sections</td><td>Phases 3, 6</td></tr>
+      <tr><td><code>google-cloud-firestore</code></td><td>Talks to Firestore, the database for tenants, conversations and leads</td><td>Phase 6</td></tr>
+      <tr><td><code>google-api-python-client</code>, <code>google-auth</code></td><td>Read the school's Google Sheet of prices and dates; prove who we are to Google</td><td>Phase 6</td></tr>
+      <tr><td><code>resend</code></td><td>Sends the lead emails to the school</td><td>Phases 4, 6</td></tr>
+      <tr><td><code>slowapi</code>, <code>limits</code></td><td>Rate limiting: stops one visitor sending hundreds of messages</td><td>Phase 4</td></tr>
+      <tr><td><code>sentry-sdk</code></td><td>Reports errors from the live server to Sentry, a monitoring service</td><td>Phase 6</td></tr>
+      <tr><td><code>cohere</code></td><td>Reranking search results (built, switched off by default)</td><td>Phase 3</td></tr>
+      <tr><td><code>rank-bm25</code></td><td>Keyword search (built, switched off by default)</td><td>Phase 3</td></tr>
+      <tr><td><code>PyYAML</code></td><td>Reads <code>programmes.yaml</code>, the list of each school's courses</td><td>Phase 4</td></tr>
+    </tbody>
+  </table></div>
+  <p><code>requirements-dev.txt</code> adds the developer tools: <code>pytest</code> (runs the tests), <code>pytest-cov</code> and <code>coverage</code> (measure how much code the tests exercise), <code>ruff</code> (finds likely bugs), <code>mypy</code> (checks types), <code>bandit</code> (finds insecure patterns). Phase 7 covers them.</p>
+  <div class="box project"><div class="tag">In Sitechat</div><p>A real gotcha from this project, recorded in <code>CLAUDE.md</code>: on Windows, saving the package list with PowerShell's <code>&gt;</code> writes the file in UTF-16, an encoding the Linux server can't read. The fix is to save it as UTF-8. Details like this are why the project keeps notes.</p></div>
+</section>
+
+<section>
+  <h2>8. Python: the parts this project uses</h2>
+  <p>You don't need all of Python to read Sitechat. These are the pieces it actually uses, each shown with real code from the project.</p>
+
+  <h3>8.1 Values, types and variables</h3>
+  <p>A <b>value</b> is a piece of data. Its <b>type</b> says what kind: text, a whole number, true/false. A <b>variable</b> is a name you give a value so you can use it later.</p>
+  <pre><code>MAX_SKIP_LENGTH = 25          # a whole number (int)
+display_name = "Pyramid Yogshala"  # text (str, "string")
+is_active = True              # True or False (bool)
+score = 0.86                  # a decimal number (float)
+privacy_url = None            # "nothing here yet" (None)</code></pre>
+  <p>Everything after <code>#</code> is a <b>comment</b>: a note for humans that Python ignores. Sitechat's code has many comments explaining <em>why</em> something is done.</p>
+  <p>Names written in CAPITALS, like <code>MAX_SKIP_LENGTH</code>, are <b>constants</b> by convention: values meant never to change while the program runs. Names starting with an underscore, like <code>_digits</code>, mean "for use inside this file only".</p>
+
+  <h3>8.2 Text (strings) and f-strings</h3>
+  <p>Text goes in quotes. An <b>f-string</b> (a string with <code>f</code> before the quote) lets you drop variables into text with curly braces:</p>
+  <pre><code>tenant_id = "pyramid-yogshala"
+namespace = f"tenant-{tenant_id}"     # "tenant-pyramid-yogshala"</code></pre>
+  <div class="box project"><div class="tag">In Sitechat</div><p>That exact pattern names each school's private section in the search database (<code>app/retrieval/vector_store.py</code>), so one school's documents can never appear in another school's answers.</p></div>
+  <p>Text in three quotes (<code>"""…"""</code>) can span many lines. At the top of a file or function it is a <b>docstring</b>: the built-in explanation of what that file or function is for. Nearly every Sitechat file starts with one.</p>
+
+  <h3>8.3 Collections: lists, dictionaries, tuples, sets</h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Kind</th><th>Looks like</th><th>Use it for</th></tr></thead>
+    <tbody>
+      <tr><td>list</td><td><code>["localhost", "127.0.0.1"]</code></td><td>An ordered collection you can change. A tenant's <code>allowed_domains</code>.</td></tr>
+      <tr><td>dict (dictionary)</td><td><code>{"role": "user", "content": "hi"}</code></td><td>Named values, looked up by name. Every message sent to the AI model is a dict like this.</td></tr>
+      <tr><td>tuple</td><td><code>("email", "phone", "text")</code></td><td>A fixed group of values. A function can return several values as one tuple.</td></tr>
+      <tr><td>set</td><td><code>{"answered", "partly"}</code></td><td>Unique values, fast "is it in here?" checks.</td></tr>
+    </tbody>
+  </table></div>
+  <pre><code>message = {"role": "user", "content": "What are the fees?"}
+message["content"]          # "What are the fees?"
+domains = ["localhost"]
+domains.append("pyramidyogshala.com")   # add to the end of a list
+len(domains)                # 2</code></pre>
+
+  <h3>8.4 Decisions and repetition</h3>
+  <pre><code>if not first_name:
+    greeting = "Hi,"
+else:
+    greeting = f"Hi {first_name},"
+
+for question in questions:      # do the indented lines once per question
+    print(question.text)</code></pre>
+  <p><b>Indentation matters in Python.</b> The lines pushed in under <code>if</code> or <code>for</code> belong to it; when the indentation ends, so does the block. Other languages use braces <code>{ }</code> for this; Python uses spaces.</p>
+  <p>A <b>comprehension</b> builds a list in one line. Sitechat uses them often:</p>
+  <pre><code># "every question whose status needs an answer"
+to_answer = [q for q in questions if q.status in {"not_answered", "partly"}]</code></pre>
+
+  <h3>8.5 Functions</h3>
+  <p>A <b>function</b> is a named, reusable piece of code. You give it inputs (<b>parameters</b>), it does its job and gives back a result (<code>return</code>). This real one, from <code>app/leads/extraction.py</code>, keeps only the digits in some text:</p>
+  <p class="file">app/leads/extraction.py</p>
+  <pre><code>def _digits(text: str) -&gt; str:
+    return re.sub(r"\D", "", text)</code></pre>
+  <ul>
+    <li><code>def</code> starts a function; <code>_digits</code> is its name (the underscore: only used in this file).</li>
+    <li><code>text: str</code> is a parameter called <code>text</code>, and <code>: str</code> is a <b>type hint</b> saying "this should be a string". Hints don't change what Python does; they help people and checking tools (mypy) catch mistakes.</li>
+    <li><code>-&gt; str</code> says the function returns a string.</li>
+    <li><code>re.sub(r"\D", "", text)</code> replaces every non-digit (<code>\D</code>) with nothing. So <code>_digits("+91 98765-43210")</code> returns <code>"919876543210"</code>.</li>
+  </ul>
+  <p>A bigger one from the same file. It finds an email address in a visitor's message and hides it, before the AI ever sees the message:</p>
+  <p class="file">app/leads/extraction.py (shortened)</p>
+  <pre><code>EMAIL_PLACEHOLDER = "[email provided]"
+
+def extract_contact(message: str) -&gt; tuple[str, str, str]:
+    """Find an email and phone number, and return the message with them removed."""
+    email = ""
+    phone = ""
+    redacted = message
+
+    email_match = EMAIL_RE.search(redacted)
+    if email_match:
+        typed = email_match.group(0)
+        redacted = redacted.replace(typed, EMAIL_PLACEHOLDER)
+        email = typed.lower()
+    ...
+    return email, phone, redacted</code></pre>
+  <ol>
+    <li>It starts with empty results, and a copy of the message to edit.</li>
+    <li><code>EMAIL_RE.search(...)</code> looks for something shaped like an email (explained next).</li>
+    <li>If found, it swaps the address in the text for <code>[email provided]</code>, and keeps the address, in lowercase, to store separately.</li>
+    <li>It returns three things at once, as a tuple: the email, the phone, and the cleaned message.</li>
+  </ol>
+  <div class="box project"><div class="tag">In Sitechat</div><p>Why bother? The cleaned message is what goes to the AI model and into the chat history. The visitor's address is kept in one place (the lead record) that can be deleted, instead of being re-sent to OpenAI with every later message.</p></div>
+
+  <h3>8.6 Regular expressions</h3>
+  <p>A <b>regular expression</b> ("regex") is a tiny pattern language for finding text shapes. <code>re</code> is Python's built-in regex module.</p>
+  <pre><code>EMAIL_RE = re.compile(r"\b[\w.+-]+@[\w-]+\.[\w.-]+\b")</code></pre>
+  <p>Read it as: some letters, digits or <code>. + -</code>, then <code>@</code>, then a domain name, then a dot and more letters. You don't need to write these fluently; know that they find patterns, and that Sitechat uses them to spot emails and phone numbers, to recognise "hi"/"thanks" messages (<code>app/retrieval/triage.py</code>), and to match course names.</p>
+
+  <h3>8.7 Files of code: modules, packages and imports</h3>
+  <p>Every <code>.py</code> file is a <b>module</b>. A folder of modules with an <code>__init__.py</code> file in it is a <b>package</b>. One module uses another's code by <b>importing</b> it:</p>
+  <pre><code>import re                                    # Python's own regex module
+from app.config import get_settings          # one function from app/config.py
+from app.tenants.models import Tenant        # one class from app/tenants/models.py</code></pre>
+  <p>The dotted name follows the folders: <code>app.tenants.models</code> is the file <code>app/tenants/models.py</code>. That is how the 65 files in <code>app/</code> fit together into one program.</p>
+  <p>Scripts are run the same way, as modules, from the project folder:</p>
+  <pre><code>python -m scripts.ingest pyramid-yogshala docs/pyramid-yogshala</code></pre>
+  <p>Inside a script you will see this at the bottom:</p>
+  <pre><code>if __name__ == "__main__":
+    main()</code></pre>
+  <p>It means "only run <code>main()</code> when this file is started directly, not when another file imports it". Tests import scripts to check them, without running them for real.</p>
+
+  <h3>8.8 Classes and objects</h3>
+  <p>A <b>class</b> is a blueprint for a kind of thing; an <b>object</b> is one thing made from it. The blueprint lists the thing's <b>fields</b> (its data) and <b>methods</b> (functions that belong to it).</p>
+  <div class="box analogy"><div class="tag">Analogy</div><p>The class is the blank admission form; each filled-in form is an object. Every form has the same boxes; each has different answers.</p></div>
+  <p class="file">app/tenants/models.py (shortened)</p>
+  <pre><code>from pydantic import BaseModel, Field
+
+class Tenant(BaseModel):
+    tenant_id: str                      # e.g. "pyramid-yogshala"; required
+    site_key: str                       # the public key in the website snippet
+    display_name: str                   # shown in the chat header
+    allowed_domains: list[str] = Field(default_factory=list)
+    greeting: str = "Hi! Ask me anything about our courses."
+    is_active: bool = True
+    team_email: str = ""
+
+school = Tenant(tenant_id="pyramid-yogshala",
+                site_key="pk_pyramid_yogshala_001",
+                display_name="Pyramid Yogshala")
+school.display_name     # "Pyramid Yogshala"
+school.is_active        # True (the default)</code></pre>
+  <ul>
+    <li><code>class Tenant(BaseModel)</code> makes a class called <code>Tenant</code>, built on Pydantic's <code>BaseModel</code>.</li>
+    <li>Each line <code>name: type</code> is a field. Fields with <code>= something</code> have a default; fields without one must be given.</li>
+    <li><code>Field(default_factory=list)</code> means "start with a new empty list for each tenant". Writing <code>= []</code> would make all tenants share one list, a classic Python trap.</li>
+  </ul>
+  <h3>Why Pydantic</h3>
+  <p>Pydantic checks the data whenever an object is made. If a tenant record arrives from the database with <code>is_active="maybe"</code> or no <code>site_key</code>, Pydantic refuses it immediately with a clear error, instead of the server failing confusingly later, in the middle of a visitor's chat. The same idea checks every chat message that arrives from the internet (<code>app/api/schemas.py</code>).</p>
+  <div class="box interview"><div class="tag">Say it in an interview</div><p>"Every piece of data that crosses a boundary, from the browser, the database or an environment variable, goes through a Pydantic model, so bad data fails at the edge with a clear message instead of deep inside the request."</p></div>
+
+  <h3>8.9 Errors: try, except, raise</h3>
+  <p>When something goes wrong, Python <b>raises an exception</b>: it stops what it was doing and passes an error upwards. Code can <b>catch</b> it and decide what to do instead.</p>
+  <pre><code>try:
+    results = search_documents(question)
+except Exception:
+    logger.exception("Retrieval failed")   # record the full error for us
+    results = []                           # carry on without documents</code></pre>
+  <div class="box project"><div class="tag">In Sitechat</div><p>This is how the bot survives an outage: if the search database is down, <code>app/agent/orchestrator.py</code> catches the error and still answers, saying it doesn't have the details, instead of showing the visitor a crash. If OpenAI itself fails, <code>app/agent/llm.py</code> turns the error into a polite "Please try again in a moment".</p></div>
+
+  <h3>8.10 Decorators</h3>
+  <p>A line starting with <code>@</code> just above a function is a <b>decorator</b>: it wraps the function with extra behaviour, without changing the function's own code.</p>
+  <pre><code>@router.post("/chat")      # FastAPI: "when a request arrives at /chat, run this function"
+def chat(...):
+    ...
+
+@lru_cache                 # "remember the result; don't compute it twice"
+def get_settings():
+    return Settings()</code></pre>
+  <p>You'll meet <code>@router.post</code> in Phase 4 (it is how web addresses map to code) and <code>@patch</code> in Phase 7 (tests use it to swap the real AI for a fake one).</p>
+
+  <h3>8.11 The <code>with</code> statement</h3>
+  <p><code>with</code> opens something and guarantees it is closed afterwards, even if an error happens in between:</p>
+  <pre><code>with open("leads.csv", "w", encoding="utf-8-sig") as f:
+    f.write("...")
+# the file is closed here, whatever happened</code></pre>
+
+  <h3 id="abc">8.12 Abstract classes: promising a shape</h3>
+  <p>This is the hardest idea in this phase, so we go slowly, in six steps, using one real example: how Sitechat keeps its list of <b>tenants</b> (the businesses using it).</p>
+
+  <h3>Step 1: the problem</h3>
+  <p>When a chat message arrives, the server must find out which business it belongs to. The message carries a <b>site key</b> (like <code>pk_pyramid_yogshala_001</code>), and the server looks up the tenant with that key. But where are tenants kept?</p>
+  <ul>
+    <li><b>On the live server:</b> in <b>Firestore</b>, Google's database in the cloud. Using it needs internet, a Google account and passwords.</li>
+    <li><b>When running tests on your laptop:</b> we don't want any of that. Tests should run in seconds, offline, cost nothing, and never touch real customer data. So there we keep tenants in a plain Python dictionary in memory, which disappears when the test ends.</li>
+  </ul>
+  <p>So there are two very different storage places. The code that answers chats should not have to say "if we are testing, look in the dictionary, otherwise ask Firestore" everywhere. We want it to just say "store, give me the tenant with this key", and not care which store it is.</p>
+
+  <div class="box analogy"><div class="tag">Analogy</div><p>A company writes a <b>job description</b> for a "receptionist": must be able to (1) find a visitor's booking, (2) record a new booking. It doesn't say <i>how</i>. One receptionist uses a paper notebook; another uses a computer. The manager just says "find the booking for Mr Rao" and doesn't care which receptionist is on shift today.</p>
+  <p>In Sitechat: the job description is <code>TenantStore</code>. The notebook receptionist is <code>InMemoryTenantStore</code> (tests). The computer receptionist is <code>FirestoreTenantStore</code> (live). The manager is the code that handles chats.</p></div>
+
+  <h3>Step 2: writing the promise (the abstract class)</h3>
+  <p>An <b>abstract base class</b> (ABC) is that job description, written in Python. It lists the methods every store must have, but does no work itself. Here is the real one, complete:</p>
+  <p class="file">app/tenants/store.py</p>
+  <pre><code>from abc import ABC, abstractmethod
+
+class TenantStore(ABC):
+    @abstractmethod
+    def get_by_site_key(self, site_key: str) -&gt; Tenant | None:
+        """Return the tenant owning this site key, or None."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_by_id(self, tenant_id: str) -&gt; Tenant | None:
+        """Return a tenant by internal id, or None."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def save(self, tenant: Tenant) -&gt; None:
+        """Create or overwrite a tenant."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def with_facts_sheet(self) -&gt; list[Tenant]:
+        """Active tenants with a facts sheet, for the scheduled sync."""
+        raise NotImplementedError</code></pre>
+  <p>Line by line:</p>
+  <ul>
+    <li><code>from abc import ABC, abstractmethod</code>: <code>abc</code> is a module built into Python (nothing to install). Its name stands for "abstract base classes".</li>
+    <li><code>class TenantStore(ABC)</code>: a class built on <code>ABC</code>. That marks it as a promise only: Python will not let anyone make a <code>TenantStore</code> object directly.</li>
+    <li><code>@abstractmethod</code>: a decorator (8.10). It marks the method below as a duty: "every real store must write its own version of this".</li>
+    <li><code>def get_by_site_key(self, site_key: str) -&gt; Tenant | None</code>: the method's name, its input and its result. <code>self</code> is the store object itself; Python fills it in automatically, so callers write just <code>store.get_by_site_key("pk_abc")</code>. <code>site_key: str</code> means the input is text. <code>-&gt; Tenant | None</code> means "gives back a Tenant, or <code>None</code> if no tenant has that key".</li>
+    <li>The text in <code>"""triple quotes"""</code> is a docstring (8.2): a note for people saying what the method must do.</li>
+    <li><code>raise NotImplementedError</code>: the body of the promise does nothing useful; it is just a placeholder that complains if somehow run.</li>
+  </ul>
+  <p>So the promise says: <i>"Any tenant store can find a tenant by site key, find one by id, save one, and list the tenants that have a facts sheet."</i> Nothing about dictionaries or databases.</p>
+
+  <h3>Step 3: keeping the promise, two different ways</h3>
+  <p>Each real store is a class that says <code>(TenantStore)</code> after its name, meaning "I am a kind of TenantStore", and then writes every promised method its own way.</p>
+  <p class="file">app/tenants/store.py: the test version, a dictionary</p>
+  <pre><code>class InMemoryTenantStore(TenantStore):
+    """Holds tenants in a dict. Used by tests."""
+
+    def __init__(self) -&gt; None:
+        self._by_id: dict[str, Tenant] = {}      # starts empty
+
+    def get_by_site_key(self, site_key: str) -&gt; Tenant | None:
+        for tenant in self._by_id.values():      # look at each tenant
+            if tenant.site_key == site_key:
+                return tenant                    # found it
+        return None                              # nobody has this key
+
+    def get_by_id(self, tenant_id: str) -&gt; Tenant | None:
+        return self._by_id.get(tenant_id)
+
+    def save(self, tenant: Tenant) -&gt; None:
+        self._by_id[tenant.tenant_id] = tenant   # put it in the dict
+
+    def with_facts_sheet(self) -&gt; list[Tenant]:
+        return [t for t in self._by_id.values() if t.is_active and t.facts_sheet_id]</code></pre>
+  <p><code>__init__</code> is the method Python runs when the object is first made; here it creates an empty dictionary. The underscore in <code>_by_id</code> is a convention meaning "private: only this class touches it".</p>
+  <p class="file">app/tenants/store.py: the live version, Firestore (shortened)</p>
+  <pre><code>class FirestoreTenantStore(TenantStore):
+    """Stores tenants in Firestore, one document per tenant."""
+
+    def __init__(self, project_id: str) -&gt; None:
+        self._db = firestore.Client(project=project_id)   # connect to Google
+
+    def get_by_site_key(self, site_key: str) -&gt; Tenant | None:
+        query = (
+            self._db.collection("tenants")
+            .where(filter=firestore.FieldFilter("site_key", "==", site_key))
+            .limit(1)
+        )
+        for doc in query.stream():
+            return Tenant(**(doc.to_dict() or {}))
+        return None
+
+    def save(self, tenant: Tenant) -&gt; None:
+        data = tenant.model_dump(mode="json")
+        self._db.collection("tenants").document(tenant.tenant_id).set(data)
+
+    # ... get_by_id and with_facts_sheet, also written for Firestore</code></pre>
+  <p>You don't need to understand the Firestore lines yet (Phase 6 covers them). In plain words, <code>get_by_site_key</code> asks the database: "in the <code>tenants</code> collection, find one record whose <code>site_key</code> equals this one", and turns what comes back into a <code>Tenant</code> object.</p>
+  <p>Compare the two side by side:</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Method</th><th>InMemoryTenantStore (tests)</th><th>FirestoreTenantStore (live)</th></tr></thead>
+    <tbody>
+      <tr><td><code>get_by_site_key</code></td><td>Loops over a dictionary</td><td>Sends a query to Google's database</td></tr>
+      <tr><td><code>save</code></td><td>Puts the tenant in the dictionary</td><td>Writes a document in the cloud</td></tr>
+      <tr><td>Needs internet?</td><td>No</td><td>Yes, plus Google credentials</td></tr>
+      <tr><td>Data survives a restart?</td><td>No, gone when the program ends</td><td>Yes</td></tr>
+      <tr><td>Name, inputs, result</td><td colspan="2">Exactly the same: that is the promise</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Step 4: Python checks the promise is kept</h3>
+  <p>Suppose someone writes a new store and forgets <code>save</code>. The moment they try to make one, Python refuses:</p>
+  <pre><code>class ForgetfulStore(TenantStore):
+    def get_by_site_key(self, site_key): ...
+    def get_by_id(self, tenant_id): ...
+    def with_facts_sheet(self): ...
+    # no save!
+
+ForgetfulStore()
+# TypeError: Can't instantiate abstract class ForgetfulStore
+#            without an implementation for abstract method 'save'
+
+TenantStore()
+# also refused: the promise itself can't be used as a store</code></pre>
+  <p>That is the point of <code>@abstractmethod</code>: a missing method is caught at once, when the store is made, not weeks later when a visitor's chat happens to need it.</p>
+
+  <h3>Step 5: the code that uses a store doesn't know which one it has</h3>
+  <p>Here is the "manager": the code that checks every chat request's site key.</p>
+  <p class="file">app/api/dependencies.py (shortened)</p>
+  <pre><code>store: TenantStore = request.app.state.tenant_store
+...
+tenant = store.get_by_site_key(site_key)</code></pre>
+  <p>The type hint says only <code>TenantStore</code>: "some store that keeps the promise". This code calls <code>get_by_site_key</code> and gets a <code>Tenant</code> or <code>None</code>. It never says the word Firestore or dictionary. The same line works in tests and live, unchanged.</p>
+
+  <h3>Step 6: choosing which store, once, at the start</h3>
+  <p>The decision is made in exactly one place: when the app is built (<code>app/main.py</code>). The app takes stores as inputs; if none is given, it makes the real Firestore one.</p>
+  <p class="file">app/main.py (shortened)</p>
+  <pre><code>def create_app(tenant_store=None, conversation_store=None, ...):
+    app = FastAPI(...)
+    if tenant_store is not None:
+        app.state.tenant_store = tenant_store      # use the one we were given
+    ...
+
+# later, when the server starts up:
+    if not hasattr(app.state, "tenant_store"):     # nobody gave us one?
+        app.state.tenant_store = FirestoreTenantStore(settings.gcp_project_id)</code></pre>
+  <p>So the live server calls <code>create_app()</code> with nothing, and gets Firestore. A test hands in the dictionary version:</p>
+  <p class="file">tests/test_api_security.py (shortened)</p>
+  <pre><code>store = InMemoryTenantStore()
+store.save(Tenant(tenant_id="t1", site_key="pk_valid",
+                  display_name="Test School", allowed_domains=["example.com"]))
+
+app = create_app(tenant_store=store,
+                 conversation_store=InMemoryConversationStore(), ...)</code></pre>
+  <p>Now when the test sends a chat with site key <code>pk_valid</code>, the same Step 5 line runs, but it is talking to the dictionary. No internet, no Google account, and the test controls exactly which tenants exist.</p>
+  <p>Handing a piece of code the things it needs from outside, instead of letting it build them itself, has a name: <b>dependency injection</b>. "Dependency" = the store it depends on; "injection" = we pass it in.</p>
+  <div class="flow" aria-label="Which store gets used">
+    <span class="node">Live: <code>create_app()</code></span><span class="arrow">→</span><span class="node">FirestoreTenantStore</span><span class="arrow">→</span><span class="node"><code>store.get_by_site_key(...)</code></span>
+  </div>
+  <div class="flow">
+    <span class="node">Test: <code>create_app(tenant_store=InMemory...)</code></span><span class="arrow">→</span><span class="node">InMemoryTenantStore</span><span class="arrow">→</span><span class="node"><code>store.get_by_site_key(...)</code></span>
+  </div>
+
+  <h3>Why this matters</h3>
+  <ul>
+    <li><b>Fast, free, offline tests.</b> Every data area in Sitechat (tenants, conversations, leads, facts, documents, usage, feedback) has this same pair: a promise class, an <code>InMemory…</code> version and a <code>Firestore…</code> version. Together with fake AI calls, that is why the 490+ tests run in about half a minute with no internet.</li>
+    <li><b>Easy to change the database later.</b> If Sitechat ever moved from Firestore to another database, you would write one new class per area that keeps the same promise. The chat code, the lead code and the tests wouldn't change.</li>
+    <li><b>Safety rules live in the promise.</b> Most store methods take a <code>tenant_id</code>, so it is impossible to ask for "a conversation" without saying whose. That keeps one business's data away from another's (Phase 7).</li>
+  </ul>
+  <div class="box project"><div class="tag">In Sitechat</div><p>Open <code>app/conversations/store.py</code> or <code>app/leads/store.py</code> and you'll see the same shape: an ABC at the top, then <code>InMemory…</code>, then <code>Firestore…</code>. Once you can read <code>app/tenants/store.py</code>, you can read all of them.</p></div>
+  <div class="box interview"><div class="tag">Say it in an interview</div><p>"Each storage area is an interface, an abstract base class, with two implementations: in-memory for tests and Firestore for production. The app receives its stores through <code>create_app</code>, which is dependency injection, so the request code depends only on the interface. Tests inject the in-memory stores and fake the AI calls, so the whole suite runs offline in about 30 seconds, and switching databases would mean writing new implementations, not touching business logic."</p></div>
+</section>
+
+<section>
+  <h2>9. Git and GitHub</h2>
+  <p><b>Git</b> is a program that records the history of a project's files. Each saved snapshot is a <b>commit</b>, with a message saying what changed and why. You can look at any past version, compare versions, and undo changes.</p>
+  <div class="box analogy"><div class="tag">Analogy</div><p>Git is a save-game system for code. Each commit is a save point with a label. GitHub is the cloud copy of all the save points, so they survive your laptop and others can see them.</p></div>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Word</th><th>Meaning</th></tr></thead>
+    <tbody>
+      <tr><td>repository (repo)</td><td>A project folder whose history Git tracks. <code>D:\projects\sitechat</code> is one; Git keeps its history in a hidden <code>.git</code> folder.</td></tr>
+      <tr><td>commit</td><td>One saved snapshot with a message. Sitechat has about 150. Each has a short id like <code>fc39ee8</code>.</td></tr>
+      <tr><td>branch</td><td>A line of history. Sitechat works on one branch, <code>main</code>.</td></tr>
+      <tr><td>push</td><td>Upload your new commits to GitHub. In this project, a push also starts an automatic deploy (Phase 6).</td></tr>
+      <tr><td>revert</td><td>Make a new commit that undoes earlier ones. You did this today: commit <code>c7c0d84</code> undid four commits, without erasing them from history.</td></tr>
+      <tr><td><code>.gitignore</code></td><td>A list of files Git must never record.</td></tr>
+    </tbody>
+  </table></div>
+  <h3>What Sitechat keeps out of Git, and why</h3>
+  <pre><code>.env                     # secret keys
+.venv/                   # the virtual environment: rebuildable, large
+__pycache__/  *.pyc      # Python's own speed-up files: rebuildable
+.pytest_cache/           # test tool's scratch files
+service-account.json     # a Google secret key file
+docs/                    # the school's source documents: their content, not code
+evaluation/history/      # saved test-run results: local records
+chat.txt  leads-*.csv    # exports containing visitors' personal details</code></pre>
+  <p>The rule: secrets, personal data, and anything that can be rebuilt stay out. A check on GitHub (gitleaks, Phase 7) scans every commit ever made for leaked keys.</p>
+</section>
+
+<section>
+  <h2>10. Settings and secrets</h2>
+  <p>A <b>secret</b> is something that grants access, like a password: the OpenAI key lets anyone spend money on your account. Secrets must never be written into code, because code is copied, shared and uploaded.</p>
+  <p>Instead, programs read them from <b>environment variables</b>: named values the operating system hands to a program when it starts. Locally, a file called <code>.env</code> holds them, one per line, and is never committed. Sitechat's <code>.env</code> has these names (values hidden):</p>
+  <pre><code>ENVIRONMENT=…                 # "development" on your laptop, "production" live
+LOG_LEVEL=…                   # how much detail to log
+GCP_PROJECT_ID=…              # which Google Cloud project holds the database
+OPENAI_API_KEY=…              # the AI model
+PINECONE_API_KEY=…            # the search database
+PINECONE_INDEX_NAME=…
+COHERE_API_KEY=…              # reranking (off by default)
+RESEND_API_KEY=…              # sending lead emails
+NOTIFICATION_FROM_EMAIL=…     # the address lead emails come from
+SENTRY_DSN=…                  # error reporting
+GOOGLE_SERVICE_ACCOUNT_FILE=… # the key file used to read Google Sheets locally</code></pre>
+  <p>The file <code>app/config.py</code> describes every setting the app understands, with a default, and Pydantic fills them from the environment:</p>
+  <p class="file">app/config.py (shortened)</p>
+  <pre><code>class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+    environment: Literal["development", "production"] = "development"
+    log_level: str = "INFO"
+    gcp_project_id: str = ""
+    openai_api_key: SecretStr = SecretStr("")
+    openai_model: str = "gpt-4o-mini"</code></pre>
+  <ul>
+    <li><code>BaseSettings</code> reads each field from an environment variable of the same name, ignoring capitals: <code>OPENAI_API_KEY</code> fills <code>openai_api_key</code>.</li>
+    <li><code>Literal["development", "production"]</code> allows only those two words; a typo stops the app at start-up with a clear message.</li>
+    <li><code>SecretStr</code> hides the value when printed or logged, so a key never ends up in a log by accident.</li>
+  </ul>
+  <div class="box project"><div class="tag">In Sitechat</div><p>On your laptop the values come from <code>.env</code>. On the live server there is no <code>.env</code>: Google Cloud's <b>Secret Manager</b> stores the keys and hands them to the server as environment variables when it starts (set up in <code>cloudbuild.yaml</code>, Phase 6). Same code, different source, no secret ever in Git.</p></div>
+  <div class="box interview"><div class="tag">Say it in an interview</div><p>"Configuration is twelve-factor style: all settings come from environment variables, validated by Pydantic at start-up. Locally that's a git-ignored .env; in production, Secret Manager injects them into Cloud Run, and the service account can read only those five secrets."</p></div>
+</section>
+
+<section>
+  <h2>11. The files at the top of the project</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>File or folder</th><th>What it is</th></tr></thead>
+    <tbody>
+      <tr><td><code>app/</code></td><td>The server: everything that runs live. 65 Python files in folders by topic (Phase 4).</td></tr>
+      <tr><td><code>static/</code></td><td>Files sent to browsers as they are: <code>widget.js</code> (the chat bubble) and a test page (Phase 5).</td></tr>
+      <tr><td><code>scripts/</code></td><td>Admin programs you run by hand: create a tenant, load documents, run evaluations, delete data (Phase 8).</td></tr>
+      <tr><td><code>evaluation/</code></td><td>The question sets and scoring code that measure answer quality (Phases 3, 7).</td></tr>
+      <tr><td><code>tests/</code></td><td>Automatic tests: code that checks the code (Phase 7).</td></tr>
+      <tr><td><code>notes/</code></td><td>Written documentation: the code map, backlog, setup guides, and these KT pages.</td></tr>
+      <tr><td><code>docs/</code></td><td>Each school's source documents, used to build its knowledge base. Not in Git.</td></tr>
+      <tr><td><code>.github/</code></td><td>Instructions for GitHub: the automatic checks on every push, and Dependabot (package update alerts).</td></tr>
+      <tr><td><code>requirements.txt</code>, <code>requirements-dev.txt</code></td><td>The package lists (section 7).</td></tr>
+      <tr><td><code>Dockerfile</code>, <code>.dockerignore</code></td><td>How to pack the server into a container image, and what to leave out of it (Phase 6).</td></tr>
+      <tr><td><code>cloudbuild.yaml</code></td><td>The deploy recipe Google Cloud follows on every push: test, build, upload, deploy (Phase 6).</td></tr>
+      <tr><td><code>conftest.py</code></td><td>Shared set-up for the tests (Phase 7).</td></tr>
+      <tr><td><code>ruff.toml</code>, <code>mypy.ini</code></td><td>Settings for the code-checking tools (Phase 7).</td></tr>
+      <tr><td><code>CLAUDE.md</code></td><td>A guide to the project for an AI coding assistant, and a good summary for humans: commands, architecture, gotchas.</td></tr>
+      <tr><td><code>.gitignore</code>, <code>.env</code>, <code>.venv/</code></td><td>Section 9, section 10 and section 6.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section>
+  <h2>12. Starting a project like this from nothing</h2>
+  <p>This is the order you would follow on day one, with what each step is for. Phase 8 repeats it with the full detail, up to a deployed bot.</p>
+  <ol class="steps">
+    <li><div><p><b>Install the tools:</b> Python, Git, a code editor (VS Code), and later the Google Cloud command-line tool (<code>gcloud</code>).</p></div></li>
+    <li><div><p><b>Make the folder and start Git:</b></p><pre><code>mkdir D:\projects\sitechat
+cd D:\projects\sitechat
+git init</code></pre></div></li>
+    <li><div><p><b>Make a virtual environment</b> and install the first packages:</p><pre><code>python -m venv .venv
+.venv\Scripts\activate
+pip install fastapi uvicorn</code></pre></div></li>
+    <li><div><p><b>Write <code>.gitignore</code></b> first, so secrets and <code>.venv</code> never get committed by accident.</p></div></li>
+    <li><div><p><b>Write the smallest server</b>, in <code>app/main.py</code>:</p><pre><code>from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}</code></pre><p>Run it with <code>uvicorn app.main:app --reload --port 8080</code>, then open <code>http://localhost:8080/health</code> in a browser: it shows <code>{"status":"ok"}</code>. Sitechat's real <code>/health</code> still does exactly this; it is how Google Cloud checks the server is alive.</p></div></li>
+    <li><div><p><b>Save the package list</b> (<code>pip freeze</code> into <code>requirements.txt</code>, as UTF-8) and make the first commit:</p><pre><code>git add .
+git commit -m "A first server with /health"</code></pre></div></li>
+    <li><div><p><b>Grow it one piece at a time,</b> with a commit for each: settings, the chat endpoint, the AI call, the database, the chat bubble, tests, deployment. Sitechat's ~150 commits are exactly that, in order. Phases 1 to 7 explain each piece; Phase 8 rebuilds them in sequence.</p></div></li>
+  </ol>
+</section>
+
+<section>
+  <h2>Challenges we faced</h2>
+  <p>Real problems from the project's history that come down to the first principles in this phase. Each is told in full in the phase named.</p>
+  <div class="box challenge"><div class="tag">1. Two modules importing each other</div><p><code>main.py</code> imported the routes, and <code>routes.py</code> imported the rate limiter from <code>main.py</code>. Python runs a module top to bottom when it's imported, so one of them was half-loaded when the other asked it for a name, and the name didn't exist yet. The fix was to move the shared object into a third module that both import (<code>app/rate_limit.py</code>). <a href="https://claude.ai/artifact/F1oZk1cyDLGAPio8khD7cY">Phase 4a, challenge 1</a>.</p></div>
+  <div class="box challenge"><div class="tag">2. <code>from x import y</code> makes a new name</div><p>A test replaced <code>app.leads.notify.send_lead_email</code> with a fake, but the orchestrator had done <code>from app.leads.notify import send_lead_email</code>, which copies the reference into the orchestrator's own namespace at import time. The orchestrator kept calling the real function, so the test could never fail. Patch where a name is <i>used</i>: <code>app.agent.orchestrator.send_lead_email</code>. <a href="https://claude.ai/artifact/QKLydSMm3tKdXapho5kS1V">Phase 4b, challenge 8</a>.</p></div>
+  <div class="box challenge"><div class="tag">3. A list kept for later kept changing</div><p>While writing Phase 8's mini project, a test saved the list of messages passed to a fake model, then checked it afterwards. The code kept appending to that same list, so the saved "first call" had grown. Python passes lists by reference; anything you keep for later should be a copy (<code>list(messages)</code>). Sitechat's tool loop copies for the same reason. <a href="https://claude.ai/artifact/QDifNPBS4Lu8CLhvZTJ5C4">Phase 8, step 9</a>.</p></div>
+  <div class="box challenge"><div class="tag">4. A value that is sometimes <code>None</code></div><p>Firestore's <code>to_dict()</code> returns a dictionary, or <code>None</code> for a missing document. The code passed it straight into <code>Tenant(**...)</code>. It never crashed, because missing documents were checked first, but when the type checker (mypy) was added it found 30 such places. The fix, <code>to_dict() or {}</code>, makes the assumption explicit. <a href="https://claude.ai/artifact/S2dSYJnVDTPbqeAWJP6qd1">Phase 4e, challenge 6</a>.</p></div>
+  <div class="box challenge"><div class="tag">5. Two versions of Python</div><p>This laptop runs Python 3.14; CI, the build and the container run 3.12. Code using a 3.14-only feature would pass here and fail on deploy. The build now runs the tests on 3.12 before anything ships. <a href="https://claude.ai/artifact/BknbsJYd7gFx9geyWbBqKF">Phase 6, challenge 6</a>.</p></div>
+  <div class="box challenge"><div class="tag">6. A text file in the wrong encoding</div><p>Regenerating <code>requirements.txt</code> with PowerShell's <code>pip freeze &gt; requirements.txt</code> wrote it as UTF-16, which pip can't read. Text files have an encoding (how characters become bytes); the project keeps them UTF-8 and the file says so in its first comment. <a href="https://claude.ai/artifact/NKGY4fDQXK9Cp41B55wiTs">Phase 10, troubleshooting</a>.</p></div>
+  <div class="box challenge"><div class="tag">7. Editing a file many times, and unsaved files</div><p>During one edit, the routes and the static files were registered twice in <code>create_app</code>; while removing the duplicates, the line <code>app = create_app()</code> was deleted too, giving <code>Attribute "app" not found in module "app.main"</code>. It took three commits to fix. The project notes record two habits from this: for a file edited many times, look at the whole file rather than a description of the change; and check for unsaved files before testing (that cost about an hour, more than once). <a href="https://claude.ai/artifact/F1oZk1cyDLGAPio8khD7cY">Phase 4a, challenge 2</a>.</p></div>
+</section>
+
+<section>
+  <h2>Glossary</h2>
+  <dl class="gloss">
+    <div><dt>Program</dt><dd>A list of exact instructions a computer follows.</dd></div>
+    <div><dt>Source code</dt><dd>The text of a program, written in a programming language.</dd></div>
+    <div><dt>Interpreter</dt><dd>The program that reads and runs Python code.</dd></div>
+    <div><dt>Server</dt><dd>A program that keeps running and answers requests as they arrive.</dd></div>
+    <div><dt>Path</dt><dd>A file's address: the folders leading to it, then its name.</dd></div>
+    <div><dt>Terminal / shell</dt><dd>A window for typing commands. PowerShell and Git Bash are shells.</dd></div>
+    <div><dt>Argument</dt><dd>A word given to a command or function to tell it what to work on.</dd></div>
+    <div><dt>Virtual environment</dt><dd>A private folder of packages for one project (<code>.venv</code>).</dd></div>
+    <div><dt>Package / library</dt><dd>Ready-made code you install, like <code>fastapi</code>.</dd></div>
+    <div><dt>pip, PyPI</dt><dd>Python's installer, and the public catalogue it installs from.</dd></div>
+    <div><dt>Pinning</dt><dd>Fixing an exact package version (<code>==</code>) so every machine runs the same code.</dd></div>
+    <div><dt>Dependency</dt><dd>A package that another package needs.</dd></div>
+    <div><dt>Variable</dt><dd>A name for a value.</dd></div>
+    <div><dt>Type / type hint</dt><dd>The kind of a value (text, number…); a hint writes it down for people and checkers.</dd></div>
+    <div><dt>String, f-string</dt><dd>Text; text with variables dropped in via <code>{}</code>.</dd></div>
+    <div><dt>List, dict, tuple, set</dt><dd>Ordered items; named values; a fixed group; unique items.</dd></div>
+    <div><dt>Function</dt><dd>A named, reusable piece of code with inputs and a result.</dd></div>
+    <div><dt>Module, package (Python)</dt><dd>A <code>.py</code> file; a folder of them with <code>__init__.py</code>.</dd></div>
+    <div><dt>Import</dt><dd>Using code from another module.</dd></div>
+    <div><dt>Class, object</dt><dd>A blueprint; one thing built from it.</dd></div>
+    <div><dt>Pydantic model</dt><dd>A class that checks its data whenever an object is made.</dd></div>
+    <div><dt>Exception</dt><dd>An error passed upwards; caught with <code>try</code>/<code>except</code>.</dd></div>
+    <div><dt>Decorator</dt><dd>An <code>@</code> line that wraps a function with extra behaviour.</dd></div>
+    <div><dt>Abstract base class</dt><dd>A promise of which methods every implementation will have. Python refuses to make an object that is missing one.</dd></div>
+    <div><dt>Interface</dt><dd>The list of methods something offers (names, inputs, results), without how they work. An ABC writes one down.</dd></div>
+    <div><dt>Implementation</dt><dd>A class that keeps the promise by writing every method, such as <code>InMemoryTenantStore</code>.</dd></div>
+    <div><dt>Dependency injection</dt><dd>Handing code the things it needs (like a store) from outside, instead of it building them itself.</dd></div>
+    <div><dt>Docstring</dt><dd>A <code>"""note"""</code> just under a function or class saying what it does.</dd></div>
+    <div><dt>Regular expression</dt><dd>A pattern for finding shapes in text, such as email addresses.</dd></div>
+    <div><dt>Git, commit, push</dt><dd>History tracker; a saved snapshot; uploading snapshots to GitHub.</dd></div>
+    <div><dt>Environment variable</dt><dd>A named setting handed to a program when it starts.</dd></div>
+    <div><dt>Secret</dt><dd>A value that grants access, like an API key. Never in code.</dd></div>
+    <div><dt>Tenant</dt><dd>One business using Sitechat. The first is Pyramid Yogshala.</dd></div>
+  </dl>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <details><summary>Why does Sitechat use two requirements files?</summary><p><code>requirements.txt</code> lists what the live server needs. <code>requirements-dev.txt</code> adds tools only developers need (tests, checkers). The live server installs the first only, so it is smaller and has fewer packages that could have security problems.</p></details>
+  <details><summary>What would go wrong if <code>.env</code> were committed to Git?</summary><p>The API keys in it would be in the project's history forever, visible to anyone with access to the repository. Anyone holding the OpenAI key could spend money on your account. Removing the file later doesn't remove it from history; the keys would have to be replaced.</p></details>
+  <details><summary>What does <code>python -m scripts.ingest pyramid-yogshala docs/pyramid-yogshala</code> mean, word by word?</summary><p>Run Python; <code>-m</code> run a module; <code>scripts.ingest</code> the file <code>scripts/ingest.py</code>; then two arguments: the tenant id, and the folder of documents to load.</p></details>
+  <details><summary>What does <code>extract_contact</code> return for "my email is Sam@x.com"?</summary><p>A tuple of three: the email in lowercase (<code>"sam@x.com"</code>), an empty phone (<code>""</code>), and the cleaned message <code>"my email is [email provided]"</code>.</p></details>
+  <details><summary>Why does <code>Tenant</code> use <code>Field(default_factory=list)</code> instead of <code>= []</code>?</summary><p>With <code>= []</code>, every Tenant would share one list, so adding a domain to one school would add it to all of them. <code>default_factory=list</code> makes a fresh empty list for each tenant.</p></details>
+  <details><summary>Why do the tests run without internet?</summary><p>Every storage area has an in-memory version with the same methods as the real database version, and tests replace the AI calls with fakes. The app is built with whichever stores it is given, so tests hand it the in-memory ones.</p></details>
+  <details><summary>Someone writes a new tenant store but forgets the <code>save</code> method. When do they find out?</summary><p>As soon as they try to create one: Python raises <code>TypeError: Can't instantiate abstract class ... without an implementation for abstract method 'save'</code>. Because <code>save</code> is marked <code>@abstractmethod</code> in <code>TenantStore</code>, the mistake can't slip through to a live chat.</p></details>
+  <details><summary>Where is the choice between the dictionary store and Firestore made, and why only there?</summary><p>In <code>app/main.py</code>: <code>create_app</code> uses whatever stores it is given, and at startup builds Firestore ones for any not given. Everything else only talks to "a <code>TenantStore</code>", so making the choice in one place means the rest of the code works the same in tests and live.</p></details>
+  <details><summary>Where do secrets come from on the live server?</summary><p>From Google Cloud Secret Manager, which passes them to the server as environment variables when it starts. There is no <code>.env</code> file on the server.</p></details>
+</section>
+
+<section class="box interview">
+  <div class="tag">Say it in an interview: the tooling in one breath</div>
+  <p>"It's a Python 3.12 FastAPI service. Dependencies are pinned in a runtime requirements file and a separate dev file for test and lint tools. Configuration comes from environment variables validated by Pydantic, with secrets in Secret Manager in production. Every storage area sits behind an interface with in-memory and Firestore implementations, which keeps the test suite offline and fast. Everything is in Git, and a push runs the tests and deploys."</p>
+</section>
+
+<hr>
+<section>
+  <h2>Next: Phase 1, how the web works</h2>
+  <p><a href="https://claude.ai/artifact/MDdgNKEGibTrFVYqtGjGhs">Read Phase 1</a>. How a chat bubble on someone else's website talks to our server: URLs, HTTP requests and responses, status codes, JSON, APIs, headers, and why the browser needs CORS. If anything in this phase was unclear or missing, tell me and I'll add it there.</p>
+</section>
+
+</main>
+</body>
+</html>

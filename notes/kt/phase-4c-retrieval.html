@@ -1,0 +1,744 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sitechat KT 4c: Retrieval</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,650&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  /* Layout: a reading column with a phase map on top; coloured callouts by role
+     (analogy, in this project, interview, try it); code blocks scroll inside themselves. */
+  :root {
+    --bg: #f5f6f4;
+    --paper: #ffffff;
+    --ink: #1b2725;
+    --muted: #5a6663;
+    --line: #dde3e0;
+    --accent: #1f6f5c;
+    --accent-soft: #e5f1ec;
+    --analogy: #7a4f9a;
+    --analogy-soft: #f2ecf7;
+    --interview: #a5630d;
+    --interview-soft: #fbf1e0;
+    --code-bg: #f0f3f1;
+    --display: "Literata", Georgia, "Times New Roman", serif;
+    --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121918; --paper: #1a2322; --ink: #e5ebe9; --muted: #9db0aa; --line: #2b3735;
+      --accent: #63c2a6; --accent-soft: #1d3530; --analogy: #c7a3e6; --analogy-soft: #2a2235;
+      --interview: #e3a64b; --interview-soft: #2e2416; --code-bg: #0f1514;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #121918; --paper: #1a2322; --ink: #e5ebe9; --muted: #9db0aa; --line: #2b3735;
+    --accent: #63c2a6; --accent-soft: #1d3530; --analogy: #c7a3e6; --analogy-soft: #2a2235;
+    --interview: #e3a64b; --interview-soft: #2e2416; --code-bg: #0f1514;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 17px/1.65 var(--body);
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 32px 80px;
+  }
+  main { max-width: 48rem; margin: 0 auto; display: grid; gap: 44px; }
+  header { display: grid; gap: 12px; }
+  .eyebrow { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  h1 { font: 650 clamp(30px, 5.5vw, 42px)/1.12 var(--display); margin: 0; text-wrap: balance; }
+  h2 { font: 650 clamp(23px, 3.6vw, 28px)/1.25 var(--display); margin: 0; text-wrap: balance; }
+  h3 { font: 700 18px/1.35 var(--body); margin: 8px 0 0; }
+  p, ul, ol { margin: 0; }
+  ul, ol { padding-left: 1.3em; display: grid; gap: 6px; }
+  li::marker { color: var(--accent); }
+  section { display: grid; gap: 16px; min-width: 0; }
+  .lede { color: var(--muted); font-size: 18px; }
+  a { color: var(--accent); }
+  code { font: 0.88em var(--mono); background: var(--code-bg); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+  pre {
+    margin: 0; background: var(--code-bg); border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 16px; overflow-x: auto; font: 14px/1.55 var(--mono);
+  }
+  pre code { background: none; padding: 0; font-size: inherit; overflow-wrap: normal; }
+  .file { font: 600 13px var(--mono); color: var(--muted); margin-bottom: -10px; }
+  .phases { display: flex; flex-wrap: wrap; gap: 6px; }
+  .phases span {
+    font-size: 13px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line);
+    color: var(--muted); background: var(--paper);
+  }
+  .phases span.now { background: var(--accent); color: var(--paper); border-color: var(--accent); font-weight: 600; }
+  .box { border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; border: 1px solid var(--line); background: var(--paper); }
+  .box .tag { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .analogy { background: var(--analogy-soft); border-color: transparent; }
+  .analogy .tag { color: var(--analogy); }
+  .project { background: var(--accent-soft); border-color: transparent; }
+  .project .tag { color: var(--accent); }
+  .interview { background: var(--interview-soft); border-color: transparent; }
+  .interview .tag { color: var(--interview); }
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
+  table { border-collapse: collapse; width: 100%; font-size: 15.5px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-weight: 700; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+  tr:last-child td { border-bottom: none; }
+  td:first-child { white-space: nowrap; }
+  .steps { list-style: none; padding: 0; counter-reset: s; display: grid; gap: 10px; }
+  .steps > li { counter-increment: s; display: grid; grid-template-columns: 2rem 1fr; gap: 10px; min-width: 0; }
+  .steps > li::before {
+    content: counter(s); width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+    font: 700 13px/1 var(--body); color: var(--accent); border: 1.5px solid var(--accent);
+  }
+  .steps > li > div { display: grid; gap: 6px; min-width: 0; }
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .flow .node { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: 15px; }
+  .flow .arrow { color: var(--accent); font-weight: 700; }
+  details { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+  details summary { cursor: pointer; font-weight: 600; }
+  details[open] summary { margin-bottom: 8px; }
+  details p { color: var(--ink); }
+  dl.gloss { display: grid; gap: 10px; margin: 0; }
+  dl.gloss div { display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr; gap: 12px; }
+  dl.gloss dt { font-weight: 700; }
+  dl.gloss dd { margin: 0; }
+  @media (max-width: 560px) { dl.gloss div { grid-template-columns: 1fr; gap: 2px; } td:first-child { white-space: normal; } }
+  .toc { columns: 2 16rem; column-gap: 28px; }
+  .toc li { break-inside: avoid; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 0; }
+  summary:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .machines { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 10px; }
+  .machine { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 6px; align-content: start; }
+  .machine b { font-family: var(--display); font-size: 17px; }
+  .machine.us { border-color: var(--accent); }
+  .lbl { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+
+  :root { --challenge: #a8322f; --challenge-soft: #fbecea; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --challenge: #f2958f; --challenge-soft: #3a2220; } }
+  :root[data-theme="dark"] { --challenge: #f2958f; --challenge-soft: #3a2220; }
+  .challenge { background: var(--challenge-soft); border-color: transparent; }
+  .challenge .tag { color: var(--challenge); }
+  .phases a { font-size: 13px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line);
+    color: var(--muted); background: var(--paper); text-decoration: none; }
+  .phases a:hover { border-color: var(--accent); color: var(--accent); }
+  .phases a.now { background: var(--accent); color: var(--paper); border-color: var(--accent); font-weight: 600; }
+  figure { margin: 0; display: grid; gap: 8px; justify-items: start; }
+  figure img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+  figcaption { font-size: 14px; color: var(--muted); }
+  .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 12px; }
+  .kv { display: grid; grid-template-columns: minmax(7rem, 11rem) 1fr; gap: 6px 14px; }
+  @media (max-width: 560px) { .kv { grid-template-columns: 1fr; gap: 2px; } }
+</style>
+
+</head>
+<body>
+<main>
+<header>
+  <div class="eyebrow">Sitechat knowledge transfer · Phase 4c of 10</div>
+  <h1>Retrieval, file by file: from a school's documents to the five passages the bot reads</h1>
+  <p class="lede">Phase 3 explained RAG as an idea. This phase is the implementation: <code>app/documents/</code> (reading, chunking, tagging and storing documents), <code>app/retrieval/</code> (embeddings, Pinecone, keyword search, fusion, reranking, triage, and the pipeline that ties them together), <code>app/programmes/</code> (knowing which course a visitor means), and <code>app/evaluation_config.py</code>. It includes the project's most measured decisions and some of its most instructive bugs.</p>
+  <div class="phases" aria-label="All phases">
+    <a href="https://claude.ai/artifact/QuxrXdoFv7vr5KKvNSML78">0 First principles</a><a href="https://claude.ai/artifact/MDdgNKEGibTrFVYqtGjGhs">1 How the web works</a><a href="https://claude.ai/artifact/VVYejQXYpWzuimyovij4CY">2 What Sitechat is</a><a href="https://claude.ai/artifact/RHDbDbJ6r8RmXdRsvAUK9S">3 AI fundamentals</a><a href="https://claude.ai/artifact/F1oZk1cyDLGAPio8khD7cY">4a API layer</a><a href="https://claude.ai/artifact/QKLydSMm3tKdXapho5kS1V">4b The agent</a><a class="now" href="https://claude.ai/artifact/2TNXtynh229R59PV9MwHc1">4c Retrieval</a><a href="https://claude.ai/artifact/Np1qbTsXtXtDL6UmGaMvFv">4d Leads</a><a href="https://claude.ai/artifact/S2dSYJnVDTPbqeAWJP6qd1">4e Data stores</a><a href="https://claude.ai/artifact/4hwNREB8CxkHtRrwgwRraL">4f Scripts and evals</a><a href="https://claude.ai/artifact/AHXQrMEzxpZ6x4ihiiiCm1">5 The chat widget</a><a href="https://claude.ai/artifact/BknbsJYd7gFx9geyWbBqKF">6 Cloud and data</a><a href="https://claude.ai/artifact/KdgDyd9VuQVfjJu3dvHPv2">7 Quality and safety</a><a href="https://claude.ai/artifact/QDifNPBS4Lu8CLhvZTJ5C4">8 Rebuild it yourself</a><a href="https://claude.ai/artifact/99LTVwqoTPzBmFmHCZcsCS">9 Interview prep</a><a href="https://claude.ai/artifact/NKGY4fDQXK9Cp41B55wiTs">10 Set it up</a>
+  </div>
+</header>
+
+<section>
+  <h2>How to read this phase</h2>
+  <p>Two journeys run through these files. <b>Ingest</b> happens once per document, when you run <code>scripts/ingest.py</code>: file → text → chunks → programme tags → Firestore and Pinecone. <b>Retrieve</b> happens on every message that needs it: question → embedding → Pinecone search → (optional keyword search, fusion, rerank) → focus blend → top 5. The sections follow those journeys. Real outputs come from running these functions on the school's real documents on this laptop (no paid calls).</p>
+  <h3>In this phase</h3>
+  <ol class="toc">
+    <li>The shape of a chunk (<code>documents/models.py</code>)</li>
+    <li>Reading files (<code>documents/loaders.py</code>)</li>
+    <li>Splitting along headings (<code>documents/chunker.py</code>)</li>
+    <li>Section keys (<code>documents/sections.py</code>)</li>
+    <li>The programme catalogue (<code>programmes/models.py</code>)</li>
+    <li>Ingest (<code>documents/ingest.py</code>) and the chunk store</li>
+    <li>Embeddings (<code>retrieval/embeddings.py</code>)</li>
+    <li>Pinecone (<code>retrieval/vector_store.py</code>)</li>
+    <li>Triage (<code>retrieval/triage.py</code>)</li>
+    <li>Keyword search, fusion, reranking</li>
+    <li>Which programme? (<code>programmes/focus.py</code>)</li>
+    <li>The pipeline (<code>retrieval/pipeline.py</code>): <code>retrieve</code> and <code>blend</code></li>
+    <li>Configurations (<code>evaluation_config.py</code>)</li>
+    <li>Challenges we faced</li>
+    <li>Glossary and check yourself</li>
+  </ol>
+</section>
+
+<section>
+  <h2>1. The shape of a chunk (<code>documents/models.py</code>)</h2>
+<pre><code>class Chunk(BaseModel):
+    chunk_id: str                 # "course-200hr__4": document id + position
+    tenant_id: str
+    document_id: str
+    document_title: str
+    heading_path: list[str] = Field(default_factory=list)
+    text: str
+    position: int
+    programme: str = ""           # from programmes.yaml; "" for general sections
+
+    @property
+    def heading(self) -> str:
+        return self.heading_path[-1] if self.heading_path else self.document_title
+
+    def to_searchable_text(self) -> str:
+        if not self.heading_path:
+            return self.text
+        return " > ".join(self.heading_path) + "\n\n" + self.text
+
+
+class Document(BaseModel):
+    document_id: str
+    tenant_id: str
+    title: str
+    source: str                   # filename it came from
+    chunk_count: int = 0
+    ingested_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))</code></pre>
+  <p>The comment at the top of the file states the principle: "A chunk ... carries enough context to be understood alone, because at retrieval time it will be read without the surrounding document." Three fields serve that: the heading path (every heading above it, outermost first), the document title, and the programme tag.</p>
+  <ul>
+    <li><b>Stable ids.</b> <code>chunk_id</code> is the document id plus position, so re-ingesting a document overwrites its chunks instead of duplicating them.</li>
+    <li><b><code>to_searchable_text</code></b> is what gets embedded: heading path, blank line, text. A chunk about anatomy is findable by "anatomy" even if its text never says it.</li>
+    <li><b><code>Field(default_factory=...)</code></b>: a fresh empty list (or the current time) for each new object. Writing <code>= []</code> would share one list between all chunks, a classic Python trap Pydantic protects against.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>2. Reading files (<code>documents/loaders.py</code>)</h2>
+<pre><code>SUPPORTED_SUFFIXES = {".md", ".txt"}
+
+def load_text_file(path: Path) -> tuple[str, str]:
+    if path.suffix.lower() not in SUPPORTED_SUFFIXES:
+        raise LoaderError(f"{path.name}: unsupported type. ...")
+    try:
+        text = path.read_text(encoding="utf-8")
+    except UnicodeDecodeError as exc:
+        raise LoaderError(f"{path.name}: not valid UTF-8 text") from exc
+    except OSError as exc:
+        raise LoaderError(f"{path.name}: could not read ({exc})") from exc
+    if not text.strip():
+        raise LoaderError(f"{path.name}: file is empty")
+
+    title = path.stem.replace("-", " ").replace("_", " ").title()
+    for line in text.split("\n"):
+        if line.startswith("# "):
+            title = line[2:].strip()
+            break
+    return title, text</code></pre>
+  <p>Only this layer knows about file formats: "adding PDF or website support later means adding a function here and nothing else". Every failure becomes one kind of error, <code>LoaderError</code>, with a human-readable message, so the ingest script can print "Skipped: ..." and carry on with the other files. The title is the first <code># Heading</code>, else the filename made readable (<code>course-200hr.md</code> → "Course 200Hr").</p>
+  <div class="box project"><div class="tag">In Sitechat</div><p>Turning a school's website into clean Markdown is deliberately <i>not</i> part of the product. It needs site-specific rules about 20% of the time, which would pile up in the codebase one per customer. The plan is a separate tool producing reviewable Markdown plus a report of contradictions between pages; the product only ingests Markdown.</p></div>
+</section>
+
+<section>
+  <h2>3. Splitting along headings (<code>documents/chunker.py</code>)</h2>
+<pre><code>HEADING_RE = re.compile(r"^(#{1,6})\s+(.*)$")
+MAX_CHUNK_CHARS = 1800
+MIN_CHUNK_CHARS = 200
+
+def chunk_markdown(text, tenant_id, document_id, document_title) -> list[Chunk]:
+    lines = text.split("\n")
+    heading_stack: list[tuple[int, str]] = []
+    buffer: list[str] = []
+    sections: list[tuple[list[str], str]] = []
+
+    def flush() -> None:
+        body = "\n".join(buffer).strip()
+        if body:
+            sections.append(([h[1] for h in heading_stack], body))
+        buffer.clear()
+
+    for line in lines:
+        match = HEADING_RE.match(line)
+        if match:
+            flush()
+            level = len(match.group(1))
+            title = match.group(2).strip()
+            while heading_stack and heading_stack[-1][0] >= level:
+                heading_stack.pop()
+            heading_stack.append((level, title))
+        else:
+            buffer.append(line)
+    flush()
+    ...   # each section's body goes through _split_long_text, then becomes Chunk(s)</code></pre>
+  <p>How the <b>heading stack</b> works, using the 200-hour document's structure:</p>
+  <div class="tablewrap"><table>
+    <tr><th>Line read</th><th>Stack after it (level, title)</th></tr>
+    <tr><td><code># 200-Hour ... Teacher Training</code></td><td>[(1, 200-Hour ...)]</td></tr>
+    <tr><td><code>## Curriculum</code></td><td>[(1, 200-Hour ...), (2, Curriculum)]</td></tr>
+    <tr><td><code>### Pranayama</code></td><td>[(1, ...), (2, Curriculum), (3, Pranayama)]</td></tr>
+    <tr><td><code>### Bandhas</code></td><td>pop level ≥ 3 → [(1, ...), (2, Curriculum), (3, Bandhas)]</td></tr>
+    <tr><td><code>## Daily Schedule</code></td><td>pop level ≥ 2 → [(1, ...), (2, Daily Schedule)]</td></tr>
+  </table></div>
+  <p>When a heading arrives, everything collected so far is <b>flushed</b> as a section labelled with the current stack; then any headings at the same or deeper level are popped (we've left them), and the new heading is pushed. Text lines go into the buffer. The result: every section knows its full path.</p>
+<pre><code>def _split_long_text(text: str) -> list[str]:
+    paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
+    pieces, current = [], ""
+    for paragraph in paragraphs:
+        candidate = f"{current}\n\n{paragraph}" if current else paragraph
+        if len(candidate) > MAX_CHUNK_CHARS and current:
+            pieces.append(current)
+            current = paragraph
+        else:
+            current = candidate
+    if current:
+        if pieces and len(current) &lt; MIN_CHUNK_CHARS:
+            pieces[-1] = pieces[-1] + "\n\n" + current
+        else:
+            pieces.append(current)
+    return pieces</code></pre>
+  <p>Sections over 1,800 characters are split at paragraph breaks, never mid-sentence; a leftover under 200 characters is merged into the piece before it. Every piece keeps the section's heading path. <b>Real output</b> on the 200-hour document: 18 chunks, from 110 to 1,362 characters (none needed splitting). Across the school's three documents: 18 + 58 + 19 = 95.</p>
+</section>
+
+<section>
+  <h2>4. Section keys (<code>documents/sections.py</code>)</h2>
+<pre><code>def section_key(document_id: str, heading_path: list[str]) -> str:
+    return f"{document_id} | {' > '.join(heading_path[1:])}"
+
+def matches(key: str, label: str) -> bool:
+    if label.startswith("="):
+        return key == label[1:]                 # exactly that section
+    if label.endswith("|"):
+        return key.startswith(label)            # anywhere in that document
+    return key == label or key.startswith(label + " > ")   # that section or below</code></pre>
+  <p>A <b>section key</b> names a section by its document and headings (minus the title, which is the first heading): <code>pyramid-yogshala-website | 300-Hour ... (Rishikesh) &gt; Fees</code>. Keys come from headings, so they survive re-chunking, unlike chunk ids. They're used twice: to tag chunks with programmes (next section), and by the evaluation to label correct answers (Phase 4f). Note the <code>" &gt; "</code> in the third rule: "Fees" must not match "Fees and discounts", only "Fees" or "Fees &gt; ...".</p>
+</section>
+
+<section>
+  <h2>5. The programme catalogue (<code>programmes/models.py</code>)</h2>
+  <p>Pyramid Yogshala offers 12 programmes: seven teacher trainings (100-hour, five different 200-hours, 300-hour) and five retreats. Their sections look alike ("Fees", "Dates", "What is included"), so the bot must know which programme each section belongs to and which one the visitor means. That knowledge lives in a per-school file, <code>docs/&lt;tenant&gt;/programmes.yaml</code>:</p>
+<pre><code>programmes:
+  - programme_id: "300"
+    name: 300-Hour Ashtanga Vinyasa Flow and Ayurveda TTC (Rishikesh)
+    aliases: [300 hour, advanced ttc, advanced teacher training, advanced course, 500 hour]
+    sections: ["pyramid-yogshala-website | 300-Hour Ashtanga Vinyasa Flow and Ayurveda TTC (Rishikesh)"]
+
+  - programme_id: retreat-7
+    name: 7-Day Yoga Retreat (Rishikesh)
+    aliases: [7 day retreat, seven day retreat, one week retreat, week long retreat]
+    context_aliases: [7 day, seven day, one week]
+    sections: ["pyramid-yogshala-website | 7-Day Yoga Retreat (Rishikesh)"]
+
+families:
+  retreat: [retreat-4, retreat-7, retreat-11, retreat-14, retreat-28]
+  havelock: [200-havelock, retreat-11]
+  200 hour: [200-naturopathy, 200-kundalini, 200-spanish, 200-havelock, 200-mysore]
+  teacher training: ["100", 200-naturopathy, ..., "300"]
+
+overview_sections:
+  - "pyramid-yogshala-website | Programmes at a glance"</code></pre>
+  <div class="tablewrap"><table>
+    <tr><th>Field</th><th>Meaning</th></tr>
+    <tr><td><code>aliases</code></td><td>Names visitors use, matched as whole words after normalising ("300-hr", "300 hrs" and "300 Hours" all read "300 hour").</td></tr>
+    <tr><td><code>context_aliases</code></td><td>Short names that only count when the conversation is already about the same family. "7 day" alone is ambiguous: "I can only come for 7 days".</td></tr>
+    <tr><td><code>sections</code></td><td>Labels (section-key format) for the knowledge-base sections that belong to the programme.</td></tr>
+    <tr><td><code>families</code></td><td>Words naming a group: "retreat", "havelock", "200 hour".</td></tr>
+    <tr><td><code>overview_sections</code></td><td>The section comparing every programme side by side.</td></tr>
+  </table></div>
+<pre><code>def programme_for(self, key: str) -> str:
+    if any(matches(key, label) for label in self.overview_sections):
+        return OVERVIEW                          # "overview"
+    for programme in self.programmes:
+        if any(matches(key, label) for label in programme.sections):
+            return programme.programme_id
+    return ""</code></pre>
+  <p><b>Real output</b>, tagging section keys from the website document:</p>
+<pre><code>'pyramid-yogshala-website | Programmes at a glance'                           -> 'overview'
+'pyramid-yogshala-website | 100-Hour Yoga Teacher Training (Rishikesh) > Curriculum' -> '100'
+'pyramid-yogshala-website | 200-Hour Multi-Style TTC, Havelock Island (Andaman) > Fees' -> '200-havelock'
+'pyramid-yogshala-website | 300-Hour Ashtanga Vinyasa Flow ... (Rishikesh) > Fees'    -> '300'
+'pyramid-yogshala-website | 7-Day Yoga Retreat (Rishikesh)'                    -> 'retreat-7'</code></pre>
+  <p><code>load_catalogue</code> reads the YAML with <code>yaml.safe_load</code> ("safe" refuses YAML features that can run code). <code>programmes/store.py</code> saves one catalogue per tenant in Firestore and caches reads for 60 seconds, like facts.</p>
+</section>
+
+<section>
+  <h2>6. Ingest (<code>documents/ingest.py</code>) and the chunk store</h2>
+<pre><code>def make_document_id(filename: str) -> str:
+    stem = Path(filename).stem.lower()
+    return re.sub(r"[^a-z0-9]+", "-", stem).strip("-")
+
+def ingest_file(path, tenant_id, store, vector_store=None, catalogue=None) -> IngestResult:
+    title, text = load_text_file(path)
+    text = strip_invisible(text)
+    document_id = make_document_id(path.name)
+    chunks = chunk_markdown(text=text, tenant_id=tenant_id, document_id=document_id, document_title=title)
+    if not chunks:
+        raise LoaderError(f"{path.name}: produced no usable text")
+    if catalogue is not None:
+        for chunk in chunks:
+            chunk.programme = catalogue.programme_for(section_key(chunk.document_id, chunk.heading_path))
+    document = Document(document_id=document_id, tenant_id=tenant_id, title=title,
+                        source=path.name, chunk_count=len(chunks))
+    store.save_document(document, chunks)
+    if vector_store is not None:
+        vector_store.delete_document(tenant_id, document_id)
+        vector_store.upsert_chunks(tenant_id, chunks)
+    warnings = []
+    for chunk in chunks:
+        found = instruction_like(chunk.text)
+        if found:
+            warnings.append(f"{' > '.join(chunk.heading_path)}: {found!r}")
+    return IngestResult(document_id=document_id, title=title, chunk_count=len(chunks), warnings=warnings)</code></pre>
+  <ol class="steps">
+    <li><div><b>Stable document id</b> from the filename (<code>Course 200hr.md</code> → <code>course-200hr</code>): ingesting the same file twice replaces it.</div></li>
+    <li><div><b>Invisible characters stripped</b> (hidden instructions have no place in documents).</div></li>
+    <li><div><b>Chunk</b>, then <b>tag</b> each chunk with its programme.</div></li>
+    <li><div><b>Save text</b> to Firestore (<code>FirestoreChunkStore.save_document</code> first deletes the document's old chunks, so a re-ingest producing fewer chunks leaves no stale ones, then writes all in one batch).</div></li>
+    <li><div><b>Replace vectors</b>: delete the document's old vectors in Pinecone, then embed and upsert the new ones.</div></li>
+    <li><div><b>Screen</b> every chunk for text addressed to a model; matches are returned as warnings and printed by the script as "CHECK, reads like an instruction to the bot". Ingested anyway, because we prepare these files ourselves; the warning is for a human to look.</div></li>
+  </ol>
+  <p>Why keep chunk text in Firestore as well as Pinecone? Pinecone holds it for fast retrieval; Firestore holds the source of truth, "so the text survives re-indexing", and it's what <code>inspect_chunks</code>, the evaluation's label check and (when enabled) BM25 read.</p>
+</section>
+
+<section>
+  <h2>7. Embeddings (<code>retrieval/embeddings.py</code>)</h2>
+<pre><code>def _get_client() -> OpenAI:
+    global _client
+    if _client is None:
+        settings = get_settings()
+        # Short timeout: an embedding takes well under a second, and the
+        # SDK default (600 s, two retries) would outlast the request.
+        _client = OpenAI(api_key=settings.openai_api_key.get_secret_value(),
+                         timeout=settings.embedding_timeout_seconds,     # 5 s
+                         max_retries=settings.openai_max_retries)        # 1
+    return _client
+
+def embed_texts(texts: list[str]) -> list[list[float]]:
+    if not texts:
+        return []
+    response = _get_client().embeddings.create(model=get_settings().embedding_model, input=texts)
+    return [item.embedding for item in response.data]
+
+def embed_query(text: str) -> list[float]:
+    return embed_texts([text])[0]</code></pre>
+  <p><b>Batching</b>: <code>embed_texts</code> sends many texts in one call, so ingesting 58 chunks is one round trip, not 58. A separate client from the chat one, with its own short timeout: the SDK's default of 600 seconds with two retries would outlast Cloud Run's whole request. The model is <code>text-embedding-3-small</code> (1,536 numbers); the opening comment warns that changing it means re-embedding everything, because vectors from different models can't be compared.</p>
+</section>
+
+<section>
+  <h2>8. Pinecone (<code>retrieval/vector_store.py</code>)</h2>
+  <p>The same interface-and-implementations pattern as every store: an abstract <code>VectorStore</code> with <code>upsert_chunks</code>, <code>search</code> and <code>delete_document</code>; an <code>InMemoryVectorStore</code> for tests (dot product over a list); and <code>PineconeVectorStore</code>.</p>
+<pre><code>@dataclass
+class SearchResult:
+    chunk_id: str
+    text: str
+    document_title: str
+    heading_path: list[str]
+    score: float
+    programme: str = ""
+
+    @property
+    def citation_title(self) -> str:
+        path = [h for h in self.heading_path if h]
+        return " > ".join(path) if path else self.document_title</code></pre>
+  <p><code>citation_title</code> is the label each passage carries into the prompt: its full heading path, document title included. The docstring explains why: "a section called 'Fees' exists once per programme, and its text does not name the programme, so '7-Day Yoga Retreat (Rishikesh) &gt; Fees' is what stops the model reading one programme's prices as another's."</p>
+<pre><code>class PineconeVectorStore(VectorStore):
+    def __init__(self) -> None:
+        settings = get_settings()
+        self._pc = Pinecone(api_key=settings.pinecone_api_key.get_secret_value())
+        self._index_name = settings.pinecone_index_name
+        self._index_handle = None
+
+    @property
+    def _index(self):
+        """Built on first use, not at startup. ..."""
+        if self._index_handle is None:
+            self._index_handle = self._pc.index(self._index_name)
+        return self._index_handle
+
+    def _namespace(self, tenant_id: str) -> str:
+        return f"tenant-{tenant_id}"
+
+    def upsert_chunks(self, tenant_id, chunks):
+        ...
+        vectors = embed_texts([c.to_searchable_text() for c in chunks])
+        documents = [{"_id": chunk.chunk_id, "embedding": vector, "text": chunk.text,
+                      "document_id": chunk.document_id, "document_title": chunk.document_title,
+                      "heading_path": " > ".join(chunk.heading_path), "programme": chunk.programme}
+                     for chunk, vector in zip(chunks, vectors)]
+        self._index.documents.upsert(namespace=self._namespace(tenant_id), documents=documents)
+
+    def delete_document(self, tenant_id, document_id):
+        try:
+            self._index.documents.delete(namespace=self._namespace(tenant_id),
+                                         filter={"document_id": {"$eq": document_id}})
+        except NotFoundError:
+            logger.debug("Namespace for %s not found, nothing to delete", tenant_id)</code></pre>
+  <ul>
+    <li><b>Lazy index handle.</b> <code>pc.index()</code> makes a network call. Doing it at start-up would add seconds before the container can serve, paid on every cold start, so it's done on first use (a <code>@property</code> that fills a hidden field once).</li>
+    <li><b>Namespace per tenant</b>: <code>tenant-pyramid-yogshala</code>. Every method maps the tenant to its namespace; there's no code path that searches without one.</li>
+    <li><b>The document API.</b> The index was created with a <i>document schema</i> (a field named <code>embedding</code> of type dense vector, <code>scripts/create_index.py</code>), so writes, searches and deletes must go through <code>index.documents</code>. The heading path is stored as one string ("A &gt; B &gt; C") and split back on read.</li>
+    <li><b>Deleting a document</b> uses a filter on the stored <code>document_id</code> field. On a first ingest the namespace doesn't exist yet, which Pinecone reports as "not found": expected, so logged at debug level, not as an error.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>9. Triage (<code>retrieval/triage.py</code>)</h2>
+<pre><code>MAX_SKIP_LENGTH = 25
+CONVERSATIONAL = re.compile(
+    r"^(?:"
+    r"hi|hey|hello|yo|namaste|"
+    r"ok|okay|k|sure|right|fine|got it|understood|i see|"
+    r"thanks|thank you|thanks a lot|ty|cheers|"
+    r"bye|goodbye|see you|take care|"
+    r"yes|yeah|yep|no|nope|"
+    r"good morning|good afternoon|good evening|"
+    r"great|nice|cool|perfect|awesome|lovely"
+    r")"
+    r"[\s!.,?]*$",
+    re.IGNORECASE,
+)
+
+def needs_retrieval(message: str) -> bool:
+    text = message.strip()
+    if not text:
+        return False
+    if len(text) > MAX_SKIP_LENGTH:
+        return True
+    return not CONVERSATIONAL.match(text)</code></pre>
+  <p>Skips retrieval (about two seconds from outside the database's region) only when a message is short <b>and</b> is entirely a conversational phrase, with optional punctuation. The <code>^</code> and <code>$</code> anchor the pattern to the whole message, so "thanks, but what about the fees?" still retrieves. Deliberately conservative: "a missed retrieval produces a wrong answer while an unnecessary one only costs time." Real output: <code>hi</code>, <code>thanks!</code>, <code>ok</code>, <code>namaste</code> skip; <code>yes please</code> retrieves (not in the list, so it errs safe).</p>
+</section>
+
+<section>
+  <h2>10. Keyword search, fusion, reranking</h2>
+  <p>All three are built, tested, and <b>off by default</b> (<code>use_keyword_search = False</code>, <code>use_rerank = False</code>), after measurement (<a href="https://claude.ai/artifact/RHDbDbJ6r8RmXdRsvAUK9S">Phase 3, sections 10 and 11</a>). The code remains so they can be switched on and re-measured when a school has hundreds of chunks.</p>
+  <h3><code>keyword_search.py</code></h3>
+<pre><code>def tokenize(text: str) -> list[str]:
+    return [t for t in re.split(r"[^a-z0-9]+", text.lower()) if t]
+
+def keyword_search(tenant_id, query, chunk_store, top_k) -> list[SearchResult]:
+    built = _get_index(tenant_id, chunk_store)       # BM25Okapi over all chunks, cached 5 min
+    ...
+    scores = index.get_scores(query_tokens)
+    query_set = set(query_tokens)
+    candidates = [(float(score), chunk) for score, chunk, tokens in zip(scores, chunks, corpus)
+                  if query_set &amp; set(tokens)]          # shares a word, not "score > 0"
+    candidates.sort(key=lambda pair: pair[0], reverse=True)
+    ...</code></pre>
+  <p>The BM25 index is built in memory from all of a tenant's chunks (on their searchable text, so headings are matchable) and cached for 5 minutes: fine "into the low thousands of chunks", beyond which a search service would be needed. The filter on shared words (<code>query_set &amp; set(tokens)</code> is a set intersection) instead of score is the IDF-zero fix from Phase 3.</p>
+  <h3><code>fusion.py</code></h3>
+<pre><code>RRF_K = 60
+
+def reciprocal_rank_fusion(result_lists, top_k, weights=None):
+    if weights is None:
+        weights = [1.0] * len(result_lists)
+    if len(weights) != len(result_lists):
+        raise ValueError("weights must have one entry per result list")
+    scores, by_id = {}, {}
+    for results, weight in zip(result_lists, weights):
+        for rank, result in enumerate(results, start=1):
+            scores[result.chunk_id] = scores.get(result.chunk_id, 0.0) + weight / (RRF_K + rank)
+            by_id.setdefault(result.chunk_id, result)
+    ordered = sorted(scores.items(), key=lambda pair: pair[1], reverse=True)
+    ...</code></pre>
+  <p>Weighted RRF, with <code>vector_weight = 1.0</code> and <code>keyword_weight = 0.3</code> when enabled. Real numbers in Phase 3, §11.</p>
+  <h3><code>reranker.py</code></h3>
+<pre><code>_MIN_SECONDS_BETWEEN_CALLS = 6.5
+
+def rerank(query, candidates, top_k):
+    settings = get_settings()
+    if not candidates or not settings.cohere_api_key.get_secret_value():
+        return candidates[:top_k]
+    documents = [c.to_searchable_text_for_rerank() for c in candidates]
+    if settings.throttle_rerank:
+        wait = _MIN_SECONDS_BETWEEN_CALLS - (time.monotonic() - _last_call_at)
+        if wait > 0:
+            time.sleep(wait)
+        ...
+    try:
+        response = _get_client().rerank(model=settings.rerank_model, query=query,
+                                        documents=documents, top_n=min(top_k, len(documents)))
+    except Exception:
+        logger.exception("Reranking failed, falling back to fusion order")
+        return candidates[:top_k]
+    ...</code></pre>
+  <p>Three safety behaviours: no key → return the candidates unchanged; any error → fall back to the first stage's order ("a degraded answer beats no answer"); and a throttle for Cohere's trial keys (10 calls a minute), so evaluation runs measure real reranking instead of silently falling back. The throttle sleeps the whole process, so it must be off in production (<code>THROTTLE_RERANK=false</code> is set in <code>cloudbuild.yaml</code>).</p>
+  <div class="box challenge"><div class="tag">Challenge we faced: a reranker that isn't running looks like a reranker that changes nothing</div><p>In the latest saved evaluation (18 Oct), "vector + rerank" scored exactly the same as "vector only" on every metric. Because <code>rerank</code> quietly returns the candidates unchanged when no Cohere key is set, identical numbers most likely mean the reranker wasn't active in that run, not that it's neutral. The 10 Oct measurement, with a working key, showed it hurting (MRR 0.96 → 0.90). <b>Lesson:</b> a silent fallback protects production but can fool a measurement; check the configuration actually ran.</p></div>
+</section>
+
+<section>
+  <h2>11. Which programme? (<code>programmes/focus.py</code>)</h2>
+  <p>Decided "by matching names, never by a model call: it runs on every message". Three rules, in order (from the file's docstring):</p>
+  <ol class="steps">
+    <li><div>Programmes named in this message become the focus. If the message compares ("vs", "or", "compare", "difference", "which", "better", "between"...), the earlier focus is kept alongside them.</div></li>
+    <li><div>A family word ("retreat", "teacher training") keeps the earlier focus if it's within that family; otherwise the focus becomes the family, or nothing if the family is too large.</div></li>
+    <li><div>Otherwise the earlier focus carries over.</div></li>
+  </ol>
+  <p>A focus of more than 3 programmes (<code>MAX_FOCUS</code>) counts as no focus: retrieval searches everything.</p>
+  <h3>Normalising text</h3>
+<pre><code>def normalise(text: str) -> str:
+    text = unicodedata.normalize("NFKD", text)
+    text = "".join(c for c in text if not unicodedata.combining(c))     # drop accents
+    text = text.lower().replace("-", " ").replace("_", " ")
+    text = re.sub(r"(\d+)\s*(h|hr|hrs|hour|hours)\b", r"\1 hour", text)
+    text = re.sub(r"(\d+)\s*(d|day|days)\b", r"\1 day", text)
+    text = re.sub(rf"(\d+)\s*({OTHER_HOURS})(?![a-z])", r"\1 hour", text)  # horas, Stunden, घंटे...
+    text = re.sub(rf"(\d+)\s*({OTHER_DAYS})(?![a-z])", r"\1 day", text)    # dias, Tage, दिन...
+    text = re.sub(r"[^a-z0-9 ]+", " ", text)
+    return " ".join(text.split())</code></pre>
+  <p>Real output: <code>normalise("300-HRS Course, 7-days")</code> → <code>"300 hour course 7 day"</code>. NFKD splits "á" into "a" plus an accent mark, and the next line drops the marks, so "días" becomes "dias". Unit words in about fifteen languages are spelled one way, so "¿Cuánto cuesta el curso de 300 horas?" finds the 300-hour course. The lists are sorted longest first, so "horas" isn't read as "hora" plus "s".</p>
+  <h3><code>resolve_focus</code> in action</h3>
+  <p><b>Real output</b> on the school's real catalogue:</p>
+<pre><code>'Tell me about the 300-hr course'         prev=[]             -> ['300']
+'how much does it cost?'                  prev=['300']        -> ['300']           (carried over)
+'is it better than the 100 hour?'         prev=['300']        -> ['300', '100']    (comparing keeps both)
+'what about the 7 day one?'               prev=['retreat-14'] -> ['retreat-7']     (short name, same family)
+'I can only come for 7 days'              prev=[]             -> []                (short name alone: ignored)
+'what retreats do you have?'              prev=[]             -> []   overview=True  (family of 5: too many)
+'teacher training on Havelock'            prev=[]             -> ['200-havelock']  (two families narrow each other)
+'¿Cuánto cuesta el curso de 300 horas?'   prev=[]             -> ['300']
+'is there laundry?'                       prev=['300']        -> ['300']           (carried over; see §12)</code></pre>
+  <p>The matcher (<code>_find</code>) looks for each alias surrounded by spaces in the normalised message (padded with a space at each end), longest aliases first, and <i>removes</i> each match from the text, so "havelock teacher training" isn't also counted as "teacher training". The "teacher training on Havelock" case shows family narrowing: "teacher training" names 7 programmes and "havelock" names 2; the programmes in both are just <code>200-havelock</code>.</p>
+  <p><code>wants_overview</code> returns True when a message names a group too large to focus on, or compares within a group ("the 200-hour in Rishikesh or on Havelock?"): then the "Programmes at a glance" section is added, so the bot doesn't give one course's length or location for all of them.</p>
+</section>
+
+<section>
+  <h2>12. The pipeline (<code>retrieval/pipeline.py</code>): <code>retrieve</code> and <code>blend</code></h2>
+<pre><code>def retrieve(tenant_id, query, vector_store, chunk_store=None, config=None,
+             programmes=None, overview=False) -> list[SearchResult]:
+    settings = get_settings()
+    config = config or RetrievalConfig.from_settings(settings)
+    candidates = config.candidates
+
+    query_vector = embed_query(query)
+    vector_results = vector_store.search(tenant_id, query_vector, candidates)
+
+    keyword_results = []
+    if config.use_keyword and chunk_store is not None:
+        keyword_results = keyword_search(tenant_id, query, chunk_store, candidates)
+
+    if keyword_results:
+        fused = reciprocal_rank_fusion([vector_results, keyword_results], candidates,
+                                       weights=[settings.vector_weight, config.keyword_weight])
+    else:
+        fused = vector_results[:candidates]
+
+    if config.use_rerank:
+        final = rerank(query, fused, settings.retrieval_top_k)
+    else:
+        final = fused[: settings.retrieval_top_k]
+
+    if programmes:
+        focused = [result for programme in programmes
+                   for result in vector_store.search(tenant_id, query_vector, FOCUS_POOL,
+                                                     programmes=[programme])]
+        general = vector_store.search(tenant_id, query_vector, GENERAL_POOL)
+        final = blend(focused, general, settings.retrieval_top_k, programmes, settings.focus_boost)
+
+    if overview:
+        table = vector_store.search(tenant_id, query_vector, 1, programmes=[OVERVIEW])
+        present = {r.chunk_id for r in final}
+        final = final + [t for t in table if t.chunk_id not in present]
+
+    logger.info("Retrieved for %s (focus %s): ... %s", ..., [r.chunk_id for r in final])
+    return final</code></pre>
+  <p>"The one retrieval path, used by production and the eval." With today's settings, the active steps are: embed once; vector search for 5; if there's a focus, search each focused programme's top 3 (a Pinecone filter on <code>programme</code>) and the top 20 overall, and blend; if a group was named, add the overview section. The chunk ids chosen are logged, which is where sources went when they were removed from the widget.</p>
+<pre><code>KEEP_ONE, KEEP_EACH, FOCUS_POOL, GENERAL_POOL = 1, 2, 3, 20
+
+def blend(focused, general, top_k, programmes, boost) -> list[SearchResult]:
+    best = {}
+    for result in focused + general:
+        score = result.score + (boost if result.programme in programmes else 0.0)
+        if result.chunk_id not in best or score > best[result.chunk_id][0]:
+            best[result.chunk_id] = (score, result)
+    ranked = sorted(best.values(), key=lambda pair: pair[0], reverse=True)
+
+    keep = KEEP_ONE if len(programmes) == 1 else KEEP_EACH
+    chosen = {}
+    for programme in programmes:
+        mine = [pair for pair in ranked if pair[1].programme == programme]
+        for pair in mine[:keep]:
+            chosen[pair[1].chunk_id] = pair
+    for pair in ranked:
+        if len(chosen) >= top_k:
+            break
+        chosen.setdefault(pair[1].chunk_id, pair)
+    return [r for _, r in sorted(chosen.values(), key=lambda pair: pair[0], reverse=True)]</code></pre>
+  <p>How blending decides, step by step: merge both lists without duplicates; add <code>focus_boost</code> (0.08) to the similarity of sections belonging to the focused programme; rank everything; guarantee a minimum per focused programme (1 for a single focus, 2 for each side of a comparison); fill the rest by rank. <b>Real output</b>, with the 300-hour course in focus and a laundry question where the school-wide Laundry section is genuinely the best match:</p>
+<pre><code>focused: 300>Fees 0.50, 300>Dates 0.48            (+0.08 each → 0.58, 0.56)
+general: About>Laundry 0.61, 300>Fees 0.50, Booking 0.49, Rooms 0.47
+blend(top_k=3) -> [('About>Laundry', 0.61), ('300>Fees', 0.5), ('300>Dates', 0.48)]</code></pre>
+  <p>The school-wide section wins on merit, and the focused course still gets its places. That balance took three iterations to find (challenge 4 below).</p>
+</section>
+
+<section>
+  <h2>13. Configurations (<code>evaluation_config.py</code>)</h2>
+<pre><code>@dataclass
+class RetrievalConfig:
+    name: str
+    use_keyword: bool = True
+    use_rerank: bool = True
+    keyword_weight: float = 1.0
+    candidates: int = 20
+
+    @classmethod
+    def from_settings(cls, settings: Settings) -> "RetrievalConfig":
+        return cls("production", use_keyword=settings.use_keyword_search,
+                   use_rerank=settings.use_rerank, keyword_weight=settings.keyword_weight,
+                   candidates=settings.retrieval_candidates)
+
+VECTOR_ONLY = RetrievalConfig("vector only", use_keyword=False, use_rerank=False)
+VECTOR_RERANK = RetrievalConfig("vector + rerank", use_keyword=False, use_rerank=True)
+HYBRID_EQUAL = RetrievalConfig("hybrid, equal weights", use_keyword=True, use_rerank=False, keyword_weight=1.0)
+HYBRID_WEIGHTED = RetrievalConfig("hybrid, keyword at 0.3", use_keyword=True, use_rerank=False, keyword_weight=0.3)
+FULL = RetrievalConfig("hybrid 0.3 + rerank", use_keyword=True, use_rerank=True, keyword_weight=0.3)</code></pre>
+  <p>A <code>@dataclass</code> is a lightweight class whose fields and constructor are generated from the annotations. A <code>@classmethod</code> receives the class (<code>cls</code>) instead of an instance, a common way to write alternative constructors: <code>RetrievalConfig.from_settings(settings)</code> builds exactly what production runs. The presets keep 20 candidates because that's what the original comparison used; production uses 5. Kept in <code>app/</code> rather than <code>evaluation/</code> because it describes the pipeline, which production may one day switch per tenant.</p>
+</section>
+
+<section>
+  <h2>14. Challenges we faced</h2>
+  <div class="box challenge"><div class="tag">1. Standard advice made retrieval worse</div><p>Hybrid search and reranking, measured on 10 Oct: vector-only MRR 0.96 against 0.70 to 0.90 for the others. Both switched off with the numbers in the config. Re-measured on 18 Oct with 95 chunks and 82 questions: vector-only 0.86, hybrid 0.78 to 0.81. The details are the strongest interview story in the project (Phase 3, §10 to 11).</p></div>
+  <div class="box challenge"><div class="tag">2. BM25's IDF collapsed to zero</div><p>A <code>score &gt; 0</code> filter discarded correct matches whenever a word appeared in half the chunks. Fixed by filtering on shared words. Only measurement could see it (Phase 3, §10).</p></div>
+  <div class="box challenge"><div class="tag">3. The evaluation ran different code from production</div><p><code>evaluation/run.py</code> had its own copy of the retrieval steps that always ran fusion and read the candidate count from settings, which had since dropped from 20 to 5. Re-running it would have silently changed the comparison. <b>Fix (15 Oct):</b> <code>retrieve</code> takes an optional <code>RetrievalConfig</code>; the evaluation calls the production function; re-run, every config matched the recorded numbers. A "production" row built from settings was added, so the eval measures exactly what ships. <b>Lesson:</b> an evaluation must exercise the real code path, or it measures something else.</p></div>
+  <div class="box challenge"><div class="tag">4. Getting programme focus right took three tries</div><ol>
+    <li><b>Fixed slots</b> (three sections from the focused programme, then the rest from everything): from a real chat, with the 300-hour in focus, all five passages were the 300-hour's, so "is there laundry?" (asked twice) got "I don't have details", although the school's About section says a laundry machine is free to use. Two causes: a carried-over focus put the programme's name into the search text, pulling even the general search towards it; and the remaining slots could also come from the focused programme.</li>
+    <li><b>Dropped the name from the search text; filled the rest only from outside the focus, from a wider pool of 20.</b> Then "how many halls?" still got three 300-hour sections and no Campus section, and "what about 200h yttc?" (five courses, too many to focus on) got no side-by-side view, so the bot gave the Rishikesh course length to Havelock too.</li>
+    <li><b>Rank everything by relevance with a small boost for the focus</b>, a minimum of one section per focused programme (two per side of a comparison), and an overview section for broad groups. The boost was tuned against the evaluation: 0.0 / 0.05 / 0.08 / 0.12 / 0.2 gave overall MRR 0.82 / 0.85 / 0.87 / 0.86 / 0.85; 0.08 kept follow-up questions at 1.00 and general questions at 0.96, while higher values started losing general ones.</li>
+  </ol><p>And putting the overview <i>first</i> pushed better matches down for any question naming a group ("what will I learn on the 200-hour course?"): semantic MRR 0.86 → 0.69. It's now added after the ranked results. <b>Lesson:</b> every rule of thumb ("give the focus 3 slots") failed on a real conversation; a tuned score with a measured parameter held up.</p></div>
+  <div class="box challenge"><div class="tag">5. "Fees" chunks were indistinguishable</div><p>Labels showed only the last heading, so every programme's fee section read "... — Fees". Fixed by labelling with the full heading path including the document title (§8).</p></div>
+  <div class="box challenge"><div class="tag">6. Re-ingesting failed after the first time</div><p><code>delete_document</code> used Pinecone's plain vectors endpoint, which returns 400 once a namespace exists on an index with a document schema. So re-ingesting any document, or ingesting a second one, failed after the first ingest. <code>delete_tenant</code>'s namespace delete had the same bug. <b>Fix (16 Oct):</b> deletes go through <code>index.documents</code>; confirmed against the live index that the <code>document_id</code> filter matches all of a document's chunks.</p></div>
+  <div class="box challenge"><div class="tag">7. General questions failed until the documents were restructured</div><p>School-wide facts (rooms, Wi-Fi, laundry, food, travel) were scattered through programme sections. They were moved into their own "school-general" document, one sub-topic per section; general-question retrieval went from MRR 0.46 to 0.90 (backlog 80). The evaluation's labels listed both the old and new places, so one question set measured before and after. <b>Lesson:</b> retrieval quality is often a content-structure problem, not an algorithm problem.</p></div>
+  <div class="box challenge"><div class="tag">8. Latency: retrieval on every message, far from the data</div><p>Retrieval took about 2 seconds and ran even on "hi" and "thanks"; Pinecone searches took 1.4 to 2.6 s because the index is in AWS us-east-1 and testing was from India. Fixes: triage, running retrieval in parallel with the conversation read, fetching 5 candidates instead of 20, and the lazy index handle so cold starts don't pay for it.</p></div>
+</section>
+
+<section>
+  <h2>Glossary</h2>
+  <dl class="gloss">
+    <div><dt>Ingest</dt><dd>Loading documents into the system: read, chunk, tag, embed, store.</dd></div>
+    <div><dt>Heading path</dt><dd>All the headings above a chunk, outermost first.</dd></div>
+    <div><dt>Heading stack</dt><dd>The chunker's running list of headings in scope while reading a file.</dd></div>
+    <div><dt>Section key</dt><dd><code>document | Heading &gt; Sub</code>: a re-chunking-proof name for a section.</dd></div>
+    <div><dt>Programme catalogue</dt><dd>A school's <code>programmes.yaml</code>: programmes, their names, families, sections, overview.</dd></div>
+    <div><dt>Alias / context alias</dt><dd>A name visitors use for a programme / a short name that counts only within the same family.</dd></div>
+    <div><dt>Family</dt><dd>A word naming a group of programmes ("retreat").</dd></div>
+    <div><dt>Normalising</dt><dd>Rewriting text into one standard form before matching (lower case, units, no accents).</dd></div>
+    <div><dt>Focus boost</dt><dd>0.08 added to the similarity of the focused programme's sections.</dd></div>
+    <div><dt>Upsert</dt><dd>Insert, or update if the id already exists.</dd></div>
+    <div><dt>Document schema (Pinecone)</dt><dd>An index layout with named fields; requires the documents API.</dd></div>
+    <div><dt>Lazy initialisation</dt><dd>Creating something on first use instead of at start-up.</dd></div>
+    <div><dt>Dataclass</dt><dd>A class whose constructor and fields are generated from its annotations.</dd></div>
+    <div><dt>Throttle</dt><dd>Spacing calls out deliberately to stay under a rate limit.</dd></div>
+    <div><dt>Fallback</dt><dd>A simpler behaviour used when the preferred one fails.</dd></div>
+  </dl>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <details><summary>Why do chunk ids include the position, and why is that not enough for evaluation labels?</summary><p>So re-ingesting overwrites rather than duplicates. But positions shift whenever a document's text changes, so labels use section keys (document plus headings), which only change when headings do.</p></details>
+  <details><summary>The chunker reads <code>## Daily Schedule</code> while the stack is [(1, Title), (2, Curriculum), (3, Bandhas)]. What's the stack after?</summary><p>[(1, Title), (2, Daily Schedule)]: everything at level 2 or deeper is popped, then the new heading is pushed.</p></details>
+  <details><summary>Why is "7 day" a context alias but "7 day retreat" a normal alias?</summary><p>"7 day" alone is ambiguous ("I can only come for 7 days"); it only means the 7-day retreat when the conversation is already about retreats.</p></details>
+  <details><summary>With the 300-hour course in focus, why can the school-wide Laundry section still be returned first?</summary><p><code>blend</code> ranks everything by similarity plus a small boost (0.08) for the focus. A clearly better school-wide match beats the boosted programme sections; the focus is still guaranteed at least one place.</p></details>
+  <details><summary>Why must the reranker's throttle be off in production?</summary><p>It sleeps the whole process between calls to fit a trial key's limit; in production every visitor would queue behind it.</p></details>
+  <details><summary>Why did re-ingesting a document fail after the first ingest, and what fixed it?</summary><p>Deletes used Pinecone's plain vectors endpoint, which returns 400 on a document-schema index once the namespace exists. Deletes now go through <code>index.documents</code> with a <code>document_id</code> filter.</p></details>
+  <details><summary>What does "the evaluation calls the production function" protect against?</summary><p>An evaluation that measures a different code path from what ships, e.g. always fusing, or using a different candidate count.</p></details>
+</section>
+
+<section>
+  <h2>Next: Phase 4d, leads</h2>
+  <p>Contact-detail extraction, the lead record and its pending items, the email (plain text and HTML), unclickable links, the suggested reply, and the store that never loses a field. <a href="https://claude.ai/artifact/Np1qbTsXtXtDL6UmGaMvFv">Read Phase 4d</a>.</p>
+</section>
+
+</main>
+</body>
+</html>

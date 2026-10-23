@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Widget test page</title>
+<style>
+  /* Deliberately hostile styling, to prove the shadow root holds. */
+  *, *::before, *::after { box-sizing: content-box !important; }
+  button { text-transform: uppercase; letter-spacing: 3px; border: 3px dashed red; }
+  textarea { background: yellow; }
+  p { font-size: 19px; line-height: 2.1; }
+  body {
+    font-family: Georgia, "Times New Roman", serif;
+    max-width: 660px;
+    margin: 0 auto;
+    padding: 56px 24px 120px;
+    background: #fbf9f4;
+    color: #2d2a24;
+  }
+  h1 { font-size: 42px; line-height: 1.1; margin: 0 0 24px; }
+</style>
+</head>
+<body>
+  <h1>A page the widget knows nothing about</h1>
+
+  <p>
+    Everything here is set up to break an injected widget. Buttons are
+    uppercase with a dashed red border, textareas are yellow, box sizing is
+    forced to content-box with an important flag, and the body font is a
+    serif. None of it should reach inside the chat panel.
+  </p>
+
+  <p>
+    The one thing that should cross over is the typeface. The widget inherits
+    it on purpose, so it reads as part of the page rather than something
+    pasted on top.
+  </p>
+
+  <p>
+    Open the chat, ask something, close it, and reload. The conversation
+    should still be there. Resize below 520 pixels and the panel should take
+    the whole screen. Press Escape and it should close.
+  </p>
+
+  <p>
+    Filler so the page scrolls. Lorem ipsum dolor sit amet, consectetur
+    adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore
+    magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco
+    laboris nisi ut aliquip ex ea commodo consequat.
+  </p>
+
+  <p>
+    Duis aute irure dolor in reprehenderit in voluptate velit esse cillum
+    dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+    proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+  </p>
+
+  <script src="/widget/widget.js" data-site-key="pk_pyramid_yogshala_001"></script>
+</body>
+</html>

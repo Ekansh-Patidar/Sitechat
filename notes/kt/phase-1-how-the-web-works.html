@@ -1,0 +1,867 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sitechat KT 1: The Web</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,650&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  /* Layout: a reading column with a phase map on top; coloured callouts by role
+     (analogy, in this project, interview, try it); code blocks scroll inside themselves. */
+  :root {
+    --bg: #f5f6f4;
+    --paper: #ffffff;
+    --ink: #1b2725;
+    --muted: #5a6663;
+    --line: #dde3e0;
+    --accent: #1f6f5c;
+    --accent-soft: #e5f1ec;
+    --analogy: #7a4f9a;
+    --analogy-soft: #f2ecf7;
+    --interview: #a5630d;
+    --interview-soft: #fbf1e0;
+    --code-bg: #f0f3f1;
+    --display: "Literata", Georgia, "Times New Roman", serif;
+    --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121918; --paper: #1a2322; --ink: #e5ebe9; --muted: #9db0aa; --line: #2b3735;
+      --accent: #63c2a6; --accent-soft: #1d3530; --analogy: #c7a3e6; --analogy-soft: #2a2235;
+      --interview: #e3a64b; --interview-soft: #2e2416; --code-bg: #0f1514;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #121918; --paper: #1a2322; --ink: #e5ebe9; --muted: #9db0aa; --line: #2b3735;
+    --accent: #63c2a6; --accent-soft: #1d3530; --analogy: #c7a3e6; --analogy-soft: #2a2235;
+    --interview: #e3a64b; --interview-soft: #2e2416; --code-bg: #0f1514;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 17px/1.65 var(--body);
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 32px 80px;
+  }
+  main { max-width: 48rem; margin: 0 auto; display: grid; gap: 44px; }
+  header { display: grid; gap: 12px; }
+  .eyebrow { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  h1 { font: 650 clamp(30px, 5.5vw, 42px)/1.12 var(--display); margin: 0; text-wrap: balance; }
+  h2 { font: 650 clamp(23px, 3.6vw, 28px)/1.25 var(--display); margin: 0; text-wrap: balance; }
+  h3 { font: 700 18px/1.35 var(--body); margin: 8px 0 0; }
+  p, ul, ol { margin: 0; }
+  ul, ol { padding-left: 1.3em; display: grid; gap: 6px; }
+  li::marker { color: var(--accent); }
+  section { display: grid; gap: 16px; min-width: 0; }
+  .lede { color: var(--muted); font-size: 18px; }
+  a { color: var(--accent); }
+  code { font: 0.88em var(--mono); background: var(--code-bg); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+  pre {
+    margin: 0; background: var(--code-bg); border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 16px; overflow-x: auto; font: 14px/1.55 var(--mono);
+  }
+  pre code { background: none; padding: 0; font-size: inherit; overflow-wrap: normal; }
+  .file { font: 600 13px var(--mono); color: var(--muted); margin-bottom: -10px; }
+  .phases { display: flex; flex-wrap: wrap; gap: 6px; }
+  .phases span {
+    font-size: 13px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line);
+    color: var(--muted); background: var(--paper);
+  }
+  .phases span.now { background: var(--accent); color: var(--paper); border-color: var(--accent); font-weight: 600; }
+  .box { border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; border: 1px solid var(--line); background: var(--paper); }
+  .box .tag { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .analogy { background: var(--analogy-soft); border-color: transparent; }
+  .analogy .tag { color: var(--analogy); }
+  .project { background: var(--accent-soft); border-color: transparent; }
+  .project .tag { color: var(--accent); }
+  .interview { background: var(--interview-soft); border-color: transparent; }
+  .interview .tag { color: var(--interview); }
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
+  table { border-collapse: collapse; width: 100%; font-size: 15.5px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-weight: 700; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+  tr:last-child td { border-bottom: none; }
+  td:first-child { white-space: nowrap; }
+  .steps { list-style: none; padding: 0; counter-reset: s; display: grid; gap: 10px; }
+  .steps > li { counter-increment: s; display: grid; grid-template-columns: 2rem 1fr; gap: 10px; min-width: 0; }
+  .steps > li::before {
+    content: counter(s); width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+    font: 700 13px/1 var(--body); color: var(--accent); border: 1.5px solid var(--accent);
+  }
+  .steps > li > div { display: grid; gap: 6px; min-width: 0; }
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .flow .node { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: 15px; }
+  .flow .arrow { color: var(--accent); font-weight: 700; }
+  details { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+  details summary { cursor: pointer; font-weight: 600; }
+  details[open] summary { margin-bottom: 8px; }
+  details p { color: var(--ink); }
+  dl.gloss { display: grid; gap: 10px; margin: 0; }
+  dl.gloss div { display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr; gap: 12px; }
+  dl.gloss dt { font-weight: 700; }
+  dl.gloss dd { margin: 0; }
+  @media (max-width: 560px) { dl.gloss div { grid-template-columns: 1fr; gap: 2px; } td:first-child { white-space: normal; } }
+  .toc { columns: 2 16rem; column-gap: 28px; }
+  .toc li { break-inside: avoid; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 0; }
+  summary:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .machines { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 10px; }
+  .machine { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 6px; align-content: start; }
+  .machine b { font-family: var(--display); font-size: 17px; }
+  .machine.us { border-color: var(--accent); }
+  .lbl { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+
+  :root { --challenge: #a8322f; --challenge-soft: #fbecea; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --challenge: #f2958f; --challenge-soft: #3a2220; } }
+  :root[data-theme="dark"] { --challenge: #f2958f; --challenge-soft: #3a2220; }
+  .challenge { background: var(--challenge-soft); border-color: transparent; }
+  .challenge .tag { color: var(--challenge); }
+  .phases a { font-size: 13px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line);
+    color: var(--muted); background: var(--paper); text-decoration: none; }
+  .phases a:hover { border-color: var(--accent); color: var(--accent); }
+  .phases a.now { background: var(--accent); color: var(--paper); border-color: var(--accent); font-weight: 600; }
+  figure { margin: 0; display: grid; gap: 8px; justify-items: start; }
+  figure img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+  figcaption { font-size: 14px; color: var(--muted); }
+  .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 12px; }
+  .kv { display: grid; grid-template-columns: minmax(7rem, 11rem) 1fr; gap: 6px 14px; }
+  @media (max-width: 560px) { .kv { grid-template-columns: 1fr; gap: 2px; } }
+</style>
+</head>
+<body>
+<main>
+
+<header>
+  <div class="eyebrow">Sitechat knowledge transfer · Phase 1 of 10</div>
+  <h1>How the web works: from a chat bubble to our server and back</h1>
+  <p class="lede">A visitor on a yoga school's website types a question into a small bubble, and two seconds later an answer appears. This phase explains every mechanism in between: how the browser finds our server, what a request actually is (down to the bytes), how JSON carries the data, what the status numbers mean, and the browser's security rules (the same-origin policy and CORS) that decide whether the bubble may even read our answer. Each idea is shown with real Sitechat code and with real responses captured from the app.</p>
+  <p class="box"><span><b>Updated 23 Oct 2026:</b> new <b>Challenges we faced</b> section before the glossary (real web-related problems from the project), links to every phase at the top, and a link to Phase 2.</span></p>
+  <div class="phases" aria-label="All phases">
+    <a href="https://claude.ai/artifact/QuxrXdoFv7vr5KKvNSML78">0 First principles</a><a class="now" href="https://claude.ai/artifact/MDdgNKEGibTrFVYqtGjGhs">1 How the web works</a><a href="https://claude.ai/artifact/VVYejQXYpWzuimyovij4CY">2 What Sitechat is</a><a href="https://claude.ai/artifact/RHDbDbJ6r8RmXdRsvAUK9S">3 AI fundamentals</a><a href="https://claude.ai/artifact/F1oZk1cyDLGAPio8khD7cY">4a API layer</a><a href="https://claude.ai/artifact/QKLydSMm3tKdXapho5kS1V">4b The agent</a><a href="https://claude.ai/artifact/2TNXtynh229R59PV9MwHc1">4c Retrieval</a><a href="https://claude.ai/artifact/Np1qbTsXtXtDL6UmGaMvFv">4d Leads</a><a href="https://claude.ai/artifact/S2dSYJnVDTPbqeAWJP6qd1">4e Data stores</a><a href="https://claude.ai/artifact/4hwNREB8CxkHtRrwgwRraL">4f Scripts and evals</a><a href="https://claude.ai/artifact/AHXQrMEzxpZ6x4ihiiiCm1">5 The chat widget</a><a href="https://claude.ai/artifact/BknbsJYd7gFx9geyWbBqKF">6 Cloud and data</a><a href="https://claude.ai/artifact/KdgDyd9VuQVfjJu3dvHPv2">7 Quality and safety</a><a href="https://claude.ai/artifact/QDifNPBS4Lu8CLhvZTJ5C4">8 Rebuild it yourself</a><a href="https://claude.ai/artifact/99LTVwqoTPzBmFmHCZcsCS">9 Interview prep</a><a href="https://claude.ai/artifact/NKGY4fDQXK9Cp41B55wiTs">10 Set it up</a>
+  </div>
+</header>
+
+<section>
+  <h2>How to read this phase</h2>
+  <p>Same boxes as <a href="https://claude.ai/artifact/QuxrXdoFv7vr5KKvNSML78">Phase 0</a>: Analogy, In Sitechat, Say it in an interview. Each section answers one question, and each answer is needed by the next: you can't understand CORS (section 9) without origins (section 4) and headers (section 5). Section 12 then walks one chat message through everything, start to finish.</p>
+  <p>Every response shown on this page was <b>really produced</b>: either by Sitechat running on this laptop with fake AI and in-memory stores (the same set-up the tests use), or by the live server on Google Cloud. Nothing was typed in by hand.</p>
+  <h3>In this phase</h3>
+  <ol class="toc">
+    <li>Three computers, one conversation</li>
+    <li>Clients, servers, requests and responses</li>
+    <li>Finding the server: IP addresses, ports, DNS</li>
+    <li>URLs and origins</li>
+    <li>HTTP: what actually travels</li>
+    <li>JSON: the shape of the data</li>
+    <li>Status codes: the server's one-number verdict</li>
+    <li>APIs: the contract between widget and server</li>
+    <li>The browser's rules: same-origin policy and CORS</li>
+    <li>Who is asking: IP addresses, proxies, rate limits</li>
+    <li>HTTPS: why nobody else can read it</li>
+    <li>One message, start to finish</li>
+    <li>Try it yourself</li>
+    <li>Glossary and check yourself</li>
+  </ol>
+</section>
+
+<section>
+  <h2>1. Three computers, one conversation</h2>
+  <p>The first thing to get right is <b>who talks to whom</b>. Most people picture "the yoga school's website talks to the chatbot". That's wrong, and the wrong picture makes everything later confusing. There are three separate computers, owned by three different parties:</p>
+  <div class="machines">
+    <div class="machine"><span class="lbl">Computer 1 · the visitor's</span><b>The browser</b><p>Chrome or Safari on the visitor's phone or laptop. It's the only one that talks to both of the others.</p></div>
+    <div class="machine"><span class="lbl">Computer 2 · the school's</span><b>The school's web server</b><p>Hosts <code>pyramidyogshala.com</code>: the pages, the photos. It hands the browser one extra line of HTML, the <code>&lt;script&gt;</code> tag. After that it plays no part in the chat.</p></div>
+    <div class="machine us"><span class="lbl">Computer 3 · ours</span><b>Sitechat's server</b><p>Runs on Google Cloud Run at <code>sitechat-api-uukevi3qpq-uc.a.run.app</code>. It sends the browser the widget's code, and answers every chat message.</p></div>
+  </div>
+  <p>Here's the order things happen in:</p>
+  <ol class="steps">
+    <li><div><p>The visitor opens <code>pyramidyogshala.com</code>. The browser asks <b>the school's server</b> for the page and gets HTML back. Somewhere near the bottom of that HTML is this line, which the school pasted in once (from <code>notes/install-guide.md</code>):</p>
+<pre><code>&lt;script src="https://sitechat-api-uukevi3qpq-uc.a.run.app/widget/widget.js"
+        data-site-key="pk_YOUR_KEY"&gt;&lt;/script&gt;</code></pre></div></li>
+    <li><div><p>The browser sees <code>src=</code> pointing at <b>our server</b>, so it asks our server for <code>widget.js</code> and runs it inside the school's page. That JavaScript draws the chat bubble.</p></div></li>
+    <li><div><p>From then on, every chat message goes <b>straight from the browser to our server</b>. The school's server never sees a single chat message. It doesn't even know the chat exists.</p></div></li>
+  </ol>
+  <div class="box analogy"><div class="tag">Analogy</div><p>The school's website is a shop. The shop owner sticks a "Questions? Call this number" sticker by the door (the script tag). A customer who wants help dials the number from their own phone (the browser) and talks to a call centre in another city (our server). The shop owner never hears the call. Everything interesting in this phase is about that phone line: how the number is looked up, what language the call is in, and the rules the phone itself enforces.</p></div>
+  <div class="box project"><div class="tag">In Sitechat</div><p>This is why a school can install Sitechat by pasting one line, on any kind of website (WordPress, Wix, hand-written HTML): nothing has to run on their server. It's also why the browser's security rules (section 9) matter so much. JavaScript loaded from <i>our</i> server is running inside <i>their</i> page and talking back to <i>us</i>, and browsers are deeply suspicious of exactly that pattern.</p></div>
+</section>
+
+<section>
+  <h2>2. Clients, servers, requests and responses</h2>
+  <p>Every exchange on the web has the same shape. One program, the <b>client</b>, sends a <b>request</b>. Another program, the <b>server</b>, sends back exactly one <b>response</b>. Then that exchange is over.</p>
+  <div class="flow" aria-label="Request and response">
+    <span class="node">Client (browser)</span><span class="arrow">request →</span><span class="node">Server (Sitechat)</span><span class="arrow">response →</span><span class="node">Client</span>
+  </div>
+  <p>Three rules follow from this shape, and each one shows up in Sitechat's design.</p>
+  <h3>Rule 1: the server only ever answers; it never starts</h3>
+  <p>A server can't reach out to a browser and say "here's a new message for you". It can only reply to a request it has received. That's why the bot can't send a message on its own after the visitor goes quiet: the widget would have to ask first. (There are ways around this, like WebSockets, but Sitechat doesn't need them and doesn't use them.)</p>
+  <p>The same rule applies to our server's own timed jobs. Sitechat must email the school about leads that went quiet, but a server that only answers can't wake itself up to do it. So <b>Google Cloud Scheduler</b> acts as a client: every 5 minutes it sends a request to <code>POST /internal/lead-digest</code>, and the server does the email sweep as its response. A timer outside, a request inside.</p>
+  <h3>Rule 2: one request, one response, and a deadline</h3>
+  <p>The browser waits for the response. While Sitechat is working out the answer (searching documents, calling OpenAI), the request is "open" and the visitor sees the waiting dots. Google Cloud Run gives up on any request still open after <b>60 seconds</b> (<code>--timeout=60</code> in <code>cloudbuild.yaml</code>). That's why the AI settings are sized to fit inside that window: 15 s per OpenAI attempt, and a 40 s budget for the whole reply.</p>
+  <p>Work that doesn't need to finish before the visitor sees the answer (saving the conversation, emailing the school) runs <b>after</b> the response has been sent, as a <b>background task</b>. You'll see the exact line in section 12.</p>
+  <h3>Rule 3: each request stands alone ("stateless")</h3>
+  <p>The server doesn't remember a browser between requests. When the second message arrives, nothing about the request itself says "this is the same person as two minutes ago", unless the client says so. So the client has to carry something that identifies the conversation, every time. In Sitechat that's the <code>conversation_id</code>:</p>
+  <ul>
+    <li>On the first message, the widget sends no id. The server makes one up (a random <b>UUID</b>, like <code>0cbf3d1f-5267-4a7d-a7d2-840df5cc3fc2</code>) and sends it back with the reply.</li>
+    <li>The widget saves it in the browser and includes it in every later message. The server uses it to load that conversation's history from the database.</li>
+  </ul>
+  <p class="file">app/api/routes.py</p>
+  <pre><code>conversation_id = body.conversation_id or str(uuid.uuid4())</code></pre>
+  <p>Read it as: "use the id the widget sent; <code>or</code>, if it sent none, make a new random one". In Python, <code>None or x</code> gives <code>x</code>.</p>
+  <p>Why not use a <b>cookie</b>, the usual way websites remember you? A cookie belongs to the site that set it. The chat runs on the school's site but talks to ours, so our cookie would be a <b>third-party cookie</b>, and browsers increasingly restrict those (Safari blocks them; Firefox keeps a separate cookie jar for each site, so ours set on one school's site isn't seen anywhere else), because advertisers used them to follow people from site to site. An id that the widget stores and sends itself works in every browser.</p>
+  <div class="box analogy"><div class="tag">Analogy</div><p>A call centre with no caller ID, where every call is picked up by whichever agent is free. The first agent gives you a ticket number. Every time you call back, you read out the ticket number, and the agent pulls up your file. The agents remember nothing; the file and the number do all the remembering.</p></div>
+</section>
+
+<section>
+  <h2>3. Finding the server: IP addresses, ports, DNS</h2>
+  <p>The script tag says <code>sitechat-api-uukevi3qpq-uc.a.run.app</code>. That's a name for people. Computers on the internet find each other by number.</p>
+  <h3>IP addresses</h3>
+  <p>Every machine reachable on the internet has an <b>IP address</b>. There are two kinds:</p>
+  <ul>
+    <li><b>IPv4</b>: four numbers from 0 to 255, like <code>34.143.72.2</code>. There are only about 4 billion of these, which isn't enough for every device in the world.</li>
+    <li><b>IPv6</b>: the newer, much longer kind, like <code>2600:1900:4242:200::</code>. There are enough of these for every device many times over.</li>
+  </ul>
+  <h3>DNS: turning the name into a number</h3>
+  <p>Before the browser can send anything, it asks the <b>Domain Name System</b> (DNS), the internet's phone book: "what is the address of <code>sitechat-api-uukevi3qpq-uc.a.run.app</code>?" I asked it from this laptop, and this is the real answer (the end of it):</p>
+  <pre><code>&gt; nslookup sitechat-api-uukevi3qpq-uc.a.run.app
+	  34.143.72.2
+	  34.143.78.2
+	  34.143.77.2
+	  34.143.76.2
+	  34.143.74.2</code></pre>
+  <p>Several addresses, not one, and none of them is "our computer". They belong to <b>Google's front end</b>: a fleet of Google machines that receive traffic for every Cloud Run service, check it, and pass it on to the right container. Our code runs somewhere behind them, and we never learn exactly where. You'll see Google's front end announce itself (<code>server: Google Frontend</code>) in a real response in section 5. It matters again in section 10, because it changes how we tell visitors apart.</p>
+  <p>DNS answers are <b>cached</b> (remembered) by the browser and the operating system for a while, so this lookup happens once, not on every message.</p>
+  <h3>Ports: which program on that machine</h3>
+  <p>One machine can run many programs that listen for requests. A <b>port</b> is a number from 0 to 65535 that says which program you want. Two are so common they're usually left out of addresses:</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Port</th><th>Used for</th><th>In Sitechat</th></tr></thead>
+    <tbody>
+      <tr><td>443</td><td>HTTPS (encrypted web traffic)</td><td>Every visitor's request to the live server. Not written in the URL, because <code>https://</code> implies 443.</td></tr>
+      <tr><td>80</td><td>HTTP (unencrypted)</td><td>Not used.</td></tr>
+      <tr><td>8080</td><td>A common choice for programs under development</td><td>Where uvicorn listens: on your laptop (<code>uvicorn app.main:app --port 8080</code>), and inside the container on Cloud Run, where Google's front end forwards each request to it.</td></tr>
+    </tbody>
+  </table></div>
+  <h3>localhost: your own machine</h3>
+  <p><code>localhost</code> is a special name that always means "this same computer" (address <code>127.0.0.1</code>). When you run Sitechat on your laptop and open <code>http://localhost:8080/widget/test-page.html</code>, the browser and the server are two programs on one machine, talking through port 8080. Nothing leaves the laptop.</p>
+  <p class="file">Dockerfile</p>
+  <pre><code>CMD exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080} --workers 1</code></pre>
+  <p><code>--host 0.0.0.0</code> means "accept connections that arrive through any of this machine's network connections". The alternative, <code>127.0.0.1</code>, would mean "only from programs on this same machine". Inside a container that difference is everything: Google's front end is outside the container, so a server listening only on <code>127.0.0.1</code> would never hear it. <code>${PORT:-8080}</code> means "the port Cloud Run gives us in the <code>PORT</code> environment variable, or 8080 if there isn't one".</p>
+  <div class="box analogy"><div class="tag">Analogy</div><p>The domain name is a company's name. DNS is directory enquiries, which gives you the switchboard number (the IP address). The port is the extension: the same building has a reception desk (443) and a workshop (8080).</p></div>
+</section>
+
+<section>
+  <h2>4. URLs and origins</h2>
+  <p>A <b>URL</b> (Uniform Resource Locator) is the full address of one thing on the web. Here's the real one from the script tag, taken apart:</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Part</th><th>In our URL</th><th>What it means</th></tr></thead>
+    <tbody>
+      <tr><td>Scheme</td><td><code>https</code></td><td>The rules (protocol) for the conversation: HTTP, encrypted. Section 11.</td></tr>
+      <tr><td>Host</td><td><code>sitechat-api-uukevi3qpq-uc.a.run.app</code></td><td>The name that DNS turns into an address. Read it right to left: <code>app</code> is the top-level domain, <code>run.app</code> is Google's domain for Cloud Run, and the rest names our one service: <code>sitechat-api</code>, a code Google chose, and <code>uc</code> for the region (us-central).</td></tr>
+      <tr><td>Port</td><td>(not written, so 443)</td><td>Which program on that host.</td></tr>
+      <tr><td>Path</td><td><code>/widget/widget.js</code></td><td>Which thing on that server. Section 8 shows how each path maps to Python code.</td></tr>
+    </tbody>
+  </table></div>
+  <p>Two more parts appear in other URLs:</p>
+  <ul>
+    <li>A <b>query string</b> after <code>?</code>: extra named values, like <code>/search?q=yoga&amp;page=2</code>. Sitechat's public API doesn't use them; everything goes in headers and the body.</li>
+    <li>A <b>fragment</b> after <code>#</code>: a place within the page. Phase 0's "Updated" note links to <code>#abc</code>, which jumps to section 8.12. The browser never sends the fragment to the server; only the browser uses it.</li>
+  </ul>
+  <h3 id="origin">The origin: the most important idea in this phase</h3>
+  <p>An <b>origin</b> is the first three parts together: <b>scheme + host + port</b>. The path is ignored. The browser uses the origin to decide "is this the same website or a different one?", and all of its security rules (section 9) are built on that one decision. Two URLs have the same origin only if all three parts match <b>exactly</b>:</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Compared with <code>https://pyramidyogshala.com</code></th><th>Same origin?</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td><code>https://pyramidyogshala.com/courses</code></td><td>Yes</td><td>Only the path differs.</td></tr>
+      <tr><td><code>https://www.pyramidyogshala.com</code></td><td>No</td><td>Different host: <code>www.</code> makes it a different name.</td></tr>
+      <tr><td><code>http://pyramidyogshala.com</code></td><td>No</td><td>Different scheme (and so a different port: 80, not 443).</td></tr>
+      <tr><td><code>https://pyramidyogshala.com:8443</code></td><td>No</td><td>Different port.</td></tr>
+      <tr><td><code>https://sitechat-api-uukevi3qpq-uc.a.run.app</code></td><td>No</td><td>A completely different host: that's us.</td></tr>
+    </tbody>
+  </table></div>
+  <p>So when the chat bubble, running in a page from <code>https://www.pyramidyogshala.com</code>, sends a message to <code>https://sitechat-api-uukevi3qpq-uc.a.run.app</code>, that's a <b>cross-origin request</b>. Hold on to that phrase; section 9 is all about it.</p>
+  <div class="box project"><div class="tag">In Sitechat</div><p>The widget works out our server's origin from its own script tag, so the address is written in only one place (the tag the school pasted):</p>
+  <p class="file">static/widget.js</p>
+  <pre><code>var script = document.currentScript;               // the &lt;script&gt; tag running this code
+var siteKey = script &amp;&amp; script.getAttribute("data-site-key");
+var API = new URL(script.src).origin;              // "https://sitechat-api-uukevi3qpq-uc.a.run.app"</code></pre>
+  <p><code>new URL(...)</code> takes a URL apart into its pieces, and <code>.origin</code> puts the first three back together. On your laptop the same line gives <code>http://localhost:8080</code>, so the identical file works locally and live with no changes. This is also why the install guide says not to add <code>async</code> to the tag: <code>document.currentScript</code> is empty for scripts loaded that way, so the widget couldn't find its own tag, its site key or our address.</p></div>
+  <p>The origin also decides where the browser keeps saved data. The widget saves the <code>conversation_id</code> in <b>localStorage</b>, a small store inside the browser, for 30 days:</p>
+  <p class="file">static/widget.js (shortened)</p>
+  <pre><code>var STORAGE_KEY = "sitechat:" + siteKey;
+var MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;          // 30 days in milliseconds
+...
+localStorage.setItem(STORAGE_KEY, JSON.stringify({ id: id, at: Date.now() }));</code></pre>
+  <p>localStorage belongs to the <b>page's</b> origin, and the widget runs inside the school's page. So the id is stored under <code>https://www.pyramidyogshala.com</code>, not under our server. A visitor who comes back on <code>https://pyramidyogshala.com</code> (no <code>www.</code>) is, as far as the browser is concerned, on a different origin with separate storage, and starts a fresh conversation.</p>
+</section>
+
+<section>
+  <h2>5. HTTP: what actually travels</h2>
+  <p><b>HTTP</b> (HyperText Transfer Protocol) is the agreed format for requests and responses. In its classic form (HTTP/1.1) a request is just <b>lines of text</b>. Here is the chat request the widget sends, written out exactly as it travels (inside the encryption of section 11). The browser adds a few more headers, left out here:</p>
+  <pre><code>POST /chat HTTP/1.1
+Host: sitechat-api-uukevi3qpq-uc.a.run.app
+Origin: https://www.pyramidyogshala.com
+Content-Type: application/json
+X-Site-Key: pk_pyramid_yogshala_001
+Content-Length: 46
+
+{"message":"How much is the 200-hour course?"}</code></pre>
+  <p>A request always has the same four parts, in this order:</p>
+  <ol>
+    <li><b>The request line</b>: <code>POST /chat HTTP/1.1</code>. The <b>method</b> (what kind of action), the <b>path</b> (which thing), and the version of HTTP.</li>
+    <li><b>Headers</b>: one per line, <code>Name: value</code>. Information <i>about</i> the request: who it's for, what format the body is in, how long the body is.</li>
+    <li><b>A blank line.</b> This is how the server knows the headers have ended.</li>
+    <li><b>The body</b>: the actual content, here the visitor's message as JSON. It's exactly 46 characters long, which is why the header says <code>Content-Length: 46</code>: the server reads exactly that many bytes and knows the request is complete.</li>
+  </ol>
+  <p>The response has the same layout, with a <b>status line</b> instead of a request line. This is the real response from Sitechat running locally (with a stand-in reply text), plus two headers that Google's front end adds on the live server:</p>
+  <pre><code>HTTP/1.1 200 OK
+content-type: application/json
+access-control-allow-origin: *
+content-length: 161
+server: Google Frontend
+
+{"reply":"The 200-hour course costs ...","conversation_id":"0cbf3d1f-5267-4a7d-a7d2-840df5cc3fc2","actions":[],"confirmation":null,"reply_id":"174dce9255d84e40"}</code></pre>
+  <p><code>200 OK</code> is the <b>status code</b> (section 7): the server's verdict on the request. Then headers, a blank line, and the body.</p>
+  <p>That's genuinely all HTTP is. Newer versions (HTTP/2 and HTTP/3) pack the same information into a compact binary form and can carry many requests over one connection at once, but the meaning is identical: method, path, headers, body; status, headers, body. The live server even advertises HTTP/3 in a header you'll see in section 13 (<code>Alt-Svc: h3=":443"</code>).</p>
+
+  <h3>Methods: what kind of action</h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Method</th><th>Meaning</th><th>Sitechat uses it for</th></tr></thead>
+    <tbody>
+      <tr><td><code>GET</code></td><td>"Give me this." Has no body. Must not change anything on the server, so browsers, caches and proxies feel free to repeat or reuse it.</td><td><code>/health</code>, <code>/config</code>, <code>/widget/widget.js</code></td></tr>
+      <tr><td><code>POST</code></td><td>"Here's some data, act on it." Has a body. May change things, so it's never repeated automatically.</td><td><code>/chat</code>, <code>/feedback</code>, <code>/internal/lead-digest</code></td></tr>
+      <tr><td><code>OPTIONS</code></td><td>"What am I allowed to send you?" Sent by the browser on its own, before a cross-origin request.</td><td>The CORS preflight (section 9). Our code never handles it directly.</td></tr>
+      <tr><td><code>PUT</code>, <code>PATCH</code>, <code>DELETE</code></td><td>Replace, change, delete.</td><td>Not used.</td></tr>
+    </tbody>
+  </table></div>
+  <p>Why is <code>/chat</code> a POST and not a GET? Two reasons. It changes things (it stores the turn, may email the school, and spends AI tokens), so it must never be repeated by accident. And the message belongs in a body: a GET would have to put it in the URL, and URLs get written into server logs, browser history and analytics. What happens if you send the wrong method? FastAPI refuses it. Real response:</p>
+  <pre><code>GET /chat            →  405  {"detail":"Method Not Allowed"}</code></pre>
+
+  <h3>Headers: information about the request</h3>
+  <p>These are the headers that matter in Sitechat, and what each one does here:</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Header</th><th>Set by</th><th>What it does in Sitechat</th></tr></thead>
+    <tbody>
+      <tr><td><code>Host</code></td><td>Browser</td><td>Which site the request is for. Google's front end serves thousands of services on the same addresses, and this is how it knows to send the request to ours.</td></tr>
+      <tr><td><code>Content-Type</code></td><td>Sender</td><td>The format of the body. <code>application/json</code> tells FastAPI to read the body as JSON.</td></tr>
+      <tr><td><code>Content-Length</code></td><td>Sender</td><td>How many bytes of body follow.</td></tr>
+      <tr><td><code>X-Site-Key</code></td><td>The widget</td><td>Which school this chat belongs to. A <b>custom header</b>: names starting <code>X-</code> are an old convention for "not part of the standard, our own". It's not a password: it's printed in the school's page source for anyone to see. Section 9 explains what actually protects us.</td></tr>
+      <tr><td><code>Origin</code></td><td>Browser only</td><td>The origin of the page that made the request, e.g. <code>https://www.pyramidyogshala.com</code>. JavaScript in the page <b>cannot</b> set or change it; the browser writes it. Sitechat checks it against the school's allowed domains.</td></tr>
+      <tr><td><code>Authorization</code></td><td>Cloud Scheduler</td><td><code>Bearer &lt;token&gt;</code>: a signed token from Google proving the request comes from our scheduler account. Only <code>/internal/lead-digest</code> uses it.</td></tr>
+      <tr><td><code>X-Forwarded-For</code></td><td>Proxies</td><td>The visitor's real IP address, added by Google's front end. Section 10.</td></tr>
+      <tr><td><code>Access-Control-Allow-*</code></td><td>Our server</td><td>Response headers telling the browser what it may let the page read. Section 9.</td></tr>
+      <tr><td><code>Date</code>, <code>Server</code></td><td>Servers</td><td>When the response was made, and by what. On the live server, <code>Server: Google Frontend</code>.</td></tr>
+    </tbody>
+  </table></div>
+  <p>Header names don't care about capitals: <code>X-Site-Key</code>, <code>x-site-key</code> and <code>X-SITE-KEY</code> are the same header. (That's why the responses above show lower-case names.) FastAPI makes use of this: the Python parameter <code>x_site_key</code> is automatically matched to the header <code>X-Site-Key</code>, with the underscore turned into a hyphen.</p>
+  <p class="file">app/api/dependencies.py</p>
+  <pre><code>def get_tenant(
+    request: Request,
+    x_site_key: str = Header(...),               # required: refuse the request without it
+    origin: str | None = Header(default=None),   # optional: None if the browser sent none
+) -&gt; Tenant:</code></pre>
+  <p><code>Header(...)</code>, with the three dots, means "required". Leave the header out and FastAPI answers before any of our code runs. Real response:</p>
+  <pre><code>POST /chat  (no X-Site-Key)  →  422
+{"detail":[{"type":"missing","loc":["header","x-site-key"],"msg":"Field required","input":null}]}</code></pre>
+  <p><code>"loc":["header","x-site-key"]</code> says <i>where</i> the problem is: in the headers, the one called x-site-key.</p>
+  <div class="box analogy"><div class="tag">Analogy</div><p>An HTTP request is a posted parcel. The request line is the instruction on the front ("deliver to: chat department"). The headers are the labels (sender's address, "contents: JSON", "weight: 46 bytes", a customer reference number). The blank line is the edge of the label. The body is what's in the box.</p></div>
+</section>
+
+<section>
+  <h2>6. JSON: the shape of the data</h2>
+  <p>The body could be in any format, as long as both sides agree. Nearly every web API, Sitechat's included, uses <b>JSON</b> (JavaScript Object Notation): plain text, readable by people, that every programming language can turn into its own data. Its whole grammar fits in one table, and every row has a Python twin from Phase 0:</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>JSON</th><th>Example</th><th>Becomes in Python</th><th>Becomes in JavaScript</th></tr></thead>
+    <tbody>
+      <tr><td>object</td><td><code>{"reply": "Hi", "actions": []}</code></td><td>dict</td><td>object</td></tr>
+      <tr><td>array</td><td><code>["What are the dates?", "Fees?"]</code></td><td>list</td><td>array</td></tr>
+      <tr><td>string</td><td><code>"pk_pyramid_yogshala_001"</code></td><td>str</td><td>string</td></tr>
+      <tr><td>number</td><td><code>46</code>, <code>0.86</code></td><td>int, float</td><td>number</td></tr>
+      <tr><td>true / false</td><td><code>true</code></td><td><code>True</code></td><td><code>true</code></td></tr>
+      <tr><td>null</td><td><code>null</code></td><td><code>None</code></td><td><code>null</code></td></tr>
+    </tbody>
+  </table></div>
+  <p>The rules are strict, and a single mistake makes the whole body unreadable: names must be in double quotes, strings must use double quotes (never single), no comma after the last item, no comments.</p>
+  <h3>The round trip of one message</h3>
+  <p>Follow the data through four translations. This is where most bugs between a front end and a back end come from, so it's worth seeing once:</p>
+  <ol class="steps">
+    <li><div><p><b>JavaScript object → JSON text</b> (in the browser). <code>JSON.stringify</code> turns the widget's object into a string, which becomes the body:</p>
+<p class="file">static/widget.js</p>
+<pre><code>var body = { message: text };
+if (conversationId) body.conversation_id = conversationId;
+...
+body: JSON.stringify(body),        // '{"message":"How much is the 200-hour course?"}'</code></pre></div></li>
+    <li><div><p><b>JSON text → Python object</b> (on our server). FastAPI parses the text and builds a <code>ChatRequest</code> Pydantic object from it, checking every field on the way (section 8). Our route function receives <code>body.message</code> as an ordinary Python <code>str</code>.</p></div></li>
+    <li><div><p><b>Python object → JSON text</b> (on our server). The route returns a <code>ChatResponse</code> object; FastAPI turns it into JSON. <code>None</code> becomes <code>null</code>, the empty list becomes <code>[]</code>: look at <code>"confirmation":null</code> and <code>"actions":[]</code> in the response in section 5.</p></div></li>
+    <li><div><p><b>JSON text → JavaScript object</b> (in the browser). <code>r.json()</code> reads the body and parses it, and the widget reads <code>data.reply</code> and <code>data.conversation_id</code>.</p></div></li>
+  </ol>
+  <p>What if the body isn't valid JSON at all? Real response, after sending the plain word <code>hello</code> as the body:</p>
+  <pre><code>POST /chat  body: hello  →  422
+{"detail":[{"type":"json_invalid","loc":["body",0],"msg":"JSON decode error","input":{},"ctx":{"error":"Expecting value"}}]}</code></pre>
+  <p>Notice that error messages are JSON too. The widget can always parse whatever comes back, even a refusal.</p>
+</section>
+
+<section>
+  <h2>7. Status codes: the server's one-number verdict</h2>
+  <p>The first line of every response carries a three-digit <b>status code</b>. The first digit gives the family:</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Family</th><th>Meaning</th><th>Whose fault, roughly</th></tr></thead>
+    <tbody>
+      <tr><td>2xx</td><td>Success</td><td>Nobody's.</td></tr>
+      <tr><td>3xx</td><td>Go somewhere else (a redirect)</td><td>Not used by Sitechat.</td></tr>
+      <tr><td>4xx</td><td>The request was refused</td><td>The client's: a wrong key, a bad body, too many requests. Sending the same request again will fail the same way.</td></tr>
+      <tr><td>5xx</td><td>The server couldn't do it</td><td>The server's, or something it depends on. Trying again later may work.</td></tr>
+    </tbody>
+  </table></div>
+  <p>That last column is the reason status codes exist. Code that receives a response (the widget, a monitoring tool) can decide what to do from one number, without reading the body. Here's every status Sitechat's public routes return, each one produced for real:</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Code</th><th>When Sitechat sends it</th><th>Real body</th><th>What the widget does</th></tr></thead>
+    <tbody>
+      <tr><td>200 OK</td><td>A reply, or the widget's settings</td><td>The reply JSON (section 5)</td><td>Shows the reply.</td></tr>
+      <tr><td>204 No Content</td><td><code>/feedback</code> saved a thumbs up or down; there's nothing to send back</td><td>(none)</td><td>Nothing; it doesn't even wait for the answer.</td></tr>
+      <tr><td>401 Unauthorized</td><td>The site key matches no school</td><td><code>{"detail":"Invalid site key"}</code></td><td>On <code>/config</code>: disables the chat, and prints the reason in the browser console for whoever is installing it. (On <code>/chat</code> it can't normally happen, since <code>/config</code> would have failed first.)</td></tr>
+      <tr><td>403 Forbidden</td><td>The key is real, but the page's origin isn't on that school's allowed list, or the school is switched off</td><td><code>{"detail":"This domain is not allowed to use this site key"}</code></td><td>Same as 401, with a different console message.</td></tr>
+      <tr><td>404 Not Found</td><td>No such path</td><td><code>{"detail":"Not Found"}</code></td><td>(Doesn't happen in normal use.)</td></tr>
+      <tr><td>405 Method Not Allowed</td><td>Right path, wrong method (<code>GET /chat</code>)</td><td><code>{"detail":"Method Not Allowed"}</code></td><td>(Doesn't happen in normal use.)</td></tr>
+      <tr><td>422 Unprocessable Content</td><td>The body or headers don't match what was declared: empty message, message over 2000 characters, malformed id, not JSON</td><td>A list saying exactly which field is wrong (below)</td><td>"That message did not get through."</td></tr>
+      <tr><td>429 Too Many Requests</td><td>More than 5 messages a minute from one visitor, or a school over its hourly limit</td><td><code>{"error":"Rate limit exceeded: 5 per 1 minute"}</code></td><td>"That is a lot of questions at once. Wait a moment, then try again."</td></tr>
+      <tr><td>500 Internal Server Error</td><td>A bug: our code raised an error nobody caught</td><td>Plain text "Internal Server Error"</td><td>"That message did not get through."</td></tr>
+      <tr><td>503 Service Unavailable</td><td>OpenAI failed or timed out, or the school's daily AI budget is used up</td><td><code>{"detail":"..."}</code> with a message written for visitors</td><td>Shows that message as it is.</td></tr>
+    </tbody>
+  </table></div>
+  <p>A real 422, for an empty message, showing how precise it is:</p>
+  <pre><code>{"detail":[{"type":"string_too_short","loc":["body","message"],
+            "msg":"String should have at least 1 character","input":"","ctx":{"min_length":1}}]}</code></pre>
+  <h3>Choosing the right code is a design decision</h3>
+  <p>Look at how the widget reacts. It checks the code first, and only reads the body when the code says the body is worth reading:</p>
+  <p class="file">static/widget.js (shortened)</p>
+  <pre><code>.then(function (r) {
+  if (r.status === 429) throw new Error("rate");           // our own friendly text
+  if (r.status === 503) {
+    // The server's 503 messages are written for visitors; show them as text.
+    return r.json().then(function (data) { ... error.detail = data.detail; throw error; });
+  }
+  if (!r.ok) throw new Error(String(r.status));            // anything else that isn't 2xx
+  return r.json();                                         // success: read the reply
+})</code></pre>
+  <p><code>r.ok</code> is true for any 2xx code. And on the server, the route turns an AI failure into a 503 on purpose:</p>
+  <p class="file">app/api/routes.py</p>
+  <pre><code>except LLMError as exc:
+    # The model failed. Return the visitor-safe message with a 503 so
+    # monitoring can tell this apart from a normal reply.
+    raise HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail=exc.user_message,
+    ) from exc</code></pre>
+  <p>It could have returned 200 with "Sorry, please try again" as the reply. The visitor would see the same words. But then every dashboard would count the failure as a success, and nobody would notice OpenAI was down. The code is for machines; the body is for people.</p>
+  <p>401 versus 403 is the same kind of choice. 401 means "I don't know who you are" (a key that matches nobody). 403 means "I know who you are, and the answer is no" (a real key, used from the wrong website). The widget prints different advice for each, so the person installing it knows whether to fix the key or ask for their domain to be added.</p>
+  <div class="box project"><div class="tag">In Sitechat</div><p>One deliberate trick: <code>/internal/lead-digest</code> answers <b>404 Not Found</b>, not 401 or 403, while the digest isn't set up yet (<code>app/api/internal.py</code>: "indistinguishable from no endpoint at all"). Someone probing the server can't even tell the route exists.</p></div>
+</section>
+
+<section>
+  <h2>8. APIs: the contract between widget and server</h2>
+  <p>An <b>API</b> (Application Programming Interface) is the set of requests a program promises to accept, and what it promises to send back. For a web API that means: which paths, which methods, which headers, what the body must look like, and what the response will look like. It's the same idea as Phase 0's abstract class, a promise of a shape, stretched across the internet: the widget and the server are written separately, in different languages, and work together only because both keep to it.</p>
+  <h3>Sitechat's whole public API</h3>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Method and path</th><th>Who calls it</th><th>Sends</th><th>Gets back</th></tr></thead>
+    <tbody>
+      <tr><td><code>GET /widget/widget.js</code></td><td>The browser, from the script tag</td><td>Nothing</td><td>The widget's JavaScript (a static file)</td></tr>
+      <tr><td><code>GET /config</code></td><td>The widget, once per page view</td><td><code>X-Site-Key</code></td><td>School name, greeting, suggested questions, colour, privacy link</td></tr>
+      <tr><td><code>POST /chat</code></td><td>The widget, per message</td><td><code>X-Site-Key</code>; body: message, conversation id</td><td>Reply, conversation id, reply id, confirmation card</td></tr>
+      <tr><td><code>POST /feedback</code></td><td>The widget, on thumbs up or down</td><td><code>X-Site-Key</code>; body: ids, rating, reason</td><td>204, nothing</td></tr>
+      <tr><td><code>GET /health</code></td><td>Google Cloud, and <code>scripts.smoke_test</code></td><td>Nothing</td><td><code>{"status":"ok"}</code></td></tr>
+      <tr><td><code>POST /internal/lead-digest</code></td><td>Cloud Scheduler, every 5 minutes</td><td><code>Authorization: Bearer</code> token</td><td>A summary of emails sent</td></tr>
+    </tbody>
+  </table></div>
+  <h3>How a path becomes a Python function</h3>
+  <p>A <b>route</b> connects a method and path to a function. In FastAPI, it's the decorator from Phase 0, section 8.10:</p>
+  <p class="file">app/api/routes.py (shortened)</p>
+  <pre><code>@router.post("/chat", response_model=ChatResponse)
+@limiter.limit(lambda: get_settings().rate_limit_per_visitor)
+@limiter.limit(_tenant_limit, key_func=site_key)
+def chat(
+    request: Request,
+    body: ChatRequest,
+    background: BackgroundTasks,
+    tenant: Tenant = Depends(get_tenant),
+) -&gt; ChatResponse:</code></pre>
+  <p>Every line here is part of the contract, and FastAPI reads all of it:</p>
+  <ul>
+    <li><code>@router.post("/chat", ...)</code>: "a POST to <code>/chat</code> runs this function". Any other method gets the 405 you saw.</li>
+    <li><code>response_model=ChatResponse</code>: what comes back always has the shape of <code>ChatResponse</code>. FastAPI checks the function's result against it, and leaves out any field that isn't declared there, so nothing extra can leak out by accident.</li>
+    <li>The two <code>@limiter.limit</code> lines: rate limits, per visitor and per school (section 10).</li>
+    <li><code>body: ChatRequest</code>: "read the JSON body and build a <code>ChatRequest</code> from it". If that fails, the function never runs and the visitor gets a 422.</li>
+    <li><code>tenant: Tenant = Depends(get_tenant)</code>: "before running this, run <code>get_tenant</code>, and hand me what it returns". This is a <b>dependency</b>. <code>get_tenant</code> reads the headers, finds the school, checks the origin, and refuses the request (401, 403, 429) if anything is wrong. By the time <code>chat</code> starts, it can trust that <code>tenant</code> is a real, active school, used from an allowed website.</li>
+  </ul>
+  <p>The order of checks matters, and I tested it. A request with <b>both</b> a wrong site key and an empty message gets <b>401</b>, not 422: FastAPI runs the <code>get_tenant</code> dependency first, so a stranger with a made-up key is turned away before their message is even looked at.</p>
+  <h3>The request's shape, line by line</h3>
+  <p class="file">app/api/schemas.py</p>
+  <pre><code>class ChatRequest(BaseModel):
+    # The visitor's message. Capped so one request can't send a huge payload.
+    message: str = Field(min_length=1, max_length=2000)
+
+    @field_validator("message")
+    @classmethod
+    def _visible_only(cls, value: str) -&gt; str:
+        value = strip_invisible(value)
+        if not value.strip():
+            raise ValueError("Message is empty")
+        return value
+
+    conversation_id: str | None = Field(
+        default=None, pattern=r"^[A-Za-z0-9-]{1,64}$"
+    )</code></pre>
+  <ul>
+    <li><code>message</code>: text, at least 1 and at most 2000 characters. The upper limit means nobody can send a novel and run up the AI bill with one request.</li>
+    <li><code>_visible_only</code>: a <b>validator</b>, extra checking code that Pydantic runs on the field. It removes invisible characters (there are Unicode characters that show as nothing but can hide instructions meant for the AI; Phase 7 covers this), and refuses a message that's empty once they're gone.</li>
+    <li><code>conversation_id</code>: optional, but if it's there it must match the regular expression: 1 to 64 letters, digits or hyphens, nothing else. Why so strict? The id becomes part of a database document's name. A <code>/</code> in it would break the document path and crash the request with a 500, so it's refused at the door instead. Real response for <code>"conversation_id": "a/b"</code>:</li>
+  </ul>
+  <pre><code>422  {"detail":[{"type":"string_pattern_mismatch","loc":["body","conversation_id"],
+              "msg":"String should match pattern '^[A-Za-z0-9-]{1,64}$'","input":"a/b", ...}]}</code></pre>
+  <h3>The response's shape</h3>
+  <p class="file">app/api/schemas.py</p>
+  <pre><code>class ChatResponse(BaseModel):
+    reply: str
+    conversation_id: str
+    actions: list[Action] = Field(default_factory=list)
+    confirmation: str | None = None
+    reply_id: str = ""</code></pre>
+  <p>Now put the two sides of the contract next to each other:</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Field</th><th>Server (Python) declares</th><th>Widget (JavaScript) uses</th></tr></thead>
+    <tbody>
+      <tr><td><code>message</code></td><td><code>ChatRequest.message</code></td><td><code>var body = { message: text }</code></td></tr>
+      <tr><td><code>conversation_id</code> (sent)</td><td><code>ChatRequest.conversation_id</code></td><td><code>body.conversation_id = conversationId</code></td></tr>
+      <tr><td><code>reply</code></td><td><code>ChatResponse.reply</code></td><td><code>showReply(data.reply, ...)</code></td></tr>
+      <tr><td><code>conversation_id</code> (returned)</td><td><code>ChatResponse.conversation_id</code></td><td><code>saveConversationId(data.conversation_id)</code></td></tr>
+      <tr><td><code>confirmation</code></td><td><code>ChatResponse.confirmation</code></td><td><code>if (data.confirmation) { ... }</code></td></tr>
+      <tr><td><code>reply_id</code></td><td><code>ChatResponse.reply_id</code></td><td>Sent back in <code>/feedback</code></td></tr>
+    </tbody>
+  </table></div>
+  <p>Nothing connects these two columns except the agreement. Rename <code>reply</code> to <code>answer</code> in Python and the server keeps working perfectly, every test of the server passes, and every widget on every school's website shows an empty bubble. That's why the comment at the top of <code>schemas.py</code> says extra fields are optional "from the start": new <b>optional</b> fields are safe (an old widget simply ignores them), but renaming or removing a field breaks every widget already installed.</p>
+  <div class="box interview"><div class="tag">Say it in an interview</div><p>"The widget and the API share a contract defined by Pydantic models. Requests are validated at the edge: length limits on the message, a strict pattern on the conversation id because it ends up in a Firestore document path, and a dependency that resolves the tenant from the site key before the body is even considered. The response model filters what goes out, and changes to it are additive only, because the widget is already deployed on customers' sites."</p></div>
+</section>
+
+<section>
+  <h2 id="cors">9. The browser's rules: same-origin policy and CORS</h2>
+  <p>This is the part of web development that confuses almost everyone, including experienced developers, so we build it from the reason up.</p>
+  <h3>The danger the rule exists for</h3>
+  <p>You're logged in to your bank in one tab. In another tab you open a random website. That website's JavaScript runs:</p>
+  <pre><code>fetch("https://yourbank.com/api/balance")</code></pre>
+  <p>Your browser holds your bank's login cookie, and it attaches cookies for <code>yourbank.com</code> to every request going there, whoever asked. So the bank sees a perfectly logged-in request and answers with your balance. If the random website's JavaScript could read that answer, any page you visit could read your bank account, your email, your company's internal tools. (Newer browsers also hold back some cookies on requests between sites, a second layer added in recent years. The rule below is the original and main defence.)</p>
+  <h3>The rule: the same-origin policy</h3>
+  <p>So every browser enforces the <b>same-origin policy</b>: JavaScript from one origin may <b>send</b> requests to another origin, but it may <b>not read the response</b>, unless the other server explicitly says that's allowed. (Recall from <a href="#origin">section 4</a>: origin means scheme + host + port.)</p>
+  <p>Notice what it protects: <b>the visitor's data in their browser</b>, from other websites. It's a rule the browser applies on the visitor's behalf. It says nothing about who may talk to a server in general: a program that isn't a browser (curl, a Python script) ignores it completely.</p>
+  <h3>The exception: CORS</h3>
+  <p><b>CORS</b> (Cross-Origin Resource Sharing) is how a server says "it's fine, let that page read my response". It does it with response headers. The main one:</p>
+  <pre><code>access-control-allow-origin: *</code></pre>
+  <p>means "any origin's JavaScript may read this response". (The alternative is naming one origin, e.g. <code>https://www.pyramidyogshala.com</code>.) The browser checks the header when the response arrives. If it's missing or doesn't match, the browser throws the response away and the page's JavaScript gets only a vague network error, with a red CORS message in the console.</p>
+  <p>This is exactly Sitechat's situation. The widget's JavaScript runs on the school's origin and reads responses from ours. Without CORS headers from our server, every chat would fail in the browser, even though our server answered correctly.</p>
+  <h3>The preflight: asking before sending</h3>
+  <p>For some requests the browser doesn't even send the real request until it has asked permission. Browsers treat a cross-origin request as "simple", and send it straight away, only if it uses GET, HEAD or POST, carries only a few standard headers, and has a plain body type (like a web form's). These are the kinds of requests ordinary web pages could always send, long before CORS existed, so servers were already built to cope with them.</p>
+  <p>Sitechat's requests are <b>not</b> simple, for two reasons: they carry a custom header (<code>X-Site-Key</code>), and <code>/chat</code> declares a JSON body (<code>Content-Type: application/json</code>). For these, the browser first sends a <b>preflight</b>: an <code>OPTIONS</code> request asking "may I send you this?". Here are the real preflight request and Sitechat's real answer:</p>
+  <pre><code>OPTIONS /chat HTTP/1.1
+Origin: https://www.pyramidyogshala.com
+Access-Control-Request-Method: POST
+Access-Control-Request-Headers: content-type,x-site-key
+
+HTTP/1.1 200 OK
+access-control-allow-origin: *
+access-control-allow-methods: GET, POST, OPTIONS
+access-control-allow-headers: Accept, Accept-Language, Content-Language, Content-Type, X-Site-Key
+access-control-max-age: 600
+
+OK</code></pre>
+  <ul>
+    <li>The browser says which method and which headers it wants to use.</li>
+    <li>The server answers: any origin is fine, these methods are fine, these headers are fine.</li>
+    <li><code>access-control-max-age: 600</code>: the browser may remember this permission for 600 seconds (10 minutes) and skip the preflight for later messages in that time. So a chat's first message costs two round trips (preflight plus the real request) and the next few cost one.</li>
+  </ul>
+  <p>Only after a yes does the browser send the real <code>POST /chat</code>. If the answer had been no, the real request would never have left the browser.</p>
+  <p>CORS headers only appear when there's something to decide: the browser sends an <code>Origin</code> header with cross-origin requests, and our server answers with <code>access-control-allow-origin</code> only then. The smoke test and curl send no <code>Origin</code>, so the live 401 in section 13 has no CORS header at all. It also carries <code>vary: Origin</code>, which tells any cache along the way that the answer can differ depending on the <code>Origin</code> header.</p>
+  <h3>How Sitechat sets it up, and why "*"</h3>
+  <p class="file">app/main.py</p>
+  <pre><code># The widget runs on customer websites, so the browser needs permission
+# to call us. Which domains are actually allowed is enforced per tenant
+# in get_tenant(); this layer only keeps the browser from blocking us.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "X-Site-Key"],
+)</code></pre>
+  <p><b>Middleware</b> is code that wraps every request and response on its way in and out, before and after the route itself. This one answers preflights and adds the CORS headers to every response.</p>
+  <p>Why allow every origin (<code>*</code>) instead of listing the schools' domains? You'd think listing them would be safer. Three reasons it isn't possible or useful here:</p>
+  <ol>
+    <li><b>The preflight doesn't say which school it's for.</b> Look at the real preflight above: it lists the <i>names</i> of the headers the browser wants to send (<code>x-site-key</code>), but not their <i>values</i>. At that moment the server can't tell whether this is Pyramid Yogshala's widget or another school's, so it can't look up that school's domains.</li>
+    <li><b>Every school has different domains, and they change.</b> The list lives in each tenant's record in the database (<code>allowed_domains</code>), not in the code. A fixed list in <code>main.py</code> would mean a deploy for every new customer.</li>
+    <li><b>The real check happens anyway, one step later,</b> on the real request, where the site key <i>is</i> known. That's <code>get_tenant</code>, below.</li>
+  </ol>
+  <p><code>allow_credentials=False</code> means "don't send cookies with these requests". Sitechat uses none (section 2), and browsers don't allow <code>*</code> together with credentials, precisely because of the bank example: "any website may read responses made with your cookies" is the danger itself.</p>
+  <h3>The per-school check: the Origin header</h3>
+  <p class="file">app/api/dependencies.py</p>
+  <pre><code>def _host_from(url: str) -&gt; str:
+    """Pull the hostname out of an Origin or Referer header."""
+    without_scheme = url.split("://", 1)[-1]           # "www.pyramidyogshala.com"
+    host_and_port = without_scheme.split("/", 1)[0]    # drop any path
+    return host_and_port.split(":", 1)[0].lower()      # drop any port; lower-case
+
+def _origin_allowed(tenant: Tenant, origin: str | None) -&gt; bool:
+    if not origin:
+        # No Origin header means a same-origin or non-browser request.
+        # We allow it here; the rate limit is what protects us.
+        return True
+
+    host = _host_from(origin)
+    for allowed in tenant.allowed_domains:
+        allowed = allowed.lower()
+        if host == allowed or host.endswith("." + allowed):
+            return True
+    return False</code></pre>
+  <p>Step through it with the school's list being <code>["pyramidyogshala.com"]</code>:</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Origin header</th><th>Host worked out</th><th>Result</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td><code>https://pyramidyogshala.com</code></td><td><code>pyramidyogshala.com</code></td><td>Allowed</td><td>Exactly equal.</td></tr>
+      <tr><td><code>https://www.pyramidyogshala.com</code></td><td><code>www.pyramidyogshala.com</code></td><td>Allowed</td><td>Ends with <code>.pyramidyogshala.com</code>: a subdomain.</td></tr>
+      <tr><td><code>https://fakepyramidyogshala.com</code></td><td><code>fakepyramidyogshala.com</code></td><td>Refused, 403</td><td>Ends with <code>pyramidyogshala.com</code> but not with <code>.pyramidyogshala.com</code>. That dot in <code>"." + allowed</code> is what stops this trick.</td></tr>
+      <tr><td><code>https://pyramidyogshala.com.evil.example</code></td><td><code>pyramidyogshala.com.evil.example</code></td><td>Refused, 403</td><td>Neither equal nor ending with it.</td></tr>
+      <tr><td><code>https://evil.example</code></td><td><code>evil.example</code></td><td>Refused, 403</td><td>Real response: <code>{"detail":"This domain is not allowed to use this site key"}</code></td></tr>
+      <tr><td>(none)</td><td></td><td>Allowed</td><td>Not a cross-origin browser request; see below.</td></tr>
+    </tbody>
+  </table></div>
+  <p>Look at the real 403 for <code>evil.example</code> again: it <b>still</b> carries <code>access-control-allow-origin: *</code>. That's deliberate, and it's a good illustration of the two layers. CORS lets the browser hand the refusal to the widget, so the widget can read the status code and print "This site key is not allowed on evil.example..." in the console. The refusal itself comes from <code>get_tenant</code>.</p>
+  <h3>So what does the Origin check actually protect?</h3>
+  <p>Be precise about this, because it's a favourite interview question. JavaScript in a web page can't change the <code>Origin</code> header; the browser always writes the true one. So:</p>
+  <ul>
+    <li><b>It stops:</b> another website copying Pyramid Yogshala's script tag (the site key is public, in their page source) and running the chat on its own site, spending the school's AI budget through its own visitors' browsers. The browsers will send the true origin, and the server will refuse.</li>
+    <li><b>It doesn't stop:</b> someone with a script (curl, Python) sending requests directly. A script isn't a browser: it can leave <code>Origin</code> out, or write any value it likes. The code knows this; the comment says "the rate limit is what protects us".</li>
+  </ul>
+  <p>What protects the server against scripts, then? Limits on how much anyone can use it: 5 messages a minute per visitor, an hourly limit per school, a daily AI-token budget per school (Phase 4), and a separate limit on refused requests so guessing keys gets you blocked (section 10). The site key is an <b>identifier</b>, like a shop's name, not a password; <code>notes/install-guide.md</code> says so to customers in those words.</p>
+  <div class="box analogy"><div class="tag">Analogy</div><p>The same-origin policy is a careful parent (the browser) who won't hand their child (the page) a letter addressed from a stranger unless the letter says "OK for anyone to read". CORS is that note on the letter. The preflight is the parent phoning first: "my child wants to send you a parcel with a custom label. Is that all right?". The Origin check is the call centre looking at the caller's verified return address. None of it stops someone who isn't using the parent at all: they can just write the letter themselves. For them, the call centre has a limit on how many calls it takes.</p></div>
+  <div class="box interview"><div class="tag">Say it in an interview</div><p>"CORS is open at the middleware layer, <code>allow_origins='*'</code> with no credentials, because the preflight carries header names but not the site key's value, so we can't know the tenant at that point. Domain enforcement is per tenant in a FastAPI dependency that checks the Origin header against the tenant's allowed domains, with a dot-boundary match so lookalike domains fail. That stops other sites from embedding a tenant's public key in browsers. It doesn't stop non-browser clients, which can forge Origin, so abuse is bounded by per-visitor and per-tenant rate limits and a daily token budget."</p></div>
+</section>
+
+<section>
+  <h2>10. Who is asking: IP addresses, proxies, rate limits</h2>
+  <p>To limit "5 messages a minute <b>per visitor</b>", the server has to tell visitors apart. There are no accounts and no cookies, so the only thing available is the visitor's IP address. And on Cloud Run, even that takes care to get.</p>
+  <h3>The problem: every request seems to come from Google</h3>
+  <p>Remember from section 3: the browser connects to Google's front end, and Google's front end connects to our container. So from our server's point of view, <b>every request's connection comes from the same Google machine</b>. <code>request.client.host</code>, the address of whatever connected to us, is Google's internal address for every visitor. Limit on that, and all visitors in the world would share one limit of 5 messages a minute.</p>
+  <h3>The fix: X-Forwarded-For</h3>
+  <p>A server that receives a request and passes it on is a <b>proxy</b>. By convention, a proxy adds the address it received the request from to the end of a header called <code>X-Forwarded-For</code>. So Google's front end writes the visitor's real address there before forwarding.</p>
+  <p>But there's a trap: the visitor can <b>also</b> send an <code>X-Forwarded-For</code> header, with any made-up value, and proxies add to it rather than replace it. A visitor trying to dodge the limit sends a fake address every time:</p>
+  <pre><code>Visitor sends:            X-Forwarded-For: 1.2.3.4                      (made up)
+Google's front end adds:  X-Forwarded-For: 1.2.3.4, 203.0.113.7         (the real one, at the end)</code></pre>
+  <p>Only the entries added by proxies we trust are real. The rest is whatever the visitor typed. So the code counts from the <b>end</b>:</p>
+  <p class="file">app/rate_limit.py</p>
+  <pre><code>def client_ip(request: Request) -&gt; str:
+    hops = get_settings().trusted_proxy_hops                     # 1 on Cloud Run
+    header = request.headers.get("x-forwarded-for", "")
+    entries = [e.strip() for e in header.split(",") if e.strip()]  # ["1.2.3.4", "203.0.113.7"]
+
+    if hops &gt; 0 and len(entries) &gt;= hops:
+        return _bucket(entries[-hops])                           # entries[-1]: "203.0.113.7"
+
+    # No proxy in front (local development), or a header too short to
+    # have come through the proxies we expect.
+    return _bucket(request.client.host if request.client else "unknown")</code></pre>
+  <p><code>entries[-1]</code> in Python means "the last item". With one trusted proxy (Google's front end), the last entry is the one Google wrote, and nothing the visitor sends can change it. The setting's comment in <code>app/config.py</code> records how the number was chosen: "Measured 2026-10-15: direct *.run.app traffic arrives with one entry appended by Google's front end, so 1. Behind an external HTTPS load balancer it would be 2." Get it wrong in one direction (trusting too many entries) and visitors can fake their address; get it wrong in the other, and you limit Google instead of the visitor.</p>
+  <p><code>_bucket</code> handles one more detail. A home internet connection with IPv6 is usually given a whole block of addresses (a "/64": 18 billion billion of them), and the devices in it can switch between them freely. Counting each IPv6 address separately would let one person use a fresh address for every message. So IPv6 addresses are grouped by their /64 block, and each block counts as one visitor.</p>
+  <h3>The limits themselves</h3>
+  <p class="file">app/config.py</p>
+  <pre><code>rate_limit_per_visitor: str = "5/minute"
+rate_limit_per_tenant: str = "60/hour"
+rate_limit_config_per_visitor: str = "30/minute"
+rate_limit_feedback_per_visitor: str = "30/minute"
+rate_limit_rejected_per_visitor: str = "20/minute"</code></pre>
+  <p>The sixth message within a minute gets this real response:</p>
+  <pre><code>429  {"error":"Rate limit exceeded: 5 per 1 minute"}</code></pre>
+  <ul>
+    <li><b>Per visitor</b> stops one person flooding the bot.</li>
+    <li><b>Per tenant</b> caps a whole school's traffic (each school can have its own, <code>Tenant.rate_limit</code>), so a flood from many addresses still has a ceiling.</li>
+    <li><b>Rejected per visitor</b> counts refusals (bad key, wrong domain). After 20 in a minute, that visitor's requests are refused before the database is even asked. Without it, someone trying made-up keys would cost a database read per guess.</li>
+  </ul>
+  <p>Two more details that save database reads. Tenant lookups are <b>cached</b> for 60 seconds (<code>tenant_cache_seconds</code>), including unknown keys, so a repeated bad key costs one read a minute, not one per request. The side effect: when a school's allowed domains change, it can take up to a minute to apply. And the counters live in each server instance's memory, so if Cloud Run ran two copies of the server, each would count separately (the comment in <code>app/config.py</code> notes this and what to do if it ever matters).</p>
+</section>
+
+<section>
+  <h2>11. HTTPS: why nobody else can read it</h2>
+  <p>Look back at the raw request in section 5. It's plain text. On its way from the visitor's phone to Google it passes through the café's Wi-Fi router, the internet provider, and several networks in between. Over plain HTTP, any of them could read it, including the email address a visitor types into the chat, and could even change the reply on its way back.</p>
+  <p><b>HTTPS</b> is HTTP sent inside an encrypted connection, made with <b>TLS</b> (Transport Layer Security). Before any HTTP is sent:</p>
+  <ol class="steps">
+    <li><div><p><b>The server proves who it is.</b> It presents a <b>certificate</b>: a document saying "this is <code>*.run.app</code>", digitally signed by a <b>certificate authority</b>, an organisation the browser already trusts. The browser checks the signature and that the name matches the URL. An impostor can't produce a valid certificate for our name, so the browser would show a full-page warning instead.</p></div></li>
+    <li><div><p><b>They agree on a secret key</b> that only the two of them know, using maths designed so that someone watching the whole exchange still can't work out the key.</p></div></li>
+    <li><div><p><b>Everything after that is encrypted</b> with that key: the request line, every header (the site key included) and the body.</p></div></li>
+  </ol>
+  <p>Real timings from this laptop to the live server, measured with curl:</p>
+  <pre><code>connected:       0.024 s    (the network connection is open)
+TLS finished:    0.073 s    (identity checked, keys agreed)
+response done:   0.337 s    (request sent, server answered)</code></pre>
+  <p>Setting up the encryption took about 50 ms. The browser keeps the connection open and reuses it for later requests, so that cost is paid once per visit, not once per message.</p>
+  <p>What can someone in between still see? The IP addresses, roughly how much data flows, and usually the host name (<code>sitechat-api-...run.app</code>, which the browser sends at the start so the front end knows which certificate to show). Not the path, headers or body: not the message, not the site key.</p>
+  <h3>Where the encryption ends</h3>
+  <p>TLS runs from the browser to <b>Google's front end</b>. Google manages the certificate for <code>*.run.app</code>, which is why Sitechat's code contains nothing about certificates. From the front end to our container, the request travels inside Google's own network, and uvicorn receives ordinary HTTP on port 8080.</p>
+  <p>HTTPS isn't optional for a widget. A page loaded over <code>https://</code> isn't allowed to load scripts from <code>http://</code> addresses (that's called <b>mixed content</b>, and browsers block it), because one unencrypted script could rewrite the whole secure page. Nearly every school's site is HTTPS, so our script and API must be too. The one exception browsers make is <code>localhost</code>, treated as safe because nothing leaves the machine. That's why local testing works over plain <code>http://localhost:8080</code>.</p>
+</section>
+
+<section>
+  <h2>12. One message, start to finish</h2>
+  <p>Now everything together. A visitor on <code>https://www.pyramidyogshala.com</code> asks "How much is the 200-hour course?". Every step names the code that runs.</p>
+  <h3>When the page loads</h3>
+  <ol class="steps">
+    <li><div><p><b>The script loads.</b> The browser reads the <code>&lt;script src=...widget.js&gt;</code> tag, looks up our host in DNS, opens a TLS connection to Google's front end, and sends <code>GET /widget/widget.js</code>. FastAPI serves the file from the <code>static/</code> folder (<code>app.mount("/widget", StaticFiles(directory="static"))</code> in <code>app/main.py</code>).</p></div></li>
+    <li><div><p><b>The widget starts.</b> It reads its own tag: site key from <code>data-site-key</code>, our origin from <code>src</code>. It checks localStorage for a saved <code>conversation_id</code> under <code>"sitechat:" + siteKey</code>.</p></div></li>
+    <li><div><p><b>It fetches its settings.</b> <code>fetch(API + "/config", { headers: { "X-Site-Key": siteKey } })</code>. Because of the custom header, the browser first sends the <code>OPTIONS</code> preflight; <code>CORSMiddleware</code> answers it. Then the real <code>GET /config</code>: <code>get_tenant</code> finds the school and checks the origin; the route returns the name, greeting and suggested questions as JSON. The widget draws the bubble with them. If this fails with 401 or 403, the widget disables itself and explains why in the console.</p></div></li>
+  </ol>
+  <h3>When the visitor sends the message</h3>
+  <ol class="steps">
+    <li><div><p><b>The widget builds the request.</b> In <code>ask()</code>: shows the message and the waiting dots, makes <code>{ message: text, conversation_id: ... }</code>, and calls <code>fetch(API + "/chat", { method: "POST", headers: {...}, body: JSON.stringify(body) })</code>. The browser remembers preflight answers per address, so the one for <code>/config</code> doesn't cover <code>/chat</code>: the first message sends its own <code>OPTIONS /chat</code> preflight, and messages in the next 10 minutes skip it.</p></div></li>
+    <li><div><p><b>The browser sends it.</b> It adds <code>Origin: https://www.pyramidyogshala.com</code> itself, encrypts everything, and sends it over the open connection.</p></div></li>
+    <li><div><p><b>Google's front end receives it,</b> decrypts it, adds the visitor's address to <code>X-Forwarded-For</code>, picks a running copy of our container (or starts one), and forwards the request to port 8080.</p></div></li>
+    <li><div><p><b>uvicorn reads the HTTP</b> and hands it to the FastAPI app.</p></div></li>
+    <li><div><p><b>The middleware runs, outermost first.</b> <code>RequestContextMiddleware</code> gives the request a fresh 12-character request id, so every log line it produces can be found together later. <code>CORSMiddleware</code> will add <code>access-control-allow-origin: *</code> to the response on the way out.</p></div></li>
+    <li><div><p><b>Routing.</b> FastAPI matches <code>POST</code> + <code>/chat</code> to the <code>chat</code> function.</p></div></li>
+    <li><div><p><b>The dependency runs: <code>get_tenant</code>.</b> Too many refusals from this visitor already → <b>429</b>. Key too long or unknown → <b>401</b>. School switched off → <b>403</b>. Origin not on the school's list → <b>403</b>. Otherwise it returns the <code>Tenant</code>.</p></div></li>
+    <li><div><p><b>The body is checked.</b> FastAPI parses the JSON into a <code>ChatRequest</code>. Not JSON, empty message, over 2000 characters, malformed id → <b>422</b>.</p></div></li>
+    <li><div><p><b>The rate limits are checked.</b> The <code>@limiter.limit</code> decorators: over 5 a minute for this visitor, or over the school's hourly limit → <b>429</b>.</p></div></li>
+    <li><div><p><b>The route runs.</b> It picks the conversation id (or makes a new UUID), makes a <code>reply_id</code>, and calls <code>generate_reply(...)</code>, which builds the answer (Phases 3 and 4: find the school's information, ask OpenAI). If OpenAI fails or the daily budget is spent, <code>LLMError</code> becomes a <b>503</b> with a message for the visitor.</p></div></li>
+    <li><div><p><b>The slow, unhurried work is queued, not done.</b></p>
+<p class="file">app/api/routes.py (shortened)</p>
+<pre><code># Storing the turn, summarizing and emailing the team do not affect
+# this reply, so they run after it has been sent.
+background.add_task(after_reply, tenant, conversation_id, stored_message, reply, ...)
+
+return ChatResponse(reply=reply, conversation_id=conversation_id,
+                    confirmation=..., reply_id=reply_id)</code></pre></div></li>
+    <li><div><p><b>The response goes out.</b> FastAPI turns the <code>ChatResponse</code> into JSON; the middleware adds its headers; uvicorn writes <code>HTTP/1.1 200 OK</code>, the headers, and the body; Google's front end encrypts it and sends it to the browser.</p></div></li>
+    <li><div><p><b>Then the background task runs</b> on our server: saving the turn to the database, summarising long conversations, emailing the school if the visitor asked to be contacted. The visitor is already reading the answer.</p></div></li>
+    <li><div><p><b>The browser checks CORS.</b> The response says <code>access-control-allow-origin: *</code>, so it hands the response to the widget.</p></div></li>
+    <li><div><p><b>The widget shows the reply.</b> Status 200, so <code>r.json()</code>; then <code>saveConversationId(data.conversation_id)</code> (so the next message, or a visit next week, continues this conversation) and <code>showReply(data.reply, data.confirmation, data.reply_id)</code>. The text is put on the page as plain text, never as HTML, so nothing in a reply can run as code on the school's site (Phase 5).</p></div></li>
+  </ol>
+  <div class="box project"><div class="tag">In Sitechat</div><p>Every refusal in that list happens <b>before</b> <code>generate_reply</code>, which is the only step that costs money (AI calls). Cheap checks first, expensive work last: that ordering is deliberate, and it's why a flood of bad requests costs us almost nothing.</p></div>
+  <div class="box interview"><div class="tag">Say it in an interview: the request path in one breath</div><p>"The widget is a script tag on the customer's site. It reads its site key, fetches per-tenant config, then posts JSON to /chat on Cloud Run. Google's front end terminates TLS and forwards to uvicorn. Middleware assigns a request id and handles CORS. A dependency resolves the tenant and checks the Origin, Pydantic validates the body, rate limits run, and only then does the orchestrator call the model. The response is returned immediately, and persistence and lead emails run as background tasks after it's sent."</p></div>
+</section>
+
+<section>
+  <h2>13. Try it yourself</h2>
+  <p>Seeing these things for real is the fastest way to make them stick. All of these are safe: they only read.</p>
+  <h3>Talk to the live server with curl</h3>
+  <p><b>curl</b> is a command-line program that sends one HTTP request and prints the response. In PowerShell, type <code>curl.exe</code>, not <code>curl</code>: plain <code>curl</code> in PowerShell is a different, built-in command with different options. <code>-i</code> means "show the status line and headers too, not only the body".</p>
+  <pre><code>curl.exe -i https://sitechat-api-uukevi3qpq-uc.a.run.app/health</code></pre>
+  <p>The real response (23 October 2026):</p>
+  <pre><code>HTTP/1.1 200 OK
+content-type: application/json
+vary: Origin
+x-cloud-trace-context: aa16c09fe0b5b0b6d34fb74cbe54fed3;o=1
+date: Fri, 23 Oct 2026 08:16:28 GMT
+server: Google Frontend
+Content-Length: 15
+Alt-Svc: h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+
+{"status":"ok"}</code></pre>
+  <p>You can now read every line: status 200; JSON body; 15 bytes long; produced by Google's front end; <code>x-cloud-trace-context</code> is Google's own id for tracing this request through its systems; <code>Alt-Svc</code> says "you could use HTTP/3 next time".</p>
+  <p>Now a refusal: send a site key that doesn't exist (<code>-H</code> adds a header):</p>
+  <pre><code>curl.exe -i -H "X-Site-Key: pk_wrong" https://sitechat-api-uukevi3qpq-uc.a.run.app/config
+
+HTTP/1.1 401 Unauthorized
+content-type: application/json
+server: Google Frontend
+Content-Length: 29
+
+{"detail":"Invalid site key"}</code></pre>
+  <p>No <code>access-control-allow-origin</code> here: curl sent no <code>Origin</code>, so there was nothing for CORS to decide.</p>
+  <h3>The project's own check</h3>
+  <pre><code>.venv/Scripts/python.exe -m scripts.smoke_test https://sitechat-api-uukevi3qpq-uc.a.run.app pk_pyramid_yogshala_001
+ok    /health
+ok    /config (Pyramid Yogshala)</code></pre>
+  <p><code>scripts/smoke_test.py</code> does exactly what you just did by hand, with Python's built-in <code>urllib</code>: it confirms the server is running, and that routing, the site-key lookup and the database all work, without sending a chat (which would cost money).</p>
+  <h3>Watch the widget in the browser</h3>
+  <ol>
+    <li>Start the server locally: <code>uvicorn app.main:app --reload --port 8080</code>.</li>
+    <li>Open <code>http://localhost:8080/widget/test-page.html</code> in Chrome.</li>
+    <li>Press <b>F12</b> to open the developer tools, and pick the <b>Network</b> tab.</li>
+    <li>Reload the page. You'll see <code>widget.js</code>, then <code>config</code>.</li>
+    <li>Send a message in the chat. Click the <code>chat</code> line. <b>Headers</b> shows the request line, request headers and response headers; <b>Payload</b> shows the JSON you sent; <b>Response</b> shows the JSON that came back.</li>
+  </ol>
+  <p>Two things you'll notice. First, there's no preflight on localhost: the test page and the API are on the same origin (<code>http://localhost:8080</code>), so it isn't a cross-origin request at all. On a school's real site, you'd see an <code>OPTIONS</code> line just before. Second, a local chat message is real: your local server uses the keys in <code>.env</code>, so it calls OpenAI (a fraction of a cent) and saves the conversation in the real database, like a visitor would.</p>
+</section>
+
+<section>
+  <h2>Challenges we faced</h2>
+  <p>Real problems from the project's history that come down to how the web works. Each is told in full in the phase named.</p>
+  <div class="box challenge"><div class="tag">1. Google's 404, not ours</div><p>The health route was called <code>/healthz</code> and returned 404 on Cloud Run. The clue was <i>whose</i> error page it was: Google's HTML, not FastAPI's JSON <code>{"detail":"Not Found"}</code>, so the request never reached the container. Cloud Run's front end reserves that path. Renamed to <code>/health</code>. <a href="https://claude.ai/artifact/F1oZk1cyDLGAPio8khD7cY">Phase 4a, challenge 3</a>.</p></div>
+  <div class="box challenge"><div class="tag">2. Every visitor looked like the same visitor</div><p>Section 10 of this phase explains <code>X-Forwarded-For</code>. Before that code existed, the rate limiter used the connection's address, which on Cloud Run is Google's front end (<code>169.254.169.126</code>) for everyone: five messages a minute for the whole world. The real headers were logged in production first, then the entry one hop from the end was chosen. <a href="https://claude.ai/artifact/F1oZk1cyDLGAPio8khD7cY">Phase 4a, challenge 4</a>.</p></div>
+  <div class="box challenge"><div class="tag">3. A slash that broke a path</div><p>The <code>conversation_id</code> a browser sends back ended up inside a Firestore document path. A <code>/</code> in it split the path and caused a 500. Anything a client sends that becomes part of a key or path must be validated at the edge: the pattern <code>^[A-Za-z0-9-]{1,64}$</code> (section 8) now returns a 422 instead. <a href="https://claude.ai/artifact/F1oZk1cyDLGAPio8khD7cY">Phase 4a, challenge 5</a>.</p></div>
+  <div class="box challenge"><div class="tag">4. A silent 403</div><p>When a site's domain wasn't on the allowed list, the widget just said "not available" and the person installing it had no idea why. Now the widget prints the reason to the browser console with a <code>[sitechat]</code> prefix, and the install guide explains each message. <a href="https://claude.ai/artifact/AHXQrMEzxpZ6x4ihiiiCm1">Phase 5, challenge 5</a>.</p></div>
+  <div class="box challenge"><div class="tag">5. Refused requests that cost money</div><p>Route rate limits run after FastAPI dependencies, so requests refused for a bad site key were never counted, and each made-up key cost a database read. Fixed by caching "not found", limiting <code>/config</code>, and counting refusals per visitor before the lookup. Real output in Phase 4a: 20 refusals, then 429s even with a valid key. <a href="https://claude.ai/artifact/F1oZk1cyDLGAPio8khD7cY">Phase 4a, §8.3</a>.</p></div>
+  <div class="box challenge"><div class="tag">6. The first request timed out</div><p>The post-deploy smoke test's very first call to <code>/health</code> timed out. That led to measuring a 43-second cold start after the service scaled to zero, which the 5-minute scheduler job later removed. <a href="https://claude.ai/artifact/BknbsJYd7gFx9geyWbBqKF">Phase 6, §4</a>.</p></div>
+  <div class="box challenge"><div class="tag">7. The API's own documentation was public</div><p>FastAPI publishes <code>/docs</code> and <code>/openapi.json</code> by default, and in production they listed the internal endpoint to anyone. Not exploitable alone, but it published the attack surface; they're now off in production. <a href="https://claude.ai/artifact/F1oZk1cyDLGAPio8khD7cY">Phase 4a, challenge 8</a>.</p></div>
+</section>
+
+<section>
+  <h2>Glossary</h2>
+  <dl class="gloss">
+    <div><dt>Client, server</dt><dd>The program that asks; the program that answers.</dd></div>
+    <div><dt>Request, response</dt><dd>One message from client to server; the one reply that comes back.</dd></div>
+    <div><dt>Stateless</dt><dd>The server remembers nothing between requests; the client must send what identifies it (the <code>conversation_id</code>).</dd></div>
+    <div><dt>IP address</dt><dd>A machine's number on the internet. IPv4 is short (<code>34.143.72.2</code>), IPv6 is long.</dd></div>
+    <div><dt>DNS</dt><dd>The internet's phone book: turns a host name into IP addresses.</dd></div>
+    <div><dt>Port</dt><dd>Which program on a machine: 443 for HTTPS, 8080 for uvicorn.</dd></div>
+    <div><dt>localhost</dt><dd>This same computer (<code>127.0.0.1</code>).</dd></div>
+    <div><dt>URL</dt><dd>A full web address: scheme, host, port, path, and maybe query and fragment.</dd></div>
+    <div><dt>Origin</dt><dd>Scheme + host + port. What the browser compares to decide "same site or not".</dd></div>
+    <div><dt>Cross-origin request</dt><dd>A page on one origin calling another, like the widget calling our server.</dd></div>
+    <div><dt>HTTP</dt><dd>The format of requests and responses: request or status line, headers, blank line, body.</dd></div>
+    <div><dt>Method</dt><dd>The kind of request: GET (read), POST (act on data), OPTIONS (ask permission).</dd></div>
+    <div><dt>Header</dt><dd>A <code>Name: value</code> line of information about a request or response.</dd></div>
+    <div><dt>Body</dt><dd>The content of a request or response; in Sitechat, JSON.</dd></div>
+    <div><dt>JSON</dt><dd>A text format for data: objects, arrays, strings, numbers, true/false, null.</dd></div>
+    <div><dt>Status code</dt><dd>The response's three-digit verdict: 2xx success, 4xx client's problem, 5xx server's problem.</dd></div>
+    <div><dt>API</dt><dd>The requests a program promises to accept and the responses it promises to give.</dd></div>
+    <div><dt>Endpoint, route</dt><dd>One method and path the API offers (<code>POST /chat</code>), and the function behind it.</dd></div>
+    <div><dt>Dependency (FastAPI)</dt><dd>A function FastAPI runs before the route, like <code>get_tenant</code>; it can refuse the request.</dd></div>
+    <div><dt>Validator</dt><dd>Extra checking code Pydantic runs on a field.</dd></div>
+    <div><dt>Middleware</dt><dd>Code wrapped around every request and response, like the CORS layer.</dd></div>
+    <div><dt>Same-origin policy</dt><dd>The browser rule: a page may not read responses from another origin unless that origin allows it.</dd></div>
+    <div><dt>CORS</dt><dd>The response headers by which a server allows other origins to read its responses.</dd></div>
+    <div><dt>Preflight</dt><dd>The <code>OPTIONS</code> request a browser sends first, to ask whether a non-simple cross-origin request is allowed.</dd></div>
+    <div><dt>Cookie, third-party cookie</dt><dd>Data a site stores in the browser and gets back with every request; one set by a site other than the page you're on.</dd></div>
+    <div><dt>localStorage</dt><dd>A small store in the browser, belonging to the page's origin. Holds the widget's conversation id.</dd></div>
+    <div><dt>Proxy</dt><dd>A server that receives requests and passes them on, like Google's front end.</dd></div>
+    <div><dt>X-Forwarded-For</dt><dd>The header proxies add the client's address to. Only the entries added by trusted proxies can be believed.</dd></div>
+    <div><dt>Rate limit</dt><dd>A cap on requests per time window, like 5 a minute per visitor.</dd></div>
+    <div><dt>HTTPS, TLS</dt><dd>HTTP inside an encrypted connection; the protocol that makes the encryption.</dd></div>
+    <div><dt>Certificate</dt><dd>A signed document proving a server owns a name, checked by the browser.</dd></div>
+    <div><dt>Mixed content</dt><dd>An <code>http://</code> resource on an <code>https://</code> page. Browsers block scripts like that.</dd></div>
+    <div><dt>Background task</dt><dd>Work FastAPI runs after the response has been sent.</dd></div>
+    <div><dt>UUID</dt><dd>A random id so long that two are never the same, like <code>0cbf3d1f-5267-...</code>.</dd></div>
+  </dl>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <details><summary>Does the school's own web server ever see a chat message?</summary><p>No. It only serves the page with the script tag. The browser then loads the widget from our server and sends every message straight to our server.</p></details>
+  <details><summary>Why can't the bot send a message to the visitor by itself, five minutes after they go quiet?</summary><p>In HTTP the server only ever responds to requests; it can't start one. The widget would have to ask first. For the same reason, our server's timed lead-digest emails are triggered by Cloud Scheduler sending it a request every 5 minutes.</p></details>
+  <details><summary>Are <code>https://pyramidyogshala.com</code> and <code>https://www.pyramidyogshala.com</code> the same origin? What practical difference does it make in Sitechat?</summary><p>No: the host differs. The widget's localStorage is separate on each, so a visitor who switches between them starts a new conversation. For the domain check, though, both pass: <code>www.pyramidyogshala.com</code> ends with <code>.pyramidyogshala.com</code>.</p></details>
+  <details><summary>The widget sends a chat with a made-up site key and an empty message. Which status comes back, and why that one?</summary><p>401. FastAPI runs the <code>get_tenant</code> dependency before validating the body, so the unknown key is refused before the empty message is noticed. Checked for real.</p></details>
+  <details><summary>Why does an AI failure return 503 instead of 200 with an apology?</summary><p>The visitor sees the same words either way, but the code is for machines. A 503 lets monitoring count it as a failure and lets the widget know to show the server's message as a notice. A 200 would make an OpenAI outage look like normal traffic.</p></details>
+  <details><summary>Why does the browser send an <code>OPTIONS</code> request before <code>POST /chat</code>?</summary><p>The request is cross-origin and not "simple": it has a custom header (<code>X-Site-Key</code>) and a JSON content type. The browser asks permission first (the preflight). Our CORS middleware answers yes, and the browser remembers that for 10 minutes.</p></details>
+  <details><summary>Why can't the CORS layer only allow the school's own domains?</summary><p>The preflight carries the names of the headers the browser will send but not their values, so at that point the server doesn't know which school it is. The list of domains is also per school, in the database. So CORS allows all origins, and <code>get_tenant</code> checks the real request's Origin against that school's list.</p></details>
+  <details><summary>Someone runs a Python script that sends <code>Origin: https://pyramidyogshala.com</code> with the school's site key. Does the Origin check stop them? What does?</summary><p>No. Only browsers guarantee the Origin header is true; a script can write anything. What limits them is the rate limits (5 a minute per visitor, the school's hourly limit), the limit on refused requests, and the school's daily AI budget.</p></details>
+  <details><summary>Why does <code>client_ip</code> take the last entry of <code>X-Forwarded-For</code>, not the first?</summary><p>The visitor can send their own <code>X-Forwarded-For</code> with any value, and proxies add to the end of it. Only the entry Google's front end added (the last one, with one trusted proxy) is real. The first entry could be anything the visitor typed.</p></details>
+  <details><summary>What can someone on the same café Wi-Fi learn about a visitor's chat?</summary><p>That the visitor is talking to our host (the IP address, and usually the host name), and roughly how much data. Not the message, the site key, the path or the reply: TLS encrypts everything inside the request.</p></details>
+</section>
+
+<hr>
+<section>
+  <h2>Next: Phase 2, what Sitechat is</h2>
+  <p>Now that you know how a message travels, Phase 2 looks at what Sitechat does with it: the product as the school and the visitor see it, what a tenant is made of (documents, facts sheet, programmes, wording), how leads and emails work from the school's side, and the main decisions behind the design. If anything here was unclear, tell me which section and I'll add to it here. <a href="https://claude.ai/artifact/VVYejQXYpWzuimyovij4CY">Read Phase 2</a>.</p>
+</section>
+
+</main>
+</body>
+</html>

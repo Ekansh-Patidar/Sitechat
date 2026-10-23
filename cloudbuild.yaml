@@ -1,0 +1,52 @@
+steps:
+  # Tests first: a failing test stops the build here, before anything is
+  # built or deployed. Same Python and settings as the GitHub Actions run.
+  # Browser tests skip themselves (Playwright is not installed here).
+  - name: 'python:3.12-slim'
+    entrypoint: bash
+    env:
+      - 'ENVIRONMENT=development'
+      - 'GCP_PROJECT_ID=test-project'
+      - 'PIP_DISABLE_PIP_VERSION_CHECK=1'
+    args:
+      - '-c'
+      - 'pip install --quiet --no-cache-dir -r requirements-dev.txt && python -m pytest -q'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/sitechat/api:$SHORT_SHA'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/sitechat/api:latest'
+      - '.'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '--all-tags', 'us-central1-docker.pkg.dev/$PROJECT_ID/sitechat/api']
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'sitechat-api'
+      - '--image=us-central1-docker.pkg.dev/$PROJECT_ID/sitechat/api:$SHORT_SHA'
+      - '--region=us-central1'
+      - '--allow-unauthenticated'
+      # Its own account, allowed only Firestore and these secrets, not the
+      # default compute account (Editor on the whole project). Setup:
+      # notes/runtime-sa-setup.md.
+      - '--service-account=sitechat-runtime@$PROJECT_ID.iam.gserviceaccount.com'
+      - '--set-secrets=OPENAI_API_KEY=OPENAI_API_KEY:latest,PINECONE_API_KEY=PINECONE_API_KEY:latest,COHERE_API_KEY=COHERE_API_KEY:latest,RESEND_API_KEY=RESEND_API_KEY:latest,SENTRY_DSN=SENTRY_DSN:latest'
+      - '--set-env-vars=ENVIRONMENT=production,GCP_PROJECT_ID=$PROJECT_ID,THROTTLE_RERANK=false,LEAD_DIGEST_INVOKER=lead-digest@$PROJECT_ID.iam.gserviceaccount.com'
+      - '--min-instances=0'
+      - '--max-instances=10'
+      - '--memory=1Gi'
+      - '--cpu=1'
+      - '--timeout=60'
+
+images:
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/sitechat/api:$SHORT_SHA'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

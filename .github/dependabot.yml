@@ -1,0 +1,22 @@
+# Weekly pull requests for outdated dependencies. Security fixes as soon as
+# an advisory is published also need "Dependabot alerts" and "Dependabot
+# security updates" turned on in the repository's Settings > Code security
+# (free). Minor and patch updates are grouped so they arrive as one
+# PR to review; CI (tests and pip-audit) runs on each. The Docker base
+# image is left out: its updates would move Python off 3.12, which CI
+# and Cloud Build pin.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

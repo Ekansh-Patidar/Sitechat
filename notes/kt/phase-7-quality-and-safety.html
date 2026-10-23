@@ -1,0 +1,410 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sitechat KT 7: Quality</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,650&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+  /* Layout: a reading column with a phase map on top; coloured callouts by role
+     (analogy, in this project, interview, try it); code blocks scroll inside themselves. */
+  :root {
+    --bg: #f5f6f4;
+    --paper: #ffffff;
+    --ink: #1b2725;
+    --muted: #5a6663;
+    --line: #dde3e0;
+    --accent: #1f6f5c;
+    --accent-soft: #e5f1ec;
+    --analogy: #7a4f9a;
+    --analogy-soft: #f2ecf7;
+    --interview: #a5630d;
+    --interview-soft: #fbf1e0;
+    --code-bg: #f0f3f1;
+    --display: "Literata", Georgia, "Times New Roman", serif;
+    --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+    --mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121918; --paper: #1a2322; --ink: #e5ebe9; --muted: #9db0aa; --line: #2b3735;
+      --accent: #63c2a6; --accent-soft: #1d3530; --analogy: #c7a3e6; --analogy-soft: #2a2235;
+      --interview: #e3a64b; --interview-soft: #2e2416; --code-bg: #0f1514;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #121918; --paper: #1a2322; --ink: #e5ebe9; --muted: #9db0aa; --line: #2b3735;
+    --accent: #63c2a6; --accent-soft: #1d3530; --analogy: #c7a3e6; --analogy-soft: #2a2235;
+    --interview: #e3a64b; --interview-soft: #2e2416; --code-bg: #0f1514;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 17px/1.65 var(--body);
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 32px 80px;
+  }
+  main { max-width: 48rem; margin: 0 auto; display: grid; gap: 44px; }
+  header { display: grid; gap: 12px; }
+  .eyebrow { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  h1 { font: 650 clamp(30px, 5.5vw, 42px)/1.12 var(--display); margin: 0; text-wrap: balance; }
+  h2 { font: 650 clamp(23px, 3.6vw, 28px)/1.25 var(--display); margin: 0; text-wrap: balance; }
+  h3 { font: 700 18px/1.35 var(--body); margin: 8px 0 0; }
+  p, ul, ol { margin: 0; }
+  ul, ol { padding-left: 1.3em; display: grid; gap: 6px; }
+  li::marker { color: var(--accent); }
+  section { display: grid; gap: 16px; min-width: 0; }
+  .lede { color: var(--muted); font-size: 18px; }
+  a { color: var(--accent); }
+  code { font: 0.88em var(--mono); background: var(--code-bg); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+  pre {
+    margin: 0; background: var(--code-bg); border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 16px; overflow-x: auto; font: 14px/1.55 var(--mono);
+  }
+  pre code { background: none; padding: 0; font-size: inherit; overflow-wrap: normal; }
+  .file { font: 600 13px var(--mono); color: var(--muted); margin-bottom: -10px; }
+  .phases { display: flex; flex-wrap: wrap; gap: 6px; }
+  .phases span {
+    font-size: 13px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line);
+    color: var(--muted); background: var(--paper);
+  }
+  .phases span.now { background: var(--accent); color: var(--paper); border-color: var(--accent); font-weight: 600; }
+  .box { border-radius: 10px; padding: 14px 16px; display: grid; gap: 8px; border: 1px solid var(--line); background: var(--paper); }
+  .box .tag { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  .analogy { background: var(--analogy-soft); border-color: transparent; }
+  .analogy .tag { color: var(--analogy); }
+  .project { background: var(--accent-soft); border-color: transparent; }
+  .project .tag { color: var(--accent); }
+  .interview { background: var(--interview-soft); border-color: transparent; }
+  .interview .tag { color: var(--interview); }
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--paper); }
+  table { border-collapse: collapse; width: 100%; font-size: 15.5px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-weight: 700; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+  tr:last-child td { border-bottom: none; }
+  td:first-child { white-space: nowrap; }
+  .steps { list-style: none; padding: 0; counter-reset: s; display: grid; gap: 10px; }
+  .steps > li { counter-increment: s; display: grid; grid-template-columns: 2rem 1fr; gap: 10px; min-width: 0; }
+  .steps > li::before {
+    content: counter(s); width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
+    font: 700 13px/1 var(--body); color: var(--accent); border: 1.5px solid var(--accent);
+  }
+  .steps > li > div { display: grid; gap: 6px; min-width: 0; }
+  .flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .flow .node { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: 15px; }
+  .flow .arrow { color: var(--accent); font-weight: 700; }
+  details { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+  details summary { cursor: pointer; font-weight: 600; }
+  details[open] summary { margin-bottom: 8px; }
+  details p { color: var(--ink); }
+  dl.gloss { display: grid; gap: 10px; margin: 0; }
+  dl.gloss div { display: grid; grid-template-columns: minmax(8rem, 12rem) 1fr; gap: 12px; }
+  dl.gloss dt { font-weight: 700; }
+  dl.gloss dd { margin: 0; }
+  @media (max-width: 560px) { dl.gloss div { grid-template-columns: 1fr; gap: 2px; } td:first-child { white-space: normal; } }
+  .toc { columns: 2 16rem; column-gap: 28px; }
+  .toc li { break-inside: avoid; }
+  hr { border: none; border-top: 1px solid var(--line); margin: 0; }
+  summary:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .machines { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 10px; }
+  .machine { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 6px; align-content: start; }
+  .machine b { font-family: var(--display); font-size: 17px; }
+  .machine.us { border-color: var(--accent); }
+  .lbl { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+
+  :root { --challenge: #a8322f; --challenge-soft: #fbecea; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --challenge: #f2958f; --challenge-soft: #3a2220; } }
+  :root[data-theme="dark"] { --challenge: #f2958f; --challenge-soft: #3a2220; }
+  .challenge { background: var(--challenge-soft); border-color: transparent; }
+  .challenge .tag { color: var(--challenge); }
+  .phases a { font-size: 13px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line);
+    color: var(--muted); background: var(--paper); text-decoration: none; }
+  .phases a:hover { border-color: var(--accent); color: var(--accent); }
+  .phases a.now { background: var(--accent); color: var(--paper); border-color: var(--accent); font-weight: 600; }
+  figure { margin: 0; display: grid; gap: 8px; justify-items: start; }
+  figure img { max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+  figcaption { font-size: 14px; color: var(--muted); }
+  .shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 12px; }
+  .kv { display: grid; grid-template-columns: minmax(7rem, 11rem) 1fr; gap: 6px 14px; }
+  @media (max-width: 560px) { .kv { grid-template-columns: 1fr; gap: 2px; } }
+</style>
+
+</head>
+<body>
+<main>
+<header>
+  <div class="eyebrow">Sitechat knowledge transfer · Phase 7 of 10</div>
+  <h1>Quality and safety: how the project knows it works, and what protects it</h1>
+  <p class="lede">Quality has three layers in Sitechat: <b>tests</b> (does the code do what we intend?), <b>checks</b> (linting, types, security scans, secrets, dependencies, run on every push), and <b>evaluations</b> (does the AI answer well and resist misuse?). Safety is a map of defences against the OWASP Top 10 for LLM applications, plus privacy and abuse controls. This phase explains each layer with real numbers from running them on this laptop today.</p>
+  <div class="phases" aria-label="All phases">
+    <a href="https://claude.ai/artifact/QuxrXdoFv7vr5KKvNSML78">0 First principles</a><a href="https://claude.ai/artifact/MDdgNKEGibTrFVYqtGjGhs">1 How the web works</a><a href="https://claude.ai/artifact/VVYejQXYpWzuimyovij4CY">2 What Sitechat is</a><a href="https://claude.ai/artifact/RHDbDbJ6r8RmXdRsvAUK9S">3 AI fundamentals</a><a href="https://claude.ai/artifact/F1oZk1cyDLGAPio8khD7cY">4a API layer</a><a href="https://claude.ai/artifact/QKLydSMm3tKdXapho5kS1V">4b The agent</a><a href="https://claude.ai/artifact/2TNXtynh229R59PV9MwHc1">4c Retrieval</a><a href="https://claude.ai/artifact/Np1qbTsXtXtDL6UmGaMvFv">4d Leads</a><a href="https://claude.ai/artifact/S2dSYJnVDTPbqeAWJP6qd1">4e Data stores</a><a href="https://claude.ai/artifact/4hwNREB8CxkHtRrwgwRraL">4f Scripts and evals</a><a href="https://claude.ai/artifact/AHXQrMEzxpZ6x4ihiiiCm1">5 The chat widget</a><a href="https://claude.ai/artifact/BknbsJYd7gFx9geyWbBqKF">6 Cloud and data</a><a class="now" href="https://claude.ai/artifact/KdgDyd9VuQVfjJu3dvHPv2">7 Quality and safety</a><a href="https://claude.ai/artifact/QDifNPBS4Lu8CLhvZTJ5C4">8 Rebuild it yourself</a><a href="https://claude.ai/artifact/99LTVwqoTPzBmFmHCZcsCS">9 Interview prep</a><a href="https://claude.ai/artifact/NKGY4fDQXK9Cp41B55wiTs">10 Set it up</a>
+  </div>
+</header>
+
+<section>
+  <h2>How to read this phase</h2>
+  <p>Real results from today's run (23 Oct 2026), with <code>ENVIRONMENT=development GCP_PROJECT_ID=test-project</code>:</p>
+<pre><code>pytest --cov=app --cov-fail-under=80     492 passed, 5 warnings in 68.51s; total coverage 85.66%
+ruff check .                             All checks passed!
+mypy                                     Success: no issues found in 65 source files
+bandit -q -r app scripts --skip B101     (no findings; exit 0)</code></pre>
+  <h3>In this phase</h3>
+  <ol class="toc">
+    <li>Why tests, and what makes a good one</li>
+    <li>pytest in five ideas</li>
+    <li>How 492 tests run with no network</li>
+    <li>The test suite, file by file</li>
+    <li>Failure injection: breaking things on purpose</li>
+    <li>Coverage: what the numbers say</li>
+    <li>The CI checks, one by one</li>
+    <li>Evaluations as quality gates</li>
+    <li>The safety map: OWASP Top 10 for LLM applications</li>
+    <li>Privacy</li>
+    <li>Abuse and cost controls</li>
+    <li>Known gaps</li>
+    <li>Challenges we faced</li>
+    <li>Glossary and check yourself</li>
+  </ol>
+</section>
+
+<section>
+  <h2>1. Why tests, and what makes a good one</h2>
+  <p>A <b>test</b> is code that runs your code with known inputs and checks the result. Its value is that it runs every time anything changes, so a mistake in one place that breaks something elsewhere is caught in a minute, not by a visitor. Three properties make tests worth having, and Sitechat's history has examples of each going wrong:</p>
+  <ul>
+    <li><b>It can fail.</b> A test that always passes is worse than none, because it gives false confidence. Sitechat had one (<a href="https://claude.ai/artifact/QKLydSMm3tKdXapho5kS1V">Phase 4b</a>, challenge 8): it patched the wrong name, so its assertion could never fail. Proven by removing the guard it was meant to protect: still green.</li>
+    <li><b>It's fast and offline.</b> Tests that need the internet or keys fail in CI, cost money, and get skipped. Sitechat's tests made real API calls three separate times early on; each time they passed locally (where <code>.env</code> has keys) and failed on GitHub.</li>
+    <li><b>It tests behaviour, not wiring.</b> "A visitor with an email and a contact request gets one email to the team with Reply-To set" survives refactoring; "function X calls function Y" doesn't.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>2. pytest in five ideas</h2>
+  <ol class="steps">
+    <li><div><b>Test functions.</b> Any function named <code>test_*</code> in a file named <code>test_*.py</code> is collected and run. It passes unless an <code>assert</code> fails or an exception escapes.
+<pre><code>def test_lookalike_domain_is_rejected(client):
+    r = client.get("/config", headers={"X-Site-Key": "pk_valid", "Origin": "https://evil-yogaschool.com"})
+    assert r.status_code == 403</code></pre></div></li>
+    <li><div><b>Fixtures.</b> A function marked <code>@pytest.fixture</code> builds something tests need; a test asks for it by naming it as a parameter (<code>client</code> above). The fixture in <code>test_api_security.py</code> builds an app with in-memory stores and a test tenant. <code>yield</code> in a fixture splits set-up from clean-up.</div></li>
+    <li><div><b>Parametrize.</b> <code>@pytest.mark.parametrize("hops, xff, expected", [...])</code> runs one test with many inputs: <code>test_client_ip</code> checks several <code>X-Forwarded-For</code> headers in one function.</div></li>
+    <li><div><b>Mocks and patching.</b> <code>unittest.mock.patch("app.agent.orchestrator.complete_with_tools", fake)</code> temporarily replaces a function where it's looked up. <code>MagicMock()</code> is an object that accepts any attribute or call, and can record how it was used (<code>assert_called_once()</code>). <code>monkeypatch</code> (a pytest fixture) changes settings or attributes for one test and restores them after.</div></li>
+    <li><div><b>Expected failures.</b> <code>@pytest.mark.xfail(strict=True, reason="backlog 97")</code> marks a known bug: the test is expected to fail. <i>Strict</i> means that if it starts passing, pytest reports an error, so when the bug is fixed you're forced to remove the marker. Sitechat used this for two known gaps (a failed summary skipping the email; a lead store outage failing the turn); both were later fixed and the markers removed.</div></li>
+  </ol>
+  <p>FastAPI's <b><code>TestClient</code></b> sends HTTP requests to the app in the same process, without a network or a server: <code>client.post("/chat", headers=..., json=...)</code> returns a real response with status, headers and JSON. Every API test uses it.</p>
+</section>
+
+<section>
+  <h2>3. How 492 tests run with no network</h2>
+  <p>Three techniques, all introduced earlier, working together:</p>
+  <div class="tablewrap"><table>
+    <tr><th>Outside service</th><th>Replaced in tests by</th><th>How</th></tr>
+    <tr><td>Firestore (9 stores)</td><td><code>InMemory*Store</code> classes</td><td>Passed to <code>create_app(...)</code>; <code>lifespan</code> skips building real clients (<a href="https://claude.ai/artifact/F1oZk1cyDLGAPio8khD7cY">Phase 4a, §1.2</a>).</td></tr>
+    <tr><td>Pinecone</td><td><code>InMemoryVectorStore</code> or <code>NoOpVectorStore</code></td><td>Same: injected.</td></tr>
+    <tr><td>OpenAI chat</td><td>A scripted function</td><td><code>patch("app.agent.orchestrator.complete_with_tools", ...)</code> returning a <code>MagicMock</code> message with chosen <code>content</code> or <code>tool_calls</code>.</td></tr>
+    <tr><td>OpenAI embeddings</td><td>A fixed vector</td><td><code>patch("app.retrieval.pipeline.embed_query", return_value=[0.0] * 1536)</code>.</td></tr>
+    <tr><td>Resend</td><td>A recorder</td><td><code>patch("app.leads.notify.resend.Emails.send", ...)</code> plus a fake key in settings.</td></tr>
+    <tr><td>Google's token check</td><td>A fake verifier</td><td>Patch <code>_verify_identity_token</code> to return chosen claims.</td></tr>
+    <tr><td>Time</td><td>A controllable clock</td><td>Patch <code>time.monotonic</code> (deadline tests) or pass <code>now=</code> (digest tests); browser tests use Playwright's fake clock for the teaser.</td></tr>
+  </table></div>
+  <p>The scripted model in the browser tests shows the idea: it reads the last message and answers by keyword ("paragraphs", "included", "founder", "inject"), and when the message contains "contact me" it returns a <code>contact_team</code> tool call, so the whole tool loop runs for real with a fake brain.</p>
+  <div class="box interview"><div class="tag">Say it in an interview</div><p>"Every external dependency sits behind an interface or a single wrapper function, so tests inject in-memory stores and patch the model and embedding calls. The full suite, 492 tests including 39 real-browser tests, runs in about a minute with no network and no keys, and runs in CI and again in Cloud Build before every deploy."</p></div>
+</section>
+
+<section>
+  <h2>4. The test suite, file by file</h2>
+  <p>Counts of test functions per file (parametrised tests count once here, which is why these add up to less than 492 collected test cases).</p>
+  <div class="tablewrap"><table>
+    <tr><th>Area</th><th>Files (test functions)</th><th>What they protect</th></tr>
+    <tr><td>API security</td><td><code>test_api_security</code> (28), <code>test_log_context</code> (3)</td><td>Keys, domains, lookalikes, inactive tenants, message limits, public-only config, client IP and IPv6 grouping, every rate limit, negative caching, refusal limits, conversation-id pattern, tenant limits, docs off in production; ids on every log line.</td></tr>
+    <tr><td>Orchestrator and leads flow</td><td><code>test_orchestrator</code> (12), <code>test_pending_items</code> (25), <code>test_contact_confirmation</code> (5), <code>test_lead_digest</code> (17), <code>test_leads</code> (8), <code>test_questions</code> (5)</td><td>What goes into the prompt, what's stored, tenant isolation, summarising; contact requests, cooldown, second emails with only new questions, labels; the confirmation card; the digest sweep, claims, caps; extraction; question detection.</td></tr>
+    <tr><td>Failure and limits</td><td><code>test_failure_injection</code> (14), <code>test_llm_limits</code> (10), <code>test_size_limits</code> (3), <code>test_token_budget</code> (7)</td><td>Section 5; deadlines and retries; size caps; the budget.</td></tr>
+    <tr><td>Email</td><td><code>test_notify</code> (10), <code>test_email_html</code> (13), <code>test_reply_draft</code> (7), <code>test_lead_email_links</code> (4)</td><td>Body content, no CC, Reply-To, skip paths; escaping and layout; the draft and mailto limit; defanged links.</td></tr>
+    <tr><td>Retrieval and documents</td><td><code>test_pipeline</code> (17), <code>test_retrieval</code> (8), <code>test_programme_focus</code> (20), <code>test_chunker</code> (8), <code>test_ingest</code> (8), <code>test_vector_store</code> (1)</td><td>retrieve and blend, triage, RRF, BM25; focus rules; chunking; ingest ids and replacement; isolation.</td></tr>
+    <tr><td>Facts and data</td><td><code>test_facts</code> (5), <code>test_facts_sync</code> (15), <code>test_tenant_store</code> (5), <code>test_retention</code> (3), <code>test_feedback</code> (8), <code>test_wording</code> (5)</td><td>Facts in the prompt, sheet parsing, diff and hold, scheduled sync; expiry stamped on every write; feedback API; per-tenant wording.</td></tr>
+    <tr><td>Safety and privacy</td><td><code>test_sanitize</code> (5), <code>test_content_screening</code> (4), <code>test_sentry_privacy</code> (1), <code>test_config</code> (1), <code>test_attack_checks</code> (7)</td><td>Invisible characters; instruction-like content; Sentry gets no visitor data (real SDK, in-memory transport); keys don't print; the attack eval's checks.</td></tr>
+    <tr><td>Scripts and evals</td><td><code>test_delete_tenant</code> (7), <code>test_rename_tenant</code> (6), <code>test_leads_export</code> (4), <code>test_unanswered_report</code> (2), <code>test_faithfulness</code> (8), <code>test_judge_model</code> (3), <code>scripts/test_eval_metrics.py</code> (14)</td><td>Every collection deleted; rename safety; CSV; reports; judge parsing; metrics.</td></tr>
+    <tr><td>Deployment</td><td><code>test_cloudbuild</code> (3)</td><td>Tests run before the image is built; the service runs as its own account; every deployed secret is granted to it in the setup notes.</td></tr>
+    <tr><td>Browser</td><td><code>tests/browser/test_widget</code> (39)</td><td>The real widget in Chromium and WebKit (<a href="https://claude.ai/artifact/AHXQrMEzxpZ6x4ihiiiCm1">Phase 5, §14</a>).</td></tr>
+  </table></div>
+  <p>Two of these are worth singling out as unusual and valuable. <code>test_delete_tenant</code> fails if any store writes to a collection the delete script doesn't cover, so the next new collection can't be forgotten. <code>test_retention</code> fails if any full Firestore write forgets the expiry stamp, so no document becomes permanent by accident. Both turn a "remember to..." into something enforced.</p>
+</section>
+
+<section>
+  <h2>5. Failure injection: breaking things on purpose</h2>
+  <p><code>tests/test_failure_injection.py</code> "breaks one thing (the model API, a tool call, a store, the lead summary) and checks the failure is contained: a polite message rather than a stack trace, nothing half-stored, and the lead email still going out where it can." Every test, by name:</p>
+  <ul>
+    <li><code>test_model_api_failure_is_a_503_with_a_readable_message</code> (rate limit, timeout, connection and server errors)</li>
+    <li><code>test_model_failure_after_a_tool_call_keeps_the_recorded_request</code></li>
+    <li><code>test_tool_arguments_that_are_not_json_still_record_the_request</code></li>
+    <li><code>test_unknown_tool_is_reported_back_and_the_turn_continues</code></li>
+    <li><code>test_a_model_that_keeps_calling_tools_is_stopped</code></li>
+    <li><code>test_tool_arguments_of_the_wrong_type_are_ignored</code></li>
+    <li><code>test_lead_summary_failure_still_sends_the_email</code></li>
+    <li><code>test_running_summary_failure_does_not_skip_the_lead_email</code> (was a strict xfail)</li>
+    <li><code>test_a_failed_turn_write_still_emails_and_flags</code></li>
+    <li><code>test_store_outage_is_a_plain_500_without_details</code>, <code>test_tenant_store_outage_is_a_plain_500</code></li>
+    <li><code>test_facts_outage_still_gets_a_reply</code></li>
+    <li><code>test_lead_store_outage_still_gets_a_reply</code> (was a strict xfail), <code>test_lead_store_outage_during_a_contact_request</code></li>
+  </ul>
+  <p>Writing these found a real gap before any test was written: nothing caught retrieval errors, so an embedding or Pinecone outage turned every message into a 500. It was fixed first (reply without documents), and the two remaining gaps were recorded as strict xfails with their backlog numbers until fixed. That's the method: <b>list the dependencies, break each one, decide what should happen, and make it a test.</b></p>
+</section>
+
+<section>
+  <h2>6. Coverage: what the numbers say</h2>
+  <p><b>Coverage</b> is the share of lines of code that ran during the tests. CI requires at least 80% of <code>app/</code> (it was 85% when the floor was added; today 85.66%). Coverage tells you what is <i>definitely not</i> tested; high coverage doesn't prove the tests check the right things.</p>
+  <div class="tablewrap"><table>
+    <tr><th>File</th><th>Coverage</th><th>Reading it</th></tr>
+    <tr><td><code>retrieval/pipeline.py</code>, <code>usage/budget.py</code>, <code>leads/notify.py</code>, <code>rate_limit.py</code>, <code>api/schemas.py</code></td><td>100%</td><td>Core logic fully exercised.</td></tr>
+    <tr><td><code>api/dependencies.py</code>, <code>api/routes.py</code>, <code>leads/email_html.py</code>, <code>programmes/focus.py</code>, <code>facts/sync.py</code></td><td>98 to 99%</td><td>Near complete.</td></tr>
+    <tr><td><code>conversations/store.py</code></td><td>55%</td><td>The Firestore class isn't run (no emulator).</td></tr>
+    <tr><td><code>documents/store.py</code>, <code>retrieval/vector_store.py</code></td><td>56%, 47%</td><td>Firestore and Pinecone classes aren't run.</td></tr>
+    <tr><td><code>retrieval/reranker.py</code></td><td>33%</td><td>Off by default; the Cohere call isn't run.</td></tr>
+  </table></div>
+  <p>The pattern is clear and honest: <b>logic is covered; the thin layers that talk to real cloud services aren't.</b> Those are exactly where Firestore-only bugs lived (the field-wiping <code>set</code>). Emulator tests (backlog 25) are the fix.</p>
+</section>
+
+<section>
+  <h2>7. The CI checks, one by one</h2>
+  <p><code>.github/workflows/tests.yml</code> runs five jobs on every push and pull request; all must pass. They were added together on 18 Oct, and fixed what they found.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Job</th><th>Tool</th><th>What it catches</th><th>Found when added</th></tr>
+    <tr><td><code>test</code></td><td>pytest + coverage floor 80%</td><td>Broken behaviour; untested code creeping in</td><td>—</td></tr>
+    <tr><td><code>lint</code></td><td><b>ruff</b> (rules E4/E7/E9, pyflakes F, bugbear B)</td><td>Undefined or unused names, likely bugs (mutable default arguments, missing exception chaining). Not a formatter: "style is left alone".</td><td>Missing <code>raise ... from exc</code>; unused names.</td></tr>
+    <tr><td></td><td><b>mypy</b> on <code>app/</code></td><td>Type errors: passing a possibly-<code>None</code> where a dict is required, wrong argument types.</td><td>30 errors, mostly Firestore's optional <code>to_dict()</code>.</td></tr>
+    <tr><td></td><td><b>bandit</b> (skipping B101, asserts)</td><td>Insecure patterns: shell injection, unsafe YAML, opening arbitrary URLs.</td><td>The smoke test could open <code>file:</code> URLs; now refuses non-http(s).</td></tr>
+    <tr><td><code>secrets</code></td><td><b>gitleaks</b>, full history</td><td>Keys or passwords committed anywhere, ever.</td><td>No leaks.</td></tr>
+    <tr><td><code>dockerfile</code></td><td><b>hadolint</b></td><td>Dockerfile mistakes (running as root, unpinned images).</td><td>The image now runs as <code>USER 1000</code>.</td></tr>
+    <tr><td><code>audit</code></td><td><b>pip-audit</b> on <code>requirements.txt</code></td><td>Dependencies with published vulnerabilities.</td><td>Clean.</td></tr>
+  </table></div>
+  <p>Plus <b>Dependabot</b> (<code>.github/dependabot.yml</code>): weekly pull requests for outdated pip packages (minor and patch grouped into one), monthly for GitHub Actions; the Docker base image is excluded so Python stays on 3.12. Each PR runs the full CI. And Cloud Build runs the tests again before deploying (<a href="https://claude.ai/artifact/BknbsJYd7gFx9geyWbBqKF">Phase 6, §5</a>).</p>
+  <p>Tool versions are pinned in <code>requirements-dev.txt</code> (ruff 0.17.1, mypy 2.4.0, bandit 1.9.4...) so a new release of a linter can't suddenly fail an unchanged codebase. gitleaks is downloaded at a fixed version and checked against its SHA-256 hash before running, so a tampered download is rejected.</p>
+</section>
+
+<section>
+  <h2>8. Evaluations as quality gates</h2>
+  <p>Tests check code with a fake model; <b>evaluations</b> check the real AI with real data, and cost a little money, so they run when something relevant changes rather than on every push (<a href="https://claude.ai/artifact/4hwNREB8CxkHtRrwgwRraL">Phase 4f</a>).</p>
+  <div class="tablewrap"><table>
+    <tr><th>Evaluation</th><th>Run after</th><th>Latest result</th></tr>
+    <tr><td><code>scripts.evaluate</code> (retrieval, 82 questions, 6 configs)</td><td>Changing documents, chunking, retrieval settings</td><td>Production recall 0.99, MRR 0.86</td></tr>
+    <tr><td><code>scripts.evaluate_answers</code> (AI judge)</td><td>Changing the prompt or knowledge base</td><td>79/82</td></tr>
+    <tr><td><code>scripts.evaluate_attacks</code> (29 attacks)</td><td>Changing the prompt, tools, or what enters the context</td><td>29/29 held</td></tr>
+  </table></div>
+  <p>Every prompt change in the history came with before-and-after numbers in its commit message: "judge pass 70/74 before and after, paragraphs per reply 1.95 to 2.62, offers 7 to 8"; "attack eval 29/29; answer eval 79/82". That's the habit to describe in interviews: <b>no prompt change without a measurement.</b></p>
+</section>
+
+<section>
+  <h2>9. The safety map: OWASP Top 10 for LLM applications</h2>
+  <p>The OWASP Top 10 for LLM Applications is the industry checklist of security risks specific to AI apps. Sitechat's safety phase (17 Oct) mapped every one, from <code>notes/backlog.md</code>:</p>
+  <div class="tablewrap"><table>
+    <tr><th>Risk</th><th>What could happen here</th><th>Defences in Sitechat</th></tr>
+    <tr><td>Prompt injection</td><td>A visitor or a planted line makes the bot ignore its rules.</td><td>Prompt rules (only the system message instructs; no role changes); reference material labelled as such; invisible Unicode stripped; facts and documents screened; attack eval.</td></tr>
+    <tr><td>Sensitive information disclosure</td><td>Visitor details leak to the model, logs, Sentry or other visitors.</td><td>Contact details removed before the model; Sentry with no locals or bodies; namespace isolation; the data attacks in the eval.</td></tr>
+    <tr><td>Supply chain / data poisoning</td><td>A bad dependency or poisoned content.</td><td>Pinned dependencies, pip-audit, Dependabot, hashed gitleaks download; ingested content screened; we prepare documents ourselves.</td></tr>
+    <tr><td>Improper output handling</td><td>Model text becomes HTML on the school's page or in the email.</td><td>Widget renders text only (bold via DOM); email escapes everything; links defanged; the output attacks.</td></tr>
+    <tr><td>Excessive agency</td><td>The model is given power to do damage.</td><td>Two tools: one records a request (fixed recipient: the school), one reports details (capped, filtered). No tool sends, deletes or browses.</td></tr>
+    <tr><td>System prompt leakage</td><td>The rules or hidden context are read out.</td><td>Rule against revealing instructions; nothing secret in the prompt; install guide: treat documents and facts as public; leak markers checked in the attack eval.</td></tr>
+    <tr><td>Vector and embedding weaknesses</td><td>One tenant's documents reached from another's query.</td><td>Pinecone namespace per tenant, enforced by the database.</td></tr>
+    <tr><td>Misinformation</td><td>Confident wrong answers.</td><td>Grounding; facts verbatim; "don't know" and near-miss rules; faithfulness eval; thumbs-down review.</td></tr>
+    <tr><td>Unbounded consumption</td><td>Running up the AI bill or using the bot as a free chatbot.</td><td>Daily token budget per tenant; 600-token reply cap; scope rule; rate limits; consumption attacks.</td></tr>
+  </table></div>
+  <p>Not done (by decision): a separate moderation or classifier call before each reply. Backlog 110: "an extra call and ~0.5 s per message. Only if the attack eval shows the prompt rules are not enough."</p>
+</section>
+
+<section>
+  <h2>10. Privacy</h2>
+  <ul>
+    <li><b>Minimisation</b>: contact details are extracted once and kept only on the lead; messages hold <code>[email provided]</code>.</li>
+    <li><b>Separation</b>: leads in their own collection, apart from conversations.</li>
+    <li><b>Retention</b>: everything personal expires 365 days after last activity (TTL); a test enforces the stamp on every write.</li>
+    <li><b>Deletion on request</b>: <code>delete_tenant &lt;tenant&gt; --conversation &lt;id&gt;</code> (finding a visitor's conversations by email alone isn't built yet).</li>
+    <li><b>Error reports</b>: no personal data to Sentry, proven with the real SDK.</li>
+    <li><b>Transparency</b>: "AI assistant · Answers can be wrong" in the widget, a privacy link when the school provides one, and a note where the email goes when typed.</li>
+    <li><b>No email to visitor-typed addresses</b>: only the school's team receives email.</li>
+    <li><b>Exports</b>: lead CSVs and conversation dumps are gitignored.</li>
+  </ul>
+  <p>Open business items: each school's privacy policy, a data processing agreement listing sub-processors (OpenAI, Pinecone, Google Cloud, Resend, Sentry), and data residency terms (backlog 33, 63, 75).</p>
+</section>
+
+<section>
+  <h2>11. Abuse and cost controls</h2>
+  <div class="tablewrap"><table>
+    <tr><th>Control</th><th>Limit</th></tr>
+    <tr><td>Chats per visitor</td><td>5 a minute</td></tr>
+    <tr><td>Chats per tenant</td><td>60 an hour, or the tenant's own</td></tr>
+    <tr><td><code>/config</code>, <code>/feedback</code> per visitor</td><td>30 a minute each</td></tr>
+    <tr><td>Refused requests per visitor</td><td>20 a minute, then refused before any lookup</td></tr>
+    <tr><td>Message length</td><td>2,000 characters</td></tr>
+    <tr><td>Reply length</td><td>600 tokens</td></tr>
+    <tr><td>AI tokens per tenant</td><td>3,000,000 a day</td></tr>
+    <tr><td>Lead emails per tenant</td><td>50 a day (held, not lost)</td></tr>
+    <tr><td>Stored per conversation</td><td>100 messages, 100 questions; visitor details 200 characters</td></tr>
+    <tr><td>Tool rounds per reply</td><td>3, within a 40-second deadline</td></tr>
+  </table></div>
+  <p>Honest limitation, stated in the code: the site key is public and the Origin check stops browsers, not scripts. "Rate limits are what actually bound the cost exposure." Bot protection (Turnstile) is the next layer, waiting for a domain.</p>
+</section>
+
+<section>
+  <h2>12. Known gaps</h2>
+  <ul>
+    <li>No Firestore emulator tests (transactions only tested in memory).</li>
+    <li>No load, stress, spike or soak tests; no concurrency test of two messages at once.</li>
+    <li>No alerting.</li>
+    <li>No automated security scan of the live API (OWASP ZAP), no real-device or screen-reader passes.</li>
+    <li>The post-deploy smoke test isn't a pipeline step yet.</li>
+    <li>The date-as-phone false positive found while writing <a href="https://claude.ai/artifact/Np1qbTsXtXtDL6UmGaMvFv">Phase 4d</a>.</li>
+  </ul>
+  <p>Knowing your gaps precisely is itself a quality signal. In an interview, "here's what I'd test next and why" lands better than "it's fully tested".</p>
+</section>
+
+<section>
+  <h2>13. Challenges we faced</h2>
+  <div class="box challenge"><div class="tag">1. Tests that called real APIs (three times)</div><p>Each time, new code called an outside service and the test didn't stub it; it passed locally with keys in <code>.env</code> and failed on GitHub without them. The first led to store injection into <code>create_app</code>; later ones to stubbing the model in the security tests and embeddings in failure tests (with an <code>autouse</code> fixture: "No test here may reach a real API"). <b>Lesson recorded:</b> "when adding anything that calls out, ask what the test does when that service is absent."</p></div>
+  <div class="box challenge"><div class="tag">2. A test that could never fail</div><p>Patched the definition site instead of the lookup site, so its mock was never used. Found by deliberately breaking the code it guarded. <b>Lesson:</b> make each new test fail once on purpose.</p></div>
+  <div class="box challenge"><div class="tag">3. A test that needed a local <code>.env</code></div><p>One test passed only because the developer's <code>.env</code> supplied a value; it would fail on a clean machine. Fixed when the requirements were split (17 Oct); <code>Settings(_env_file=None, ...)</code> is the pattern for tests that must ignore local configuration.</p></div>
+  <div class="box challenge"><div class="tag">4. Sentry leaked an email, confirmed before fixing</div><p>Rather than trusting <code>send_default_pii=False</code>, the team triggered an error with Sentry's defaults and found the visitor's email in the report, from a local variable. Then turned off locals and bodies, and wrote a test with the real SDK proving the email no longer appears.</p></div>
+  <div class="box challenge"><div class="tag">5. The secrets scanner failed on Dependabot</div><p><code>gitleaks-action</code> calls GitHub's API on pull requests and failed on Dependabot's PRs (which run with restricted permissions). <b>Fix:</b> download the gitleaks program itself at a pinned version, verify its hash, and scan the full history the same way on every push and PR.</p></div>
+  <div class="box challenge"><div class="tag">6. The type checker's 30 errors</div><p>Adding mypy surfaced 30 type errors, mostly from treating Firestore's optional <code>to_dict()</code> as always a dict. None crashed in practice (missing documents were checked first), but making it explicit (<code>or {}</code>) means the next change can't break that assumption silently.</p></div>
+  <div class="box challenge"><div class="tag">7. Different Pythons</div><p>3.14 locally, 3.12 in CI, Cloud Build and production. The suite passes on both today; the Cloud Build step guarantees 3.12 is what's tested before deploy.</p></div>
+</section>
+
+<section>
+  <h2>Glossary</h2>
+  <dl class="gloss">
+    <div><dt>Unit / integration / end-to-end test</dt><dd>One function / several parts together / the whole system as a user sees it (the browser tests).</dd></div>
+    <div><dt>Fixture</dt><dd>A pytest function that prepares something a test needs.</dd></div>
+    <div><dt>Mock / stub / fake</dt><dd>Stand-ins for real dependencies, recording calls or returning fixed answers.</dd></div>
+    <div><dt>Strict xfail</dt><dd>A test expected to fail; if it passes, pytest errors, forcing the marker's removal.</dd></div>
+    <div><dt>Coverage</dt><dd>The percentage of code lines executed by tests.</dd></div>
+    <div><dt>Linter</dt><dd>A tool that flags likely bugs and bad patterns without running the code.</dd></div>
+    <div><dt>Static type checking</dt><dd>Checking type annotations for consistency without running the code (mypy).</dd></div>
+    <div><dt>SAST</dt><dd>Static application security testing: scanning code for insecure patterns (bandit).</dd></div>
+    <div><dt>Dependency audit</dt><dd>Checking installed packages against vulnerability databases (pip-audit).</dd></div>
+    <div><dt>Failure injection</dt><dd>Deliberately breaking a dependency to check the system degrades gracefully.</dd></div>
+    <div><dt>Graceful degradation</dt><dd>Doing something useful (a reply without documents) when part of the system fails.</dd></div>
+    <div><dt>Data minimisation</dt><dd>Collecting and keeping only the personal data you need.</dd></div>
+  </dl>
+</section>
+
+<section>
+  <h2>Check yourself</h2>
+  <details><summary>Why is a test that can't fail worse than no test?</summary><p>It gives false confidence: the protected behaviour can break with the suite still green.</p></details>
+  <details><summary>Name four outside services and how tests replace each.</summary><p>Firestore → in-memory stores injected into <code>create_app</code>; Pinecone → in-memory/no-op vector store; OpenAI chat → patched <code>complete_with_tools</code>; embeddings → patched <code>embed_query</code>; Resend → patched <code>Emails.send</code>.</p></details>
+  <details><summary>What does a strict xfail give you that a comment "known bug" doesn't?</summary><p>The test runs every time; when the bug is fixed the test passes, and strict mode fails the run until the marker is removed, so the record stays true.</p></details>
+  <details><summary>Coverage is 85.66%. Where are the gaps and why?</summary><p>In the Firestore and Pinecone store classes and the reranker: tests use in-memory stores and the reranker is off. Emulator tests would close the store gap.</p></details>
+  <details><summary>What do ruff, mypy, bandit, gitleaks, hadolint and pip-audit each catch?</summary><p>Likely bugs and unused code; type errors; insecure code patterns; committed secrets; Dockerfile mistakes; vulnerable dependencies.</p></details>
+  <details><summary>Which OWASP risk does the daily token budget address, and why aren't rate limits enough?</summary><p>Unbounded consumption. Rate limits count requests; cost is tokens, and one long conversation costs far more than many short ones.</p></details>
+  <details><summary>Why isn't there a moderation call before each reply?</summary><p>It would add a call and about half a second per message; the attack evaluation shows the prompt rules hold (29/29), so it's deferred until they don't.</p></details>
+</section>
+
+<section>
+  <h2>Next: Phase 8, rebuild it yourself</h2>
+  <p>A step-by-step plan to build a smaller Sitechat from an empty folder, in the same order the real one was built, with working code at each step, what to test, and which phase to reread. <a href="https://claude.ai/artifact/QDifNPBS4Lu8CLhvZTJ5C4">Read Phase 8</a>.</p>
+</section>
+
+</main>
+</body>
+</html>
